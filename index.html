@@ -15,11 +15,12 @@
       box-sizing: border-box;
     }
 
-    body {
-      background: var(--gris-claro);
-      font-family: 'Segoe UI', Arial, sans-serif;
+    html, body {
       margin: 0;
       padding: 0;
+      height: 100%;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--gris-claro);
     }
 
     .page-wrapper {
@@ -37,7 +38,7 @@
       justify-content: center;
     }
 
-    .login-container, .powerbi-container {
+    .login-container {
       background: var(--blanco);
       border-radius: 16px;
       box-shadow: 0 0 24px rgba(0,0,0,0.08);
@@ -45,7 +46,20 @@
       width: 100%;
       max-width: 420px;
       animation: fadeIn 0.7s;
+    }
+
+    .powerbi-container {
+      background: var(--blanco);
+      border-radius: 16px;
+      box-shadow: 0 0 24px rgba(0,0,0,0.08);
+      padding: 16px;
+      width: 100%;
+      max-width: 100%;
+      animation: fadeIn 0.7s;
       margin: 0 auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
     }
 
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -138,22 +152,20 @@
 
     iframe {
       width: 100%;
-      min-height: 400px;
-      height: 60vw;
-      max-height: 520px;
+      height: 80vh;
       border: none;
       border-radius: 10px;
       box-shadow: 0 0 12px rgba(102,36,131,0.10);
     }
 
     @media (max-width: 480px) {
-      .login-container, .powerbi-container {
+      .login-container {
         padding: 20px 16px;
         max-width: 100%;
       }
 
       iframe {
-        height: 70vw;
+        height: 70vh;
       }
     }
   </style>
@@ -196,7 +208,7 @@
       const err = document.getElementById('error-msg');
       if (user === 'prueba expa' && pass === 'Expa2025') {
         document.getElementById('login-form').style.display = 'none';
-        document.getElementById('powerbi').style.display = 'block';
+        document.getElementById('powerbi').style.display = 'flex';
         return false;
       } else {
         err.textContent = 'Usuario o contraseña incorrectos';
@@ -211,7 +223,7 @@
           document.getElementById('user').value = '';
           document.getElementById('pass').value = '';
           document.getElementById('error-msg').textContent = '';
-          document.getElementById('login-form').style.display = 'block';
+          document.getElementById('login-form').style.display = 'flex';
           document.getElementById('powerbi').style.display = 'none';
         });
       }

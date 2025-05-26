@@ -23,10 +23,14 @@
       box-shadow: 0 0 15px rgba(0,0,0,0.1);
       max-width: 400px;
       width: 100%;
-    }
-    .container h2 {
-      color: #662483;
       text-align: center;
+    }
+    .container img {
+      width: 100px;
+      margin-bottom: 10px;
+    }
+    h2 {
+      color: #662483;
     }
     input[type="email"],
     input[type="password"] {
@@ -45,17 +49,19 @@
       font-weight: bold;
       border-radius: 5px;
       cursor: pointer;
+      margin-top: 10px;
     }
     button:hover {
       background-color: #4a1960;
     }
     .link {
-      text-align: center;
       margin-top: 1em;
     }
     .link a {
       color: #662483;
       text-decoration: none;
+      display: inline-block;
+      margin: 5px 0;
     }
     .link a:hover {
       text-decoration: underline;
@@ -66,22 +72,38 @@
       text-align: center;
       min-height: 20px;
     }
+    #register-form {
+      display: none;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>Login PaEx360</h2>
+    <img src="paex360-logo.png" alt="Logo PaEx360">
+    <h2 id="form-title">Login PaEx360</h2>
     <div class="message" id="message"></div>
-    <input type="email" id="email" placeholder="Correo electrónico">
-    <input type="password" id="password" placeholder="Contraseña">
-    <button onclick="login()">Ingresar</button>
-    <div class="link">
-      <a href="#" onclick="resetPassword()">¿Olvidaste tu contraseña?</a>
+
+    <div id="login-form">
+      <input type="email" id="email" placeholder="Correo electrónico">
+      <input type="password" id="password" placeholder="Contraseña">
+      <button onclick="login()">Ingresar</button>
+      <div class="link">
+        <a href="#" onclick="resetPassword()">¿Olvidaste tu contraseña?</a>
+        <a href="#" onclick="showRegister()">Crear cuenta</a>
+      </div>
+    </div>
+
+    <div id="register-form">
+      <input type="email" id="register-email" placeholder="Correo electrónico">
+      <input type="password" id="register-password" placeholder="Contraseña">
+      <button onclick="register()">Registrarse</button>
+      <div class="link">
+        <a href="#" onclick="showLogin()">Volver al login</a>
+      </div>
     </div>
   </div>
 
   <script>
-    // Tu configuración Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyDFf8HvV2B5rkFt1qrYhcjWdpxKu5PCqnM",
       authDomain: "paex360.firebaseapp.com",
@@ -102,7 +124,6 @@
         .then(userCredential => {
           msg.style.color = 'green';
           msg.textContent = 'Ingreso exitoso';
-          // Redireccionar o mostrar dashboard aquí
         })
         .catch(error => {
           msg.style.color = 'red';
@@ -121,6 +142,36 @@
         .then(() => {
           msg.style.color = 'green';
           msg.textContent = 'Se ha enviado un correo para restablecer la contraseña';
+        })
+        .catch(error => {
+          msg.style.color = 'red';
+          msg.textContent = error.message;
+        });
+    }
+
+    function showRegister() {
+      document.getElementById('login-form').style.display = 'none';
+      document.getElementById('register-form').style.display = 'block';
+      document.getElementById('form-title').textContent = 'Crear cuenta';
+      document.getElementById('message').textContent = '';
+    }
+
+    function showLogin() {
+      document.getElementById('login-form').style.display = 'block';
+      document.getElementById('register-form').style.display = 'none';
+      document.getElementById('form-title').textContent = 'Login PaEx360';
+      document.getElementById('message').textContent = '';
+    }
+
+    function register() {
+      const email = document.getElementById('register-email').value;
+      const password = document.getElementById('register-password').value;
+      const msg = document.getElementById('message');
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(userCredential => {
+          msg.style.color = 'green';
+          msg.textContent = 'Usuario registrado con éxito';
+          showLogin();
         })
         .catch(error => {
           msg.style.color = 'red';

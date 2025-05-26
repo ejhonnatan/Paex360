@@ -27,10 +27,9 @@
       display: flex;
       flex-direction: column;
       min-height: 100vh;
-      padding: 0;
     }
 
-    .centered-content {
+    #centered-content {
       flex: 1;
       display: flex;
       flex-direction: column;
@@ -238,7 +237,7 @@
       </div>
     </header>
 
-    <div class="centered-content">
+    <div id="centered-content">
       <div class="login-container" id="login-form">
         <img src="paex360-logo.png" alt="Logo PaEx360" class="logo" id="logo-img">
         <div class="login-title">Bienvenido a PaEx360</div>
@@ -277,6 +276,7 @@
         document.getElementById('powerbi').style.display = 'flex';
         document.getElementById('app-header').style.display = 'flex';
         document.getElementById('user-name').textContent = 'Bienvenido, ' + user;
+        document.getElementById('centered-content').style.justifyContent = 'flex-start';
       } else {
         err.textContent = 'Usuario o contraseña incorrectos';
       }
@@ -286,12 +286,18 @@
       const logoutBtn = document.getElementById('logout-btn');
       if (logoutBtn) {
         logoutBtn.addEventListener('click', function () {
+          // Limpiar campos
           document.getElementById('user').value = '';
           document.getElementById('pass').value = '';
           document.getElementById('error-msg').textContent = '';
-          document.getElementById('login-form').style.display = 'flex';
+
+          // Mostrar login y ocultar secciones
+          document.getElementById('login-form').style.display = 'block';
           document.getElementById('powerbi').style.display = 'none';
           document.getElementById('app-header').style.display = 'none';
+
+          // Restaurar login visual
+          document.getElementById('centered-content').style.justifyContent = 'center';
         });
       }
     });

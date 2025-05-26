@@ -7,13 +7,18 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <style>
-    body {
+    html, body {
       margin: 0;
       font-family: Arial, sans-serif;
       background: #f4f4f4;
-      height: 100vh;
+      height: 100%;
+      width: 100%;
+    }
+    #auth-container {
       display: flex;
-      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
     }
     .container {
       background: #fff;
@@ -23,7 +28,6 @@
       max-width: 400px;
       width: 100%;
       text-align: center;
-      margin: auto;
     }
     .container img {
       width: 100px;
@@ -77,9 +81,8 @@
     }
     #dashboard {
       display: none;
-      flex: 1;
-      display: flex;
       flex-direction: column;
+      height: 100vh;
     }
     header {
       background: #fff;
@@ -104,27 +107,29 @@
   </style>
 </head>
 <body>
-  <div class="container" id="auth-container">
-    <img src="paex360-logo.png" alt="Logo PaEx360">
-    <h2 id="form-title">Login PaEx360</h2>
-    <div class="message" id="message"></div>
+  <div id="auth-container">
+    <div class="container">
+      <img src="paex360-logo.png" alt="Logo PaEx360">
+      <h2 id="form-title">Login PaEx360</h2>
+      <div class="message" id="message"></div>
 
-    <div id="login-form">
-      <input type="email" id="email" placeholder="Correo electrónico">
-      <input type="password" id="password" placeholder="Contraseña">
-      <button onclick="login()">Ingresar</button>
-      <div class="link">
-        <a href="#" onclick="resetPassword()">¿Olvidaste tu contraseña?</a>
-        <a href="#" onclick="showRegister()">Crear cuenta</a>
+      <div id="login-form">
+        <input type="email" id="email" placeholder="Correo electrónico">
+        <input type="password" id="password" placeholder="Contraseña">
+        <button onclick="login()">Ingresar</button>
+        <div class="link">
+          <a href="#" onclick="resetPassword()">¿Olvidaste tu contraseña?</a>
+          <a href="#" onclick="showRegister()">Crear cuenta</a>
+        </div>
       </div>
-    </div>
 
-    <div id="register-form">
-      <input type="email" id="register-email" placeholder="Correo electrónico">
-      <input type="password" id="register-password" placeholder="Contraseña">
-      <button onclick="register()">Registrarse</button>
-      <div class="link">
-        <a href="#" onclick="showLogin()">Volver al login</a>
+      <div id="register-form">
+        <input type="email" id="register-email" placeholder="Correo electrónico">
+        <input type="password" id="register-password" placeholder="Contraseña">
+        <button onclick="register()">Registrarse</button>
+        <div class="link">
+          <a href="#" onclick="showLogin()">Volver al login</a>
+        </div>
       </div>
     </div>
   </div>
@@ -134,7 +139,12 @@
       <span class="title">Cuadro de Mando PaEx360</span>
       <div class="user">
         <span id="user-email"></span>
-        <button onclick="logout()" style="margin-left: 10px; padding: 5px 10px; background:#fff; color:#662483; border: 2px solid #662483; border-radius: 5px; cursor: pointer; font-weight: bold;">Cerrar sesión</button>
+        <button onclick="logout()" style="margin-left: 10px; padding: 5px 10px; background:#fff; color:#662483; border: 2px solid #662483; border-radius: 5px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 6px;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <path d="M16 13v-2H7V8l-5 4 5 4v-3h9zM20 3H4a2 2 0 0 0-2 2v4h2V5h16v14H4v-4H2v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"/>
+          </svg>
+          Cerrar sesión
+        </button>
       </div>
     </header>
     <iframe title="Power BI Dashboard"
@@ -228,7 +238,7 @@
 
     function logout() {
       auth.signOut().then(() => {
-        document.getElementById('auth-container').style.display = 'block';
+        document.getElementById('auth-container').style.display = 'flex';
         document.getElementById('dashboard').style.display = 'none';
         showLogin();
       });

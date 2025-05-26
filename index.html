@@ -11,10 +11,9 @@
       margin: 0;
       font-family: Arial, sans-serif;
       background: #f4f4f4;
-      display: flex;
-      justify-content: center;
-      align-items: center;
       height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
     .container {
       background: #fff;
@@ -24,6 +23,7 @@
       max-width: 400px;
       width: 100%;
       text-align: center;
+      margin: auto;
     }
     .container img {
       width: 100px;
@@ -77,12 +77,29 @@
     }
     #dashboard {
       display: none;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: #fff;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    header .title {
+      font-weight: bold;
+      color: #662483;
+    }
+    header .user {
+      font-size: 0.9em;
     }
     iframe {
+      flex: 1;
       width: 100%;
-      height: 80vh;
       border: none;
-      border-radius: 10px;
     }
   </style>
 </head>
@@ -113,6 +130,13 @@
   </div>
 
   <div id="dashboard">
+    <header>
+      <span class="title">Cuadro de Mando PaEx360</span>
+      <div class="user">
+        <span id="user-email"></span>
+        <button onclick="logout()" style="margin-left: 10px; padding: 5px 10px; background:#fff; color:#662483; border: 2px solid #662483; border-radius: 5px; cursor: pointer; font-weight: bold;">Cerrar sesión</button>
+      </div>
+    </header>
     <iframe title="Power BI Dashboard"
       src="https://app.powerbi.com/view?r=eyJrIjoiZTZkNzkxNGQtYzgwYS00MWFmLWE0OTItOTNjOGU5MzYzNjQwIiwidCI6IjJkODcwNTVkLTBlYmItNDdmNy05OTU5LWU3OWYwYzBhMzNkNyJ9"
       allowfullscreen="true">
@@ -140,6 +164,7 @@
         .then(userCredential => {
           msg.style.color = 'green';
           msg.textContent = 'Ingreso exitoso';
+          document.getElementById('user-email').textContent = email;
           showDashboard();
         })
         .catch(error => {
@@ -198,7 +223,15 @@
 
     function showDashboard() {
       document.getElementById('auth-container').style.display = 'none';
-      document.getElementById('dashboard').style.display = 'block';
+      document.getElementById('dashboard').style.display = 'flex';
+    }
+
+    function logout() {
+      auth.signOut().then(() => {
+        document.getElementById('auth-container').style.display = 'block';
+        document.getElementById('dashboard').style.display = 'none';
+        showLogin();
+      });
     }
   </script>
 </body>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Login PaEx360</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root {
+      --morado-paex: #662483;
+      --blanco: #fff;
+      --gris-claro: #f4f4f4;
+    }
+    body {
+      background: var(--gris-claro);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .login-container, .powerbi-container {
+      background: var(--blanco);
+      border-radius: 16px;
+      box-shadow: 0 0 24px rgba(0,0,0,0.08);
+      padding: 32px 24px;
+      width: 100%;
+      max-width: 340px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: fadeIn 0.7s;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .logo {
+      width: 110px;
+      margin-bottom: 18px;
+    }
+    .login-title {
+      color: var(--morado-paex);
+      font-size: 1.3em;
+      font-weight: 600;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .input-group {
+      margin-bottom: 18px;
+      width: 100%;
+    }
+    .input-group label {
+      display: block;
+      font-size: 0.97em;
+      margin-bottom: 5px;
+      color: #494949;
+    }
+    .input-group input {
+      width: 100%;
+      padding: 9px 10px;
+      border: 1.5px solid #ddd;
+      border-radius: 5px;
+      font-size: 1em;
+      transition: border 0.2s;
+    }
+    .input-group input:focus {
+      outline: none;
+      border: 1.5px solid var(--morado-paex);
+    }
+    .btn {
+      background: var(--morado-paex);
+      color: var(--blanco);
+      border: none;
+      padding: 10px 0;
+      border-radius: 5px;
+      width: 100%;
+      font-size: 1.08em;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 5px;
+      transition: background 0.2s;
+    }
+    .btn:hover {
+      background: #4f1d64;
+    }
+    .error-msg {
+      color: #c0392b;
+      margin-bottom: 10px;
+      text-align: center;
+      font-size: 0.95em;
+      min-height: 22px;
+    }
+    .powerbi-container iframe {
+      width: 100%;
+      min-height: 380px;
+      height: 58vw;
+      max-height: 500px;
+      border: none;
+      border-radius: 10px;
+      box-shadow: 0 0 12px rgba(102,36,131,0.10);
+      display: block;
+    }
+    @media (max-width: 400px) {
+      .login-container, .powerbi-container {
+        padding: 16px 3vw;
+        max-width: 99vw;
+      }
+      .powerbi-container iframe {
+        width: 95vw;
+        min-width: 220px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container" id="login-form">
+    <img src="paex360-logo.png" alt="Logo PaEx360" class="logo" id="logo-img">
+    <div class="login-title">Bienvenido a PaEx360</div>
+    <div class="error-msg" id="error-msg"></div>
+    <form onsubmit="return doLogin(event)">
+      <div class="input-group">
+        <label for="user">Usuario</label>
+        <input type="text" id="user" required autocomplete="username">
+      </div>
+      <div class="input-group">
+        <label for="pass">Contraseña</label>
+        <input type="password" id="pass" required autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn">Ingresar</button>
+    </form>
+  </div>
+  <div class="powerbi-container" id="powerbi" style="display:none;">
+    <iframe title="Pruba imagen"
+      src="https://app.powerbi.com/view?r=eyJrIjoiZTZkNzkxNGQtYzgwYS00MWFmLWE0OTItOTNjOGU5MzYzNjQwIiwidCI6IjJkODcwNTVkLTBlYmItNDdmNy05OTU5LWU3OWYwYzBhMzNkNyJ9"
+      allowfullscreen="true">
+    </iframe>
+  </div>
+  <script>
+    function doLogin(e) {
+      e.preventDefault();
+      const user = document.getElementById('user').value.trim();
+      const pass = document.getElementById('pass').value.trim();
+      const err = document.getElementById('error-msg');
+      if (user === 'prueba expa' && pass === 'Expa2025') {
+        document.getElementById('login-form').style.display = 'none';
+        document.getElementById('powerbi').style.display = 'flex';
+        return false;
+      } else {
+        err.textContent = 'Usuario o contraseña incorrectos';
+        return false;
+      }
+    }
+  </script>
+</body>
+</html>

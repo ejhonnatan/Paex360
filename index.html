@@ -82,6 +82,22 @@
     .btn:hover {
       background: #4f1d64;
     }
+    .logout-btn {
+      background: #c0392b;
+      color: var(--blanco);
+      border: none;
+      padding: 9px 0;
+      border-radius: 5px;
+      width: 100%;
+      font-size: 1em;
+      font-weight: 600;
+      cursor: pointer;
+      margin: 14px 0 0 0;
+      transition: background 0.2s;
+    }
+    .logout-btn:hover {
+      background: #922b1b;
+    }
     .error-msg {
       color: #c0392b;
       margin-bottom: 10px;
@@ -128,11 +144,12 @@
       <button type="submit" class="btn">Ingresar</button>
     </form>
   </div>
-  <div class="powerbi-container" id="powerbi" style="display:none;">
+  <div class="powerbi-container" id="powerbi" style="display:none; flex-direction: column;">
     <iframe title="Pruba imagen"
       src="https://app.powerbi.com/view?r=eyJrIjoiZTZkNzkxNGQtYzgwYS00MWFmLWE0OTItOTNjOGU5MzYzNjQwIiwidCI6IjJkODcwNTVkLTBlYmItNDdmNy05OTU5LWU3OWYwYzBhMzNkNyJ9"
       allowfullscreen="true">
     </iframe>
+    <button class="logout-btn" id="logout-btn">Cerrar sesión</button>
   </div>
   <script>
     function doLogin(e) {
@@ -149,6 +166,21 @@
         return false;
       }
     }
+
+    // Botón cerrar sesión
+    document.addEventListener('DOMContentLoaded', function() {
+      const logoutBtn = document.getElementById('logout-btn');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', function() {
+          // Limpiar campos y mostrar login nuevamente
+          document.getElementById('user').value = '';
+          document.getElementById('pass').value = '';
+          document.getElementById('error-msg').textContent = '';
+          document.getElementById('login-form').style.display = 'flex';
+          document.getElementById('powerbi').style.display = 'none';
+        });
+      }
+    });
   </script>
 </body>
 </html>

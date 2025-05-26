@@ -2,305 +2,131 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Login PaEx360</title>
+  <title>Login PaEx360 con Firebase</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <style>
-    :root {
-      --morado-paex: #662483;
-      --blanco: #fff;
-      --gris-claro: #f4f4f4;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html, body {
+    body {
       margin: 0;
-      padding: 0;
-      height: 100%;
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background: var(--gris-claro);
-    }
-
-    .page-wrapper {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
       display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-
-    #centered-content {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
       justify-content: center;
-      padding: 20px;
-    }
-
-    header {
-      background: var(--blanco);
-      padding: 10px 20px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-      display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      flex-wrap: wrap;
+      height: 100vh;
     }
-
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .header-left img {
-      width: 50px;
-    }
-
-    .header-title {
-      font-size: 1.2em;
-      font-weight: 600;
-      color: var(--morado-paex);
-      white-space: nowrap;
-    }
-
-    .header-right {
-      margin-left: auto;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-
-    .user-label {
-      font-size: 0.95em;
-      color: #333;
-    }
-
-    .logout-btn {
-      background: transparent;
-      color: var(--morado-paex);
-      border: 2px solid var(--morado-paex);
-      padding: 8px 14px;
-      border-radius: 8px;
-      font-size: 0.95em;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease-in-out;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .logout-btn:hover {
-      background: var(--morado-paex);
-      color: var(--blanco);
-    }
-
-    .logout-btn svg {
-      width: 16px;
-      height: 16px;
-      fill: currentColor;
-    }
-
-    .login-container {
-      background: var(--blanco);
-      border-radius: 16px;
-      box-shadow: 0 0 24px rgba(0,0,0,0.08);
-      padding: 32px 24px;
+    .container {
+      background: #fff;
+      padding: 2em;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      max-width: 400px;
       width: 100%;
-      max-width: 420px;
-      animation: fadeIn 0.7s;
     }
-
-    .powerbi-container {
-      background: var(--blanco);
-      border-radius: 16px;
-      box-shadow: 0 0 24px rgba(0,0,0,0.08);
-      padding: 16px;
-      width: 100%;
-      max-width: 100%;
-      animation: fadeIn 0.7s;
-      margin: 0 auto;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-    .logo {
-      width: 110px;
-      margin-bottom: 18px;
-      display: block;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    .login-title {
-      color: var(--morado-paex);
-      font-size: 1.5em;
-      font-weight: 600;
-      margin-bottom: 24px;
+    .container h2 {
+      color: #662483;
       text-align: center;
     }
-
-    .input-group {
-      margin-bottom: 18px;
-      width: 100%;
-    }
-
-    .input-group label {
-      display: block;
-      font-size: 0.97em;
-      margin-bottom: 5px;
-      color: #494949;
-    }
-
-    .input-group input {
+    input[type="email"],
+    input[type="password"] {
       width: 100%;
       padding: 10px;
-      border: 1.5px solid #ddd;
+      margin: 10px 0;
+      border: 1px solid #ccc;
       border-radius: 5px;
-      font-size: 1em;
-      transition: border 0.2s;
     }
-
-    .input-group input:focus {
-      outline: none;
-      border: 1.5px solid var(--morado-paex);
-    }
-
-    .btn {
-      background: var(--morado-paex);
-      color: var(--blanco);
-      border: none;
-      padding: 12px 0;
-      border-radius: 5px;
+    button {
       width: 100%;
-      font-size: 1.1em;
-      font-weight: 600;
+      padding: 10px;
+      background-color: #662483;
+      border: none;
+      color: white;
+      font-weight: bold;
+      border-radius: 5px;
       cursor: pointer;
-      margin-top: 10px;
-      transition: background 0.2s;
     }
-
-    .btn:hover {
-      background: #4f1d64;
+    button:hover {
+      background-color: #4a1960;
     }
-
-    .error-msg {
-      color: #c0392b;
-      margin-bottom: 10px;
+    .link {
       text-align: center;
-      font-size: 0.95em;
-      min-height: 22px;
+      margin-top: 1em;
     }
-
-    iframe {
-      width: 100%;
-      height: 80vh;
-      border: none;
-      border-radius: 10px;
-      box-shadow: 0 0 12px rgba(102,36,131,0.10);
+    .link a {
+      color: #662483;
+      text-decoration: none;
     }
-
-    @media (max-width: 768px) {
-      header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .header-right {
-        margin-left: 0;
-        justify-content: flex-start;
-      }
+    .link a:hover {
+      text-decoration: underline;
+    }
+    .message {
+      color: red;
+      font-size: 0.9em;
+      text-align: center;
+      min-height: 20px;
     }
   </style>
 </head>
 <body>
-  <div class="page-wrapper">
-    <header style="display: none;" id="app-header">
-      <div class="header-left">
-        <img src="paex360-logo.png" alt="Logo PaEx360">
-        <span class="header-title">Cuadro de Mando Certificación PaEx360</span>
-      </div>
-      <div class="header-right">
-        <span class="user-label" id="user-name"></span>
-        <button class="logout-btn" id="logout-btn">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-            <path d="M16 13v-2H7V8l-5 4 5 4v-3h9zM20 3H4a2 2 0 0 0-2 2v4h2V5h16v14H4v-4H2v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"/>
-          </svg>
-          Cerrar sesión
-        </button>
-      </div>
-    </header>
-
-    <div id="centered-content">
-      <div class="login-container" id="login-form">
-        <img src="paex360-logo.png" alt="Logo PaEx360" class="logo" id="logo-img">
-        <div class="login-title">Bienvenido a PaEx360</div>
-        <div class="error-msg" id="error-msg"></div>
-        <form onsubmit="return doLogin(event)">
-          <div class="input-group">
-            <label for="user">Usuario</label>
-            <input type="text" id="user" required autocomplete="username">
-          </div>
-          <div class="input-group">
-            <label for="pass">Contraseña</label>
-            <input type="password" id="pass" required autocomplete="current-password">
-          </div>
-          <button type="submit" class="btn">Ingresar</button>
-        </form>
-      </div>
-
-      <div class="powerbi-container" id="powerbi" style="display:none;">
-        <iframe title="Power BI"
-          src="https://app.powerbi.com/view?r=eyJrIjoiZTZkNzkxNGQtYzgwYS00MWFmLWE0OTItOTNjOGU5MzYzNjQwIiwidCI6IjJkODcwNTVkLTBlYmItNDdmNy05OTU5LWU3OWYwYzBhMzNkNyJ9"
-          allowfullscreen="true" loading="lazy">
-        </iframe>
-      </div>
+  <div class="container">
+    <h2>Login PaEx360</h2>
+    <div class="message" id="message"></div>
+    <input type="email" id="email" placeholder="Correo electrónico">
+    <input type="password" id="password" placeholder="Contraseña">
+    <button onclick="login()">Ingresar</button>
+    <div class="link">
+      <a href="#" onclick="resetPassword()">¿Olvidaste tu contraseña?</a>
     </div>
   </div>
 
   <script>
-    function doLogin(e) {
-      e.preventDefault();
-      const user = document.getElementById('user').value.trim();
-      const pass = document.getElementById('pass').value.trim();
-      const err = document.getElementById('error-msg');
+    // Tu configuración Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyDFf8HvV2B5rkFt1qrYhcjWdpxKu5PCqnM",
+      authDomain: "paex360.firebaseapp.com",
+      projectId: "paex360",
+      storageBucket: "paex360.firebasestorage.app",
+      messagingSenderId: "631937872255",
+      appId: "1:631937872255:web:c1777de83ce839bbbdea4a"
+    };
 
-      if (user === 'prueba expa' && pass === 'Expa2025') {
-        document.getElementById('login-form').style.display = 'none';
-        document.getElementById('powerbi').style.display = 'flex';
-        document.getElementById('app-header').style.display = 'flex';
-        document.getElementById('user-name').textContent = 'Bienvenido, ' + user;
-        document.getElementById('centered-content').style.justifyContent = 'flex-start';
-      } else {
-        err.textContent = 'Usuario o contraseña incorrectos';
-      }
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    function login() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const msg = document.getElementById('message');
+      auth.signInWithEmailAndPassword(email, password)
+        .then(userCredential => {
+          msg.style.color = 'green';
+          msg.textContent = 'Ingreso exitoso';
+          // Redireccionar o mostrar dashboard aquí
+        })
+        .catch(error => {
+          msg.style.color = 'red';
+          msg.textContent = error.message;
+        });
     }
 
-    document.addEventListener('DOMContentLoaded', function () {
-      const logoutBtn = document.getElementById('logout-btn');
-      if (logoutBtn) {
-        logoutBtn.addEventListener('click', function () {
-          // Limpiar campos
-          document.getElementById('user').value = '';
-          document.getElementById('pass').value = '';
-          document.getElementById('error-msg').textContent = '';
-
-          // Mostrar login y ocultar secciones
-          document.getElementById('login-form').style.display = 'block';
-          document.getElementById('powerbi').style.display = 'none';
-          document.getElementById('app-header').style.display = 'none';
-
-          // Restaurar login visual
-          document.getElementById('centered-content').style.justifyContent = 'center';
-        });
+    function resetPassword() {
+      const email = document.getElementById('email').value;
+      const msg = document.getElementById('message');
+      if (!email) {
+        msg.textContent = 'Por favor ingresa tu correo para recuperar la contraseña';
+        return;
       }
-    });
+      auth.sendPasswordResetEmail(email)
+        .then(() => {
+          msg.style.color = 'green';
+          msg.textContent = 'Se ha enviado un correo para restablecer la contraseña';
+        })
+        .catch(error => {
+          msg.style.color = 'red';
+          msg.textContent = error.message;
+        });
+    }
   </script>
 </body>
 </html>

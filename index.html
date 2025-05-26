@@ -75,10 +75,19 @@
     #register-form {
       display: none;
     }
+    #dashboard {
+      display: none;
+    }
+    iframe {
+      width: 100%;
+      height: 80vh;
+      border: none;
+      border-radius: 10px;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="container" id="auth-container">
     <img src="paex360-logo.png" alt="Logo PaEx360">
     <h2 id="form-title">Login PaEx360</h2>
     <div class="message" id="message"></div>
@@ -103,6 +112,13 @@
     </div>
   </div>
 
+  <div id="dashboard">
+    <iframe title="Power BI Dashboard"
+      src="https://app.powerbi.com/view?r=eyJrIjoiZTZkNzkxNGQtYzgwYS00MWFmLWE0OTItOTNjOGU5MzYzNjQwIiwidCI6IjJkODcwNTVkLTBlYmItNDdmNy05OTU5LWU3OWYwYzBhMzNkNyJ9"
+      allowfullscreen="true">
+    </iframe>
+  </div>
+
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyDFf8HvV2B5rkFt1qrYhcjWdpxKu5PCqnM",
@@ -124,6 +140,7 @@
         .then(userCredential => {
           msg.style.color = 'green';
           msg.textContent = 'Ingreso exitoso';
+          showDashboard();
         })
         .catch(error => {
           msg.style.color = 'red';
@@ -177,6 +194,11 @@
           msg.style.color = 'red';
           msg.textContent = error.message;
         });
+    }
+
+    function showDashboard() {
+      document.getElementById('auth-container').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
     }
   </script>
 </body>

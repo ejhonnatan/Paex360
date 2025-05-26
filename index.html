@@ -10,94 +10,124 @@
       --blanco: #fff;
       --gris-claro: #f4f4f4;
     }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       background: var(--gris-claro);
       font-family: 'Segoe UI', Arial, sans-serif;
       margin: 0;
       padding: 0;
-      min-height: 100vh;
+    }
+
+    .page-wrapper {
       display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .centered-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
     }
+
     .login-container, .powerbi-container {
       background: var(--blanco);
       border-radius: 16px;
       box-shadow: 0 0 24px rgba(0,0,0,0.08);
       padding: 32px 24px;
       width: 100%;
-      max-width: 340px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      max-width: 420px;
       animation: fadeIn 0.7s;
+      margin: 0 auto;
     }
+
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
     .logo {
       width: 110px;
       margin-bottom: 18px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
     }
+
     .login-title {
       color: var(--morado-paex);
-      font-size: 1.3em;
+      font-size: 1.5em;
       font-weight: 600;
       margin-bottom: 24px;
       text-align: center;
     }
+
     .input-group {
       margin-bottom: 18px;
       width: 100%;
     }
+
     .input-group label {
       display: block;
       font-size: 0.97em;
       margin-bottom: 5px;
       color: #494949;
     }
+
     .input-group input {
       width: 100%;
-      padding: 9px 10px;
+      padding: 10px;
       border: 1.5px solid #ddd;
       border-radius: 5px;
       font-size: 1em;
       transition: border 0.2s;
     }
+
     .input-group input:focus {
       outline: none;
       border: 1.5px solid var(--morado-paex);
     }
+
     .btn {
       background: var(--morado-paex);
       color: var(--blanco);
       border: none;
-      padding: 10px 0;
+      padding: 12px 0;
       border-radius: 5px;
       width: 100%;
-      font-size: 1.08em;
+      font-size: 1.1em;
       font-weight: 600;
       cursor: pointer;
-      margin-top: 5px;
+      margin-top: 10px;
       transition: background 0.2s;
     }
+
     .btn:hover {
       background: #4f1d64;
     }
+
     .logout-btn {
       background: #c0392b;
       color: var(--blanco);
       border: none;
-      padding: 9px 0;
+      padding: 12px 0;
       border-radius: 5px;
       width: 100%;
-      font-size: 1em;
+      font-size: 1.05em;
       font-weight: 600;
       cursor: pointer;
-      margin: 14px 0 0 0;
+      margin: 20px 0 0 0;
       transition: background 0.2s;
     }
+
     .logout-btn:hover {
       background: #922b1b;
     }
+
     .error-msg {
       color: #c0392b;
       margin-bottom: 10px;
@@ -105,52 +135,59 @@
       font-size: 0.95em;
       min-height: 22px;
     }
-    .powerbi-container iframe {
+
+    iframe {
       width: 100%;
-      min-height: 380px;
-      height: 58vw;
-      max-height: 500px;
+      min-height: 400px;
+      height: 60vw;
+      max-height: 520px;
       border: none;
       border-radius: 10px;
       box-shadow: 0 0 12px rgba(102,36,131,0.10);
-      display: block;
     }
-    @media (max-width: 400px) {
+
+    @media (max-width: 480px) {
       .login-container, .powerbi-container {
-        padding: 16px 3vw;
-        max-width: 99vw;
+        padding: 20px 16px;
+        max-width: 100%;
       }
-      .powerbi-container iframe {
-        width: 95vw;
-        min-width: 220px;
+
+      iframe {
+        height: 70vw;
       }
     }
   </style>
 </head>
 <body>
-  <div class="login-container" id="login-form">
-    <img src="paex360-logo.png" alt="Logo PaEx360" class="logo" id="logo-img">
-    <div class="login-title">Bienvenido a PaEx360</div>
-    <div class="error-msg" id="error-msg"></div>
-    <form onsubmit="return doLogin(event)">
-      <div class="input-group">
-        <label for="user">Usuario</label>
-        <input type="text" id="user" required autocomplete="username">
+  <div class="page-wrapper">
+    <div class="centered-content">
+      <div class="login-container" id="login-form">
+        <img src="paex360-logo.png" alt="Logo PaEx360" class="logo" id="logo-img">
+        <div class="login-title">Bienvenido a PaEx360</div>
+        <div class="error-msg" id="error-msg"></div>
+        <form onsubmit="return doLogin(event)">
+          <div class="input-group">
+            <label for="user">Usuario</label>
+            <input type="text" id="user" required autocomplete="username">
+          </div>
+          <div class="input-group">
+            <label for="pass">Contraseña</label>
+            <input type="password" id="pass" required autocomplete="current-password">
+          </div>
+          <button type="submit" class="btn">Ingresar</button>
+        </form>
       </div>
-      <div class="input-group">
-        <label for="pass">Contraseña</label>
-        <input type="password" id="pass" required autocomplete="current-password">
+
+      <div class="powerbi-container" id="powerbi" style="display:none;">
+        <iframe title="Prueba imagen"
+          src="https://app.powerbi.com/view?r=eyJrIjoiZTZkNzkxNGQtYzgwYS00MWFmLWE0OTItOTNjOGU5MzYzNjQwIiwidCI6IjJkODcwNTVkLTBlYmItNDdmNy05OTU5LWU3OWYwYzBhMzNkNyJ9"
+          allowfullscreen="true" loading="lazy">
+        </iframe>
+        <button class="logout-btn" id="logout-btn">Cerrar sesión</button>
       </div>
-      <button type="submit" class="btn">Ingresar</button>
-    </form>
+    </div>
   </div>
-  <div class="powerbi-container" id="powerbi" style="display:none; flex-direction: column;">
-    <iframe title="Pruba imagen"
-      src="https://app.powerbi.com/view?r=eyJrIjoiZTZkNzkxNGQtYzgwYS00MWFmLWE0OTItOTNjOGU5MzYzNjQwIiwidCI6IjJkODcwNTVkLTBlYmItNDdmNy05OTU5LWU3OWYwYzBhMzNkNyJ9"
-      allowfullscreen="true">
-    </iframe>
-    <button class="logout-btn" id="logout-btn">Cerrar sesión</button>
-  </div>
+
   <script>
     function doLogin(e) {
       e.preventDefault();
@@ -159,7 +196,7 @@
       const err = document.getElementById('error-msg');
       if (user === 'prueba expa' && pass === 'Expa2025') {
         document.getElementById('login-form').style.display = 'none';
-        document.getElementById('powerbi').style.display = 'flex';
+        document.getElementById('powerbi').style.display = 'block';
         return false;
       } else {
         err.textContent = 'Usuario o contraseña incorrectos';
@@ -167,16 +204,14 @@
       }
     }
 
-    // Botón cerrar sesión
     document.addEventListener('DOMContentLoaded', function() {
       const logoutBtn = document.getElementById('logout-btn');
       if (logoutBtn) {
         logoutBtn.addEventListener('click', function() {
-          // Limpiar campos y mostrar login nuevamente
           document.getElementById('user').value = '';
           document.getElementById('pass').value = '';
           document.getElementById('error-msg').textContent = '';
-          document.getElementById('login-form').style.display = 'flex';
+          document.getElementById('login-form').style.display = 'block';
           document.getElementById('powerbi').style.display = 'none';
         });
       }

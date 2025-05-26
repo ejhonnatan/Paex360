@@ -195,7 +195,9 @@
         })
         .catch(error => {
           msg.style.color = 'red';
-          msg.textContent = error.message;
+          msg.style.fontWeight = 'bold';
+          msg.style.fontSize = '1em';
+          msg.innerHTML = '<span style="color: #c0392b; display: inline-flex; align-items: center; gap: 6px;"><svg xmlns="http://www.w3.org/2000/svg" fill="#c0392b" viewBox="0 0 24 24" width="20" height="20"><path d="M12 10.586l4.95-4.95 1.414 1.414L13.414 12l4.95 4.95-1.414 1.414L12 13.414l-4.95 4.95-1.414-1.414L10.586 12l-4.95-4.95 1.414-1.414L12 10.586z"/></svg>Credenciales inválidas. Verifica tus datos o regístrate.</span>';
         });
     }
 

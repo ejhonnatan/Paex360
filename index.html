@@ -92,6 +92,15 @@
       justify-content: space-between;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header-left img {
+      width: 36px;
+      height: auto;
+    }
     header .title {
       font-weight: bold;
       color: #662483;
@@ -139,7 +148,10 @@
 
   <div id="dashboard">
     <header>
-      <span class="title">Cuadro de Mando PaEx360</span>
+      <div class="header-left">
+        <img src="paex360-logo.png" alt="Logo pequeño">
+        <span class="title">Cuadro de Mando PaEx360</span>
+      </div>
       <div class="user">
         <span id="welcome-msg">Bienvenido, <span id="user-email"></span></span>
         <button onclick="logout()" style="padding: 5px 10px; background:#fff; color:#662483; border: 2px solid #662483; border-radius: 5px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 6px;">

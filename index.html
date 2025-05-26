@@ -125,21 +125,30 @@
     }
 
     .logout-btn {
-      background: #c0392b;
-      color: var(--blanco);
-      border: none;
-      padding: 12px 0;
-      border-radius: 5px;
-      width: 100%;
-      font-size: 1.05em;
+      background: transparent;
+      color: var(--morado-paex);
+      border: 2px solid var(--morado-paex);
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 1em;
       font-weight: 600;
       cursor: pointer;
-      margin: 20px 0 0 0;
-      transition: background 0.2s;
+      margin: 20px auto 0 auto;
+      transition: all 0.2s ease-in-out;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .logout-btn:hover {
-      background: #922b1b;
+      background: var(--morado-paex);
+      color: var(--blanco);
+    }
+
+    .logout-btn svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
     }
 
     .error-msg {
@@ -191,11 +200,16 @@
       </div>
 
       <div class="powerbi-container" id="powerbi" style="display:none;">
-        <iframe title="Prueba imagen"
+        <iframe title="Power BI"
           src="https://app.powerbi.com/view?r=eyJrIjoiZTZkNzkxNGQtYzgwYS00MWFmLWE0OTItOTNjOGU5MzYzNjQwIiwidCI6IjJkODcwNTVkLTBlYmItNDdmNy05OTU5LWU3OWYwYzBhMzNkNyJ9"
           allowfullscreen="true" loading="lazy">
         </iframe>
-        <button class="logout-btn" id="logout-btn">Cerrar sesión</button>
+        <button class="logout-btn" id="logout-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M16 13v-2H7V8l-5 4 5 4v-3h9zM20 3H4a2 2 0 0 0-2 2v4h2V5h16v14H4v-4H2v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"/>
+          </svg>
+          Cerrar sesión
+        </button>
       </div>
     </div>
   </div>

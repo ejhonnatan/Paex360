@@ -16,29 +16,36 @@ exports.handler = async (event) => {
   }
 
   try {
-    // 2) Leer datos de la petición
+    // 2) Leer parámetros
     const { workspaceId, reportId } = JSON.parse(event.body);
 
-    // 3) Credenciales y WSDL
+    // 3) Credenciales + WSDL
     const username = process.env.PBI_USER;
     const password = process.env.PBI_PASS;
-    const WSDL = "https://bo-emea.opinat.com/index.php/ws/api-soap/ws?wsdl"; // o bo-latam si aplica
+    const WSDL = "https://bo-emea.opinat.com/index.php/ws/api-soap/ws?wsdl";
 
-    // 4) Crear cliente SOAP
+    // 4) Cliente SOAP
     const client = await soap.createClientAsync(WSDL);
 
-    // 5) Llamada única a la API con los cuatro argumentos requeridos
+    // 5) Login y sessionId
+    const [loginRes] = await client.apiLoginAsync({ username, password });
+    const sessionId = loginRes.return.$value;
+    client.addHttpHeader("Cookie", "JSESSIONID=" + sessionId);
+
+    // 6) Llamada embed con los 4 parámetros
     const [raw] = await client.apiGetPowerBiAccessAsync({
-      username,    // ← usuario back-office
-      password,    // ← contraseña back-office
-      workspaceId, // ← tu workspace ID
-      reportId     // ← tu report ID
+      username,
+      password,
+      workspaceId,
+      reportId,
     });
 
-    // 6) Parsear respuesta
-    const data = JSON.parse(raw);
+    // 7) Parsear sólo si raw es string
+    const data = (typeof raw === "string")
+      ? JSON.parse(raw)
+      : raw;
 
-    // 7) Devolver al front con CORS
+    // 8) Responder con CORS
     return {
       statusCode: 200,
       headers: {

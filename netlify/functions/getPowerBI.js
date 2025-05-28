@@ -2,14 +2,14 @@
 const soap = require("soap");
 
 exports.handler = async (event) => {
-  /* 1️⃣  Responder la petición pre-flight (OPTIONS) */
+  /* ───── Preflight OPTIONS ───── */
   if (event.httpMethod === "OPTIONS") {
     return {
       statusCode: 200,
       headers: {
-        "Access-Control-Allow-Origin": "https://ejhonnatan.github.io",
-        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Allow-Origin": "https://ejhonnatan.github.io",   // ← tu dominio
         "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
       },
       body: "OK",
     };
@@ -17,10 +17,11 @@ exports.handler = async (event) => {
 
   try {
     const { workspaceId, reportId } = JSON.parse(event.body);
+
     const username = process.env.PBI_USER;
     const password = process.env.PBI_PASS;
     const WSDL =
-      "https://bo-emea.opinat.com/index.php/ws/api-soap/ws?wsdl"; // o latam
+      "https://bo-emea.opinat.com/index.php/ws/api-soap/ws?wsdl"; // usa latam si toca
 
     const client = await soap.createClientAsync(WSDL);
     const [raw] = await client.apiGetPowerBiAccessAsync({
@@ -32,7 +33,6 @@ exports.handler = async (event) => {
 
     const data = JSON.parse(raw);
 
-    /* 2️⃣  Respuesta normal con cabecera CORS */
     return {
       statusCode: 200,
       headers: {
@@ -50,7 +50,7 @@ exports.handler = async (event) => {
       headers: {
         "Access-Control-Allow-Origin": "https://ejhonnatan.github.io",
       },
-      body: "Error generando token",
+      body: "Error generando token: " + err.message,
     };
   }
 };

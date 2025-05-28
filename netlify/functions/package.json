@@ -1,6 +1,1 @@
-{
-  "name": "paex360-functions",
-  "dependencies": {
-    "soap": "^0.42.0"
-  }
-}
+chore: remove functions/package.json (moved to root)

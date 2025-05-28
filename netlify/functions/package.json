@@ -1,0 +1,6 @@
+{
+  "name": "paex360-functions",
+  "dependencies": {
+    "soap": "^0.42.0"
+  }
+}

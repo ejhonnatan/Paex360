@@ -77,9 +77,6 @@
       text-align: center;
       min-height: 20px;
     }
-    #register-form {
-      display: none;
-    }
     #dashboard {
       display: none;
       flex-direction: column;
@@ -131,17 +128,7 @@
         <input type="password" id="password" placeholder="Contraseña">
         <button onclick="login()">Ingresar</button>
         <div class="link">
-          <a href="#" onclick="resetPassword()">¿Olvidaste tu contraseña?</a>
-          <a href="#" onclick="showRegister()">Crear cuenta</a>
-        </div>
-      </div>
-
-      <div id="register-form">
-        <input type="email" id="register-email" placeholder="Correo electrónico">
-        <input type="password" id="register-password" placeholder="Contraseña">
-        <button onclick="register()">Registrarse</button>
-        <div class="link">
-          <a href="#" onclick="showLogin()">Volver al login</a>
+          <a href="#" onclick="resetPassword()">¿Cambiar contraseña?</a>
         </div>
       </div>
     </div>
@@ -197,7 +184,7 @@
           msg.style.color = 'red';
           msg.style.fontWeight = 'bold';
           msg.style.fontSize = '1em';
-          msg.innerHTML = '<span style="color: #c0392b; display: inline-flex; align-items: center; gap: 6px;"><svg xmlns="http://www.w3.org/2000/svg" fill="#c0392b" viewBox="0 0 24 24" width="20" height="20"><path d="M12 10.586l4.95-4.95 1.414 1.414L13.414 12l4.95 4.95-1.414 1.414L12 13.414l-4.95 4.95-1.414-1.414L10.586 12l-4.95-4.95 1.414-1.414L12 10.586z"/></svg>Credenciales inválidas. Verifica tus datos o regístrate.</span>';
+          msg.innerHTML = '<span style="color: #c0392b; display: inline-flex; align-items: center; gap: 6px;"><svg xmlns="http://www.w3.org/2000/svg" fill="#c0392b" viewBox="0 0 24 24" width="20" height="20"><path d="M12 10.586l4.95-4.95 1.414 1.414L13.414 12l4.95 4.95-1.414 1.414L12 13.414l-4.95 4.95-1.414-1.414L10.586 12l-4.95-4.95 1.414-1.414L12 10.586z"/></svg>Credenciales inválidas. Verifica tus datos o contacta soporte.</span>';
         });
     }
 
@@ -205,43 +192,15 @@
       const email = document.getElementById('email').value;
       const msg = document.getElementById('message');
       if (!email) {
-        msg.textContent = 'Por favor ingresa tu correo para recuperar la contraseña';
+        msg.style.color = 'red';
+        msg.style.fontWeight = 'bold';
+        msg.textContent = 'Por favor ingresa tu correo para cambiar la contraseña';
         return;
       }
       auth.sendPasswordResetEmail(email)
         .then(() => {
           msg.style.color = 'green';
-          msg.textContent = 'Se ha enviado un correo para restablecer la contraseña';
-        })
-        .catch(error => {
-          msg.style.color = 'red';
-          msg.textContent = error.message;
-        });
-    }
-
-    function showRegister() {
-      document.getElementById('login-form').style.display = 'none';
-      document.getElementById('register-form').style.display = 'block';
-      document.getElementById('form-title').textContent = 'Crear cuenta';
-      document.getElementById('message').textContent = '';
-    }
-
-    function showLogin() {
-      document.getElementById('login-form').style.display = 'block';
-      document.getElementById('register-form').style.display = 'none';
-      document.getElementById('form-title').textContent = 'Login PaEx360';
-      document.getElementById('message').textContent = '';
-    }
-
-    function register() {
-      const email = document.getElementById('register-email').value;
-      const password = document.getElementById('register-password').value;
-      const msg = document.getElementById('message');
-      auth.createUserWithEmailAndPassword(email, password)
-        .then(userCredential => {
-          msg.style.color = 'green';
-          msg.textContent = 'Usuario registrado con éxito';
-          showLogin();
+          msg.textContent = 'Se ha enviado un correo para cambiar la contraseña';
         })
         .catch(error => {
           msg.style.color = 'red';
@@ -258,7 +217,6 @@
       auth.signOut().then(() => {
         document.getElementById('auth-container').style.display = 'flex';
         document.getElementById('dashboard').style.display = 'none';
-        showLogin();
       });
     }
   </script>

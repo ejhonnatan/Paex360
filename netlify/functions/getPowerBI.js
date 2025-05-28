@@ -1,7 +1,8 @@
+// netlify/functions/getPowerBI.js
 const soap = require("soap");
 
 exports.handler = async (event) => {
-  // CORS pre-flight
+  // 1) Preflight CORS
   if (event.httpMethod === "OPTIONS") {
     return {
       statusCode: 200,
@@ -15,36 +16,38 @@ exports.handler = async (event) => {
   }
 
   try {
+    // 2) Leer parámetros de la petición
     const { workspaceId, reportId } = JSON.parse(event.body);
+
+    // 3) Credenciales y endpoint SOAP
     const username = process.env.PBI_USER;
     const password = process.env.PBI_PASS;
-    const WSDL =
-      "https://bo-emea.opinat.com/index.php/ws/api-soap/ws?wsdl"; // o https://bo-latam.opinat.com/... si aplica
+    const WSDL = "https://bo-emea.opinat.com/index.php/ws/api-soap/ws?wsdl"; // o bo-latam si aplica
 
-    // 1) Crear cliente SOAP
+    // 4) Crear cliente SOAP
     const client = await soap.createClientAsync(WSDL);
 
-    // 2) Autenticar (apiLogin)
-    const [loginRes] = await client.apiLoginAsync({
-      username,
-      password,
-    });
-    const sessionId = loginRes.sessionId;
-    // Inyectar cookie de sesión
-    client.addHttpHeader("Cookie", `JSESSIONID=${sessionId}`);
+    // 5) Paso de login: obtener sessionId
+    const [loginRes] = await client.apiLoginAsync({ username, password });
+    // Según tu prueba, viene en loginRes.return.$value
+    const sessionId = loginRes.return.$value;
 
-    // 3) Obtener embed token
+    // 6) Inyectar la cookie de sesión para siguientes llamadas
+    client.addHttpHeader("Cookie", "JSESSIONID=" + sessionId);
+
+    // 7) Llamada a la API para obtener embedToken y embedUrl
     const [raw] = await client.apiGetPowerBiAccessAsync({
-      sessionId,
       workspaceId,
       reportId,
     });
     const data = JSON.parse(raw);
 
-    // 4) Responder con token + CORS
+    // 8) Responder al front con CORS
     return {
       statusCode: 200,
-      headers: { "Access-Control-Allow-Origin": "https://ejhonnatan.github.io" },
+      headers: {
+        "Access-Control-Allow-Origin": "https://ejhonnatan.github.io",
+      },
       body: JSON.stringify({
         embedToken: data.embedToken.token,
         embedUrl: data.embedReports[0].embedUrl,
@@ -55,8 +58,10 @@ exports.handler = async (event) => {
     console.error("POWER BI ERROR:", err);
     return {
       statusCode: 500,
-      headers: { "Access-Control-Allow-Origin": "https://ejhonnatan.github.io" },
-      body: "ERROR: " + (err.message || err.toString()),
+      headers: {
+        "Access-Control-Allow-Origin": "https://ejhonnatan.github.io",
+      },
+      body: "ERROR: " + err.message,
     };
   }
 };

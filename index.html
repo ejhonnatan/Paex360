@@ -66,7 +66,7 @@
       color: #662483;
       text-decoration: none;
       display: inline-block;
-      margin: 5px 0;
+      margin: 3px 0;
     }
     .link a:hover {
       text-decoration: underline;
@@ -76,6 +76,18 @@
       font-size: 0.9em;
       text-align: center;
       min-height: 20px;
+    }
+    .footer {
+      font-size: 0.7em;
+      color: #888;
+      margin-top: 10px;
+    }
+    .footer a {
+      color: #662483;
+      text-decoration: none;
+    }
+    .footer a:hover {
+      text-decoration: underline;
     }
     #dashboard {
       display: none;
@@ -128,7 +140,11 @@
         <input type="password" id="password" placeholder="Contraseña">
         <button onclick="login()">Ingresar</button>
         <div class="link">
+          <a href="#" onclick="resetPassword()">¿Olvidaste tu contraseña?</a><br>
           <a href="#" onclick="resetPassword()">¿Cambiar contraseña?</a>
+        </div>
+        <div class="footer">
+          Powered by <a href="https://www.opinat.com/es" target="_blank">Opinat</a>
         </div>
       </div>
     </div>
@@ -184,7 +200,7 @@
           msg.style.color = 'red';
           msg.style.fontWeight = 'bold';
           msg.style.fontSize = '1em';
-          msg.innerHTML = '<span style="color: #c0392b; display: inline-flex; align-items: center; gap: 6px;"><svg xmlns="http://www.w3.org/2000/svg" fill="#c0392b" viewBox="0 0 24 24" width="20" height="20"><path d="M12 10.586l4.95-4.95 1.414 1.414L13.414 12l4.95 4.95-1.414 1.414L12 13.414l-4.95 4.95-1.414-1.414L10.586 12l-4.95-4.95 1.414-1.414L12 10.586z"/></svg>Credenciales inválidas. Verifica tus datos o contacta soporte.</span>';
+          msg.innerHTML = '<span style="color: #c0392b; display: inline-flex; align-items: center; gap: 6px;"><svg xmlns="http://www.w3.org/2000/svg" fill="#c0392b" viewBox="0 0 24 24" width="20" height="20"><path d="M12 10.586l4.95-4.95 1.414 1.414L13.414 12l4.95 4.95-1.414 1.414L12 13.414l-4.95 4.95-1.414-1.414L10.586 12l-4.95-4.95 1.414-1.414L12 10.586z"/></svg> Credenciales inválidas. Verifica tus datos o contacta soporte.</span>';
         });
     }
 

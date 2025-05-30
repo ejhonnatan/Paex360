@@ -13,115 +13,29 @@
   <script src="https://cdn.jsdelivr.net/npm/powerbi-client@2/dist/powerbi.min.js"></script>
 
   <style>
-    html, body {
-      margin: 0;
-      height: 100%;
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
-    }
-    #auth-container, #dashboard {
-      width: 100%;
-      height: 100%;
-    }
-    #auth-container {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .container {
-      background: #fff;
-      padding: 2em;
-      border-radius: 10px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.1);
-      max-width: 400px;
-      width: 100%;
-      text-align: center;
-    }
-    .container img {
-      width: 100px;
-      margin-bottom: 10px;
-    }
-    h2 {
-      color: #662483;
-    }
-    input {
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      box-sizing: border-box;
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      background: #662483;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      font-weight: bold;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-    button:hover {
-      background: #4a1960;
-    }
-    .link a {
-      color: #662483;
-      text-decoration: none;
-      display: inline-block;
-      margin: 5px 0;
-    }
-    .link a:hover {
-      text-decoration: underline;
-    }
-    .message {
-      color: red;
-      font-size: 0.9em;
-      min-height: 20px;
-      text-align: center;
-    }
-    #dashboard {
-      display: none;
-      flex-direction: column;
-    }
-    header {
-      background: #fff;
-      padding: 10px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .header-left img {
-      width: 36px;
-    }
-    .title {
-      font-weight: bold;
-      color: #662483;
-    }
-    .user {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 0.9em;
-    }
-    #reportContainer {
-      flex: 1;
-      width: 100%;
-      height: calc(100vh - 60px); /* ajustar según header */
-      display: none;
-    }
+    html, body { margin:0; height:100%; font-family:Arial,sans-serif; background:#f4f4f4; }
+    #auth-container,#dashboard { width:100%; height:100%; }
+    #auth-container { display:flex; align-items:center; justify-content:center; }
+    .container { background:#fff; padding:2em; border-radius:10px; box-shadow:0 0 15px rgba(0,0,0,0.1); max-width:400px; width:100%; text-align:center; }
+    .container img { width:100px; margin-bottom:10px; }
+    h2 { color:#662483; }
+    input { width:100%; padding:10px; margin:10px 0; border:1px solid #ccc; border-radius:5px; box-sizing:border-box; }
+    button { width:100%; padding:10px; background:#662483; color:#fff; border:none; border-radius:5px; font-weight:bold; cursor:pointer; margin-top:10px; }
+    button:hover { background:#4a1960; }
+    .link a { color:#662483; text-decoration:none; display:inline-block; margin:5px 0; }
+    .message { color:red; font-size:0.9em; min-height:20px; text-align:center; }
+    #dashboard { display:none; flex-direction:column; }
+    header { background:#fff; padding:10px 20px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 4px rgba(0,0,0,0.1); }
+    .header-left { display:flex; align-items:center; gap:10px; }
+    .header-left img { width:36px; }
+    .title { font-weight:bold; color:#662483; }
+    .user { display:flex; align-items:center; gap:12px; font-size:0.9em; }
+    #reportContainer { flex:1; width:100%; height:calc(100vh - 60px); display:none; }
   </style>
 </head>
 <body>
 
-  <!-- Contenedor de login -->
+  <!-- Login -->
   <div id="auth-container">
     <div class="container">
       <img src="paex360-logo.png" alt="Logo PaEx360">
@@ -136,7 +50,7 @@
     </div>
   </div>
 
-  <!-- Contenedor del dashboard -->
+  <!-- Dashboard -->
   <div id="dashboard">
     <header>
       <div class="header-left">
@@ -153,12 +67,11 @@
         </button>
       </div>
     </header>
-    <!-- Contenedor dinámico donde se incrustará Power BI -->
     <div id="reportContainer"></div>
   </div>
 
   <script>
-    // Configuración de Firebase
+    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyDFf8HvV2B5rkFt1qrYhcjWdpxKu5PCqnM",
       authDomain: "paex360.firebaseapp.com",
@@ -170,7 +83,7 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
 
-    // Función de login
+    // Login
     function login() {
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
@@ -187,7 +100,7 @@
         });
     }
 
-    // Función para cambiar contraseña
+    // Reset password
     function resetPassword() {
       const email = document.getElementById('email').value;
       const msg = document.getElementById('message');
@@ -200,31 +113,28 @@
         .catch(e => { msg.textContent = e.message; });
     }
 
-    // Mostrar el dashboard
+    // Show dashboard
     function showDashboard() {
-      document.getElementById('auth-container').style.display = 'none';
-      document.getElementById('dashboard').style.display = 'flex';
+      document.getElementById('auth-container').style.display  = 'none';
+      document.getElementById('dashboard').style.display       = 'flex';
     }
 
     // Logout
     function logout() {
       auth.signOut().then(() => {
-        document.getElementById('dashboard').style.display     = 'none';
-        document.getElementById('auth-container').style.display= 'flex';
+        document.getElementById('dashboard').style.display      = 'none';
+        document.getElementById('auth-container').style.display = 'flex';
       });
     }
 
-    // ─── Función para cargar el dashboard Power BI ───
+    // Cargar Power BI
     async function loadPowerBI() {
       const container = document.getElementById('reportContainer');
-
-      // Siempre mostrar y limpiar el contenedor
       container.style.display = 'block';
       container.innerHTML = '';
       console.log('▶️ Invocando loadPowerBI()');
 
       try {
-        // 1) Llamada a la función Netlify
         const resp = await fetch(
           'https://lucky-palmier-ad2422.netlify.app/.netlify/functions/getPowerBI',
           {
@@ -237,19 +147,19 @@
           }
         );
         console.log('⚙️ fetch status:', resp.status);
-
-        // 2) Si falla, mostramos mensaje
         if (!resp.ok) {
           container.innerHTML =
             '<p style="color:red;text-align:center;">No se pudo cargar el dashboard.</p>';
           return;
         }
+        let { embedToken, embedUrl, reportId } = await resp.json();
+        console.log('Raw embedUrl:', embedUrl);
 
-        // 3) Parsear JSON
-        const { embedToken, embedUrl, reportId } = await resp.json();
-        console.log('✔️ Datos recibidos:', { embedToken, embedUrl, reportId });
+        // 1) Decodificar &amp; a &
+        embedUrl = embedUrl.replace(/&amp;/g, '&');
+        console.log('Decoded embedUrl:', embedUrl);
 
-        // 4) Incrustar con Power BI client
+        // 2) Incrustar con Power BI client
         const models = window['powerbi-client'].models;
         powerbi.embed(container, {
           type:        'report',
@@ -260,7 +170,6 @@
           permissions: models.Permissions.Read,
           viewMode:    models.ViewMode.View
         });
-
       } catch (err) {
         console.error('❌ Error interno loadPowerBI():', err);
         container.innerHTML =

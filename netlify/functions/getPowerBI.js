@@ -22,7 +22,7 @@ exports.handler = async (event) => {
     // 3) Credenciales y punto SOAP (usar LATAM si tu tenant está en Latam)
     const username = process.env.PBI_USER;
     const password = process.env.PBI_PASS;
-    const WSDL = "https://bo-latam.opinat.com/index.php/ws/api-soap/ws?wsdl";
+    const WSDL = "https://bo-emea.opinat.com/index.php/ws/api-soap/ws?wsdl";
 
     // 4) Crear cliente SOAP
     const client = await soap.createClientAsync(WSDL);

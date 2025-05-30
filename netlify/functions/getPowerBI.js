@@ -2,7 +2,7 @@
 const soap = require("soap");
 
 exports.handler = async (event) => {
-  // 1) Preflight CORS
+  // 1) Responder OPTIONS para CORS
   if (event.httpMethod === "OPTIONS") {
     return {
       statusCode: 200,
@@ -16,40 +16,39 @@ exports.handler = async (event) => {
   }
 
   try {
-    // 2) Leer workspaceId y reportId del body
+    // 2) Leer workspaceId y reportId del body JSON
     const { workspaceId, reportId } = JSON.parse(event.body);
 
-    // 3) Credenciales y WSDL
+    // 3) Credenciales y punto SOAP (usar LATAM si tu tenant está en Latam)
     const username = process.env.PBI_USER;
     const password = process.env.PBI_PASS;
-    const WSDL =
-      "https://bo-emea.opinat.com/index.php/ws/api-soap/ws?wsdl"; // o bo-latam si tu tenant es LATAM
+    const WSDL = "https://bo-latam.opinat.com/index.php/ws/api-soap/ws?wsdl";
 
     // 4) Crear cliente SOAP
     const client = await soap.createClientAsync(WSDL);
 
-    // 5) Llamar a apiGetPowerBiAccess con los 4 parámetros requeridos
+    // 5) Llamar a la operación que devuelve token y URL
     const [raw] = await client.apiGetPowerBiAccessAsync({
-      username,    // usuario _Back-Office_ de Opinat
-      password,    // contraseña Back-Office
-      workspaceId, // tu workspace ID
-      reportId,    // tu report ID
+      username,
+      password,
+      workspaceId,
+      reportId,
     });
 
-    // 6) A veces raw llega ya como objeto; parsear sólo si es string
+    // 6) Si raw es string, parsearlo; si no, usarlo directamente
     const data = typeof raw === "string" ? JSON.parse(raw) : raw;
 
-    // 7) Extraer token y URL
+    // 7) Extraer los valores
     const embedToken = data.embedToken?.token;
     const embedUrl   = data.embedReports?.[0]?.embedUrl;
     const outReportId= data.embedReports?.[0]?.id;
 
     if (!embedToken || !embedUrl || !outReportId) {
-      console.error("Estructura inesperada:", JSON.stringify(data));
+      console.error("Respuesta inesperada:", JSON.stringify(data));
       throw new Error("Respuesta inválida de la API SOAP");
     }
 
-    // 8) Responder al front con CORS
+    // 8) Devolver al front-end con CORS
     return {
       statusCode: 200,
       headers: {
@@ -57,6 +56,7 @@ exports.handler = async (event) => {
       },
       body: JSON.stringify({ embedToken, embedUrl, reportId: outReportId }),
     };
+
   } catch (err) {
     console.error("POWER BI ERROR:", err);
     return {

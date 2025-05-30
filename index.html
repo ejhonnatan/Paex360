@@ -1,142 +1,56 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <link rel="icon" type="image/png" href="paex360-logo.png">
   <meta charset="UTF-8">
   <title>PaEx360</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Firebase JS SDK -->
+  <link rel="icon" href="paex360-logo.png">
+
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <!-- Power BI client -->
+  <script src="https://cdn.jsdelivr.net/npm/powerbi-client@2/dist/powerbi.min.js"></script>
+
   <style>
-    html, body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
-      height: 100%;
-      width: 100%;
-    }
-    #auth-container {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-    }
-    .container {
-      background: #fff;
-      padding: 2em;
-      border-radius: 10px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.1);
-      max-width: 400px;
-      width: 100%;
-      text-align: center;
-    }
-    .container img {
-      width: 100px;
-      margin-bottom: 10px;
-    }
-    h2 {
-      color: #662483;
-    }
-    input[type="email"],
-    input[type="password"] {
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      background-color: #662483;
-      border: none;
-      color: white;
-      font-weight: bold;
-      border-radius: 5px;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-    button:hover {
-      background-color: #4a1960;
-    }
-    .link {
-      margin-top: 1em;
-    }
-    .link a {
-      color: #662483;
-      text-decoration: none;
-      display: inline-block;
-      margin: 5px 0;
-    }
-    .link a:hover {
-      text-decoration: underline;
-    }
-    .message {
-      color: red;
-      font-size: 0.9em;
-      text-align: center;
-      min-height: 20px;
-    }
-    #dashboard {
-      display: none;
-      flex-direction: column;
-      height: 100vh;
-    }
-    header {
-      background: #fff;
-      padding: 10px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .header-left img {
-      width: 36px;
-      height: auto;
-    }
-    header .title {
-      font-weight: bold;
-      color: #662483;
-    }
-    header .user {
-      font-size: 0.9em;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    iframe {
-      flex: 1;
-      width: 100%;
-      border: none;
-    }
+    html, body { margin:0; height:100%; font-family:Arial,sans-serif; background:#f4f4f4; }
+    #auth-container, #dashboard { width:100%; height:100%; }
+    #auth-container { display:flex; justify-content:center; align-items:center; }
+    .container { background:#fff; padding:2em; border-radius:10px; box-shadow:0 0 15px rgba(0,0,0,0.1); max-width:400px; width:100%; text-align:center; }
+    .container img { width:100px; margin-bottom:10px; }
+    h2 { color:#662483; }
+    input { width:100%; padding:10px; margin:10px 0; border:1px solid #ccc; border-radius:5px; }
+    button { width:100%; padding:10px; background:#662483; color:#fff; border:none; border-radius:5px; font-weight:bold; cursor:pointer; }
+    button:hover { background:#4a1960; }
+    .link a { color:#662483; text-decoration:none; display:inline-block; margin:5px 0; }
+    .message { color:red; font-size:0.9em; min-height:20px; text-align:center; }
+    #dashboard { display:none; flex-direction:column; }
+    header { background:#fff; padding:10px 20px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 4px rgba(0,0,0,0.1); }
+    .header-left { display:flex; align-items:center; gap:10px; }
+    .header-left img { width:36px; }
+    .title { font-weight:bold; color:#662483; }
+    .user { display:flex; align-items:center; gap:12px; font-size:0.9em; }
+    #reportContainer { flex:1; width:100%; height:100%; display:none; }
   </style>
 </head>
 <body>
-  <!-- Contenedor de login -->
+
+  <!-- 1) Login -->
   <div id="auth-container">
     <div class="container">
       <img src="paex360-logo.png" alt="Logo PaEx360">
-      <h2 id="form-title">Login PaEx360</h2>
-      <div class="message" id="message"></div>
-
-      <div id="login-form">
-        <input type="email" id="email" placeholder="Correo electrónico">
-        <input type="password" id="password" placeholder="Contraseña">
-        <button onclick="login()">Ingresar</button>
-        <div class="link">
-          <a href="#" onclick="resetPassword()">¿Cambiar contraseña?</a>
-        </div>
+      <h2>Login PaEx360</h2>
+      <div id="message" class="message"></div>
+      <input type="email" id="email" placeholder="Correo electrónico">
+      <input type="password" id="password" placeholder="Contraseña">
+      <button onclick="login()">Ingresar</button>
+      <div class="link">
+        <a href="#" onclick="resetPassword()">¿Cambiar contraseña?</a>
       </div>
     </div>
   </div>
 
-  <!-- Contenedor del dashboard -->
+  <!-- 2) Dashboard -->
   <div id="dashboard">
     <header>
       <div class="header-left">
@@ -144,9 +58,8 @@
         <span class="title">Cuadro de Mando PaEx360</span>
       </div>
       <div class="user">
-        <span id="welcome-msg">Bienvenido, <span id="user-email"></span></span>
-        <button onclick="logout()" style="padding: 5px 10px; background:#fff; color:#662483; border: 2px solid #662483; border-radius: 5px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 6px;">
-          <!-- Icono de logout -->
+        <span>Bienvenido, <b id="user-email"></b></span>
+        <button onclick="logout()" style="background:#fff;color:#662483;border:2px solid #662483;padding:5px 10px;border-radius:5px;display:flex;align-items:center;gap:6px;">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
             <path d="M16 13v-2H7V8l-5 4 5 4v-3h9zM20 3H4a2 2 0 0 0-2 2v4h2V5h16v14H4v-4H2v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"/>
           </svg>
@@ -154,15 +67,12 @@
         </button>
       </div>
     </header>
-    <!-- Aquí luego insertaremos el embed de PowerBI -->
-    <iframe title="Power BI Dashboard"
-      src=""
-      allowfullscreen="true">
-    </iframe>
+    <!-- aquí cargaremos dinámicamente Power BI -->
+    <div id="reportContainer"></div>
   </div>
 
   <script>
-    // Configuración de Firebase
+    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyDFf8HvV2B5rkFt1qrYhcjWdpxKu5PCqnM",
       authDomain: "paex360.firebaseapp.com",
@@ -174,66 +84,85 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
 
-    // Función de login
+    // Login
     function login() {
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
       const msg = document.getElementById('message');
       auth.signInWithEmailAndPassword(email, password)
-        .then(userCredential => {
-          msg.style.color = 'green';
-          msg.textContent = 'Ingreso exitoso';
+        .then(() => {
+          msg.textContent = '';
           document.getElementById('user-email').textContent = email;
           showDashboard();
-          // loadPowerBI();  // ← temporalmente comentado para depurar
+          loadPowerBI();
         })
-        .catch(error => {
-          msg.style.color = 'red';
-          msg.style.fontWeight = 'bold';
-          msg.style.fontSize = '1em';
-          msg.innerHTML = 
-            '<span style="display:inline-flex;align-items:center;gap:6px;">' +
-            '<svg fill="#c0392b" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20">' +
-            '<path d="M12 10.586l4.95-4.95 1.414 1.414L13.414 12l4.95 4.95-1.414 1.414L12 13.414l-4.95 4.95-1.414-1.414L10.586 12l-4.95-4.95 1.414-1.414L12 10.586z"/>' +
-            '</svg>' +
-            'Credenciales inválidas. Verifica tus datos.' +
-            '</span>';
+        .catch(err => {
+          msg.textContent = 'Credenciales inválidas. Verifica tus datos.';
         });
     }
 
-    // Función de cambio de contraseña
+    // Reset password
     function resetPassword() {
       const email = document.getElementById('email').value;
       const msg = document.getElementById('message');
       if (!email) {
-        msg.style.color = 'red';
-        msg.style.fontWeight = 'bold';
-        msg.textContent = 'Por favor ingresa tu correo para cambiar la contraseña';
+        msg.textContent = 'Ingresa tu correo para cambiar la contraseña';
         return;
       }
       auth.sendPasswordResetEmail(email)
-        .then(() => {
-          msg.style.color = 'green';
-          msg.textContent = 'Correo enviado para restablecer contraseña';
-        })
-        .catch(error => {
-          msg.style.color = 'red';
-          msg.textContent = error.message;
-        });
+        .then(() => { msg.style.color='green'; msg.textContent='Correo enviado'; })
+        .catch(e => { msg.textContent = e.message; });
     }
 
-    // Mostrar el dashboard
+    // Mostrar dashboard
     function showDashboard() {
-      document.getElementById('auth-container').style.display = 'none';
-      document.getElementById('dashboard').style.display = 'flex';
+      document.getElementById('auth-container').style.display  = 'none';
+      document.getElementById('dashboard').style.display       = 'flex';
     }
 
     // Logout
     function logout() {
       auth.signOut().then(() => {
-        document.getElementById('auth-container').style.display = 'flex';
-        document.getElementById('dashboard').style.display = 'none';
+        document.getElementById('dashboard').style.display     = 'none';
+        document.getElementById('auth-container').style.display= 'flex';
       });
+    }
+
+    // Cargar Power BI
+    async function loadPowerBI() {
+      const container = document.getElementById('reportContainer');
+      try {
+        const resp = await fetch(
+          'https://lucky-palmier-ad2422.netlify.app/.netlify/functions/getPowerBI',
+          {
+            method: 'POST',
+            headers: { 'Content-Type':'application/json' },
+            body: JSON.stringify({
+              workspaceId: '7230301b-540b-4f1a-b94d-c3ff22d4564d',
+              reportId:   '4c205074-37ca-452d-b2cf-134e57e7cb96'
+            })
+          }
+        );
+        if (!resp.ok) {
+          container.innerHTML = '<p style="color:red;text-align:center;">No se pudo cargar el dashboard.</p>';
+          return;
+        }
+        const { embedToken, embedUrl, reportId } = await resp.json();
+        container.style.display = 'block';
+        const models = window['powerbi-client'].models;
+        powerbi.embed(container, {
+          type: 'report',
+          id: reportId,
+          embedUrl,
+          accessToken: embedToken,
+          tokenType: models.TokenType.Embed,
+          permissions: models.Permissions.Read,
+          viewMode: models.ViewMode.View
+        });
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = '<p style="color:red;text-align:center;">Error interno al cargar el dashboard.</p>';
+      }
     }
   </script>
 </body>

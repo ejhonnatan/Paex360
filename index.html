@@ -13,29 +13,115 @@
   <script src="https://cdn.jsdelivr.net/npm/powerbi-client@2/dist/powerbi.min.js"></script>
 
   <style>
-    html, body { margin:0; height:100%; font-family:Arial,sans-serif; background:#f4f4f4; }
-    #auth-container, #dashboard { width:100%; height:100%; }
-    #auth-container { display:flex; justify-content:center; align-items:center; }
-    .container { background:#fff; padding:2em; border-radius:10px; box-shadow:0 0 15px rgba(0,0,0,0.1); max-width:400px; width:100%; text-align:center; }
-    .container img { width:100px; margin-bottom:10px; }
-    h2 { color:#662483; }
-    input { width:100%; padding:10px; margin:10px 0; border:1px solid #ccc; border-radius:5px; }
-    button { width:100%; padding:10px; background:#662483; color:#fff; border:none; border-radius:5px; font-weight:bold; cursor:pointer; }
-    button:hover { background:#4a1960; }
-    .link a { color:#662483; text-decoration:none; display:inline-block; margin:5px 0; }
-    .message { color:red; font-size:0.9em; min-height:20px; text-align:center; }
-    #dashboard { display:none; flex-direction:column; }
-    header { background:#fff; padding:10px 20px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 4px rgba(0,0,0,0.1); }
-    .header-left { display:flex; align-items:center; gap:10px; }
-    .header-left img { width:36px; }
-    .title { font-weight:bold; color:#662483; }
-    .user { display:flex; align-items:center; gap:12px; font-size:0.9em; }
-    #reportContainer { flex:1; width:100%; height:100%; display:none; }
+    html, body {
+      margin: 0;
+      height: 100%;
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+    }
+    #auth-container, #dashboard {
+      width: 100%;
+      height: 100%;
+    }
+    #auth-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      background: #fff;
+      padding: 2em;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+    }
+    .container img {
+      width: 100px;
+      margin-bottom: 10px;
+    }
+    h2 {
+      color: #662483;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #662483;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button:hover {
+      background: #4a1960;
+    }
+    .link a {
+      color: #662483;
+      text-decoration: none;
+      display: inline-block;
+      margin: 5px 0;
+    }
+    .link a:hover {
+      text-decoration: underline;
+    }
+    .message {
+      color: red;
+      font-size: 0.9em;
+      min-height: 20px;
+      text-align: center;
+    }
+    #dashboard {
+      display: none;
+      flex-direction: column;
+    }
+    header {
+      background: #fff;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header-left img {
+      width: 36px;
+    }
+    .title {
+      font-weight: bold;
+      color: #662483;
+    }
+    .user {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.9em;
+    }
+    #reportContainer {
+      flex: 1;
+      width: 100%;
+      height: calc(100vh - 60px); /* ajustar según header */
+      display: none;
+    }
   </style>
 </head>
 <body>
 
-  <!-- 1) Login -->
+  <!-- Contenedor de login -->
   <div id="auth-container">
     <div class="container">
       <img src="paex360-logo.png" alt="Logo PaEx360">
@@ -50,7 +136,7 @@
     </div>
   </div>
 
-  <!-- 2) Dashboard -->
+  <!-- Contenedor del dashboard -->
   <div id="dashboard">
     <header>
       <div class="header-left">
@@ -67,12 +153,12 @@
         </button>
       </div>
     </header>
-    <!-- aquí cargaremos dinámicamente Power BI -->
+    <!-- Contenedor dinámico donde se incrustará Power BI -->
     <div id="reportContainer"></div>
   </div>
 
   <script>
-    // Firebase config
+    // Configuración de Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyDFf8HvV2B5rkFt1qrYhcjWdpxKu5PCqnM",
       authDomain: "paex360.firebaseapp.com",
@@ -84,7 +170,7 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
 
-    // Login
+    // Función de login
     function login() {
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
@@ -96,12 +182,12 @@
           showDashboard();
           loadPowerBI();
         })
-        .catch(err => {
+        .catch(() => {
           msg.textContent = 'Credenciales inválidas. Verifica tus datos.';
         });
     }
 
-    // Reset password
+    // Función para cambiar contraseña
     function resetPassword() {
       const email = document.getElementById('email').value;
       const msg = document.getElementById('message');
@@ -114,10 +200,10 @@
         .catch(e => { msg.textContent = e.message; });
     }
 
-    // Mostrar dashboard
+    // Mostrar el dashboard
     function showDashboard() {
-      document.getElementById('auth-container').style.display  = 'none';
-      document.getElementById('dashboard').style.display       = 'flex';
+      document.getElementById('auth-container').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'flex';
     }
 
     // Logout
@@ -128,40 +214,57 @@
       });
     }
 
-    // Cargar Power BI
+    // ─── Función para cargar el dashboard Power BI ───
     async function loadPowerBI() {
       const container = document.getElementById('reportContainer');
+
+      // Siempre mostrar y limpiar el contenedor
+      container.style.display = 'block';
+      container.innerHTML = '';
+      console.log('▶️ Invocando loadPowerBI()');
+
       try {
+        // 1) Llamada a la función Netlify
         const resp = await fetch(
           'https://lucky-palmier-ad2422.netlify.app/.netlify/functions/getPowerBI',
           {
             method: 'POST',
-            headers: { 'Content-Type':'application/json' },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               workspaceId: '7230301b-540b-4f1a-b94d-c3ff22d4564d',
               reportId:   '4c205074-37ca-452d-b2cf-134e57e7cb96'
             })
           }
         );
+        console.log('⚙️ fetch status:', resp.status);
+
+        // 2) Si falla, mostramos mensaje
         if (!resp.ok) {
-          container.innerHTML = '<p style="color:red;text-align:center;">No se pudo cargar el dashboard.</p>';
+          container.innerHTML =
+            '<p style="color:red;text-align:center;">No se pudo cargar el dashboard.</p>';
           return;
         }
+
+        // 3) Parsear JSON
         const { embedToken, embedUrl, reportId } = await resp.json();
-        container.style.display = 'block';
+        console.log('✔️ Datos recibidos:', { embedToken, embedUrl, reportId });
+
+        // 4) Incrustar con Power BI client
         const models = window['powerbi-client'].models;
         powerbi.embed(container, {
-          type: 'report',
-          id: reportId,
-          embedUrl,
+          type:        'report',
+          id:          reportId,
+          embedUrl:    embedUrl,
           accessToken: embedToken,
-          tokenType: models.TokenType.Embed,
+          tokenType:   models.TokenType.Embed,
           permissions: models.Permissions.Read,
-          viewMode: models.ViewMode.View
+          viewMode:    models.ViewMode.View
         });
+
       } catch (err) {
-        console.error(err);
-        container.innerHTML = '<p style="color:red;text-align:center;">Error interno al cargar el dashboard.</p>';
+        console.error('❌ Error interno loadPowerBI():', err);
+        container.innerHTML =
+          '<p style="color:red;text-align:center;">Error interno al cargar el dashboard.</p>';
       }
     }
   </script>

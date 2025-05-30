@@ -6,39 +6,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="paex360-logo.png">
 
-  <!-- Firebase SDK -->
+  <!-- SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-  <!-- Power BI client -->
   <script src="https://cdn.jsdelivr.net/npm/powerbi-client@2/dist/powerbi.min.js"></script>
 
   <style>
-    html, body { margin:0; height:100%; font-family:Arial,sans-serif; background:#f4f4f4; }
-    #auth-container,#dashboard { width:100%; height:100%; }
-    #auth-container { display:flex; align-items:center; justify-content:center; }
-    .container { background:#fff; padding:2em; border-radius:10px; box-shadow:0 0 15px rgba(0,0,0,0.1); max-width:400px; width:100%; text-align:center; }
-    .container img { width:100px; margin-bottom:10px; }
-    h2 { color:#662483; }
-    input { width:100%; padding:10px; margin:10px 0; border:1px solid #ccc; border-radius:5px; box-sizing:border-box; }
-    button { width:100%; padding:10px; background:#662483; color:#fff; border:none; border-radius:5px; font-weight:bold; cursor:pointer; margin-top:10px; }
-    button:hover { background:#4a1960; }
-    .link a { color:#662483; text-decoration:none; display:inline-block; margin:5px 0; }
-    .message { color:red; font-size:0.9em; min-height:20px; text-align:center; }
-    #dashboard { display:none; flex-direction:column; }
-    header { background:#fff; padding:10px 20px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 4px rgba(0,0,0,0.1); }
-    .header-left { display:flex; align-items:center; gap:10px; }
-    .header-left img { width:36px; }
-    .title { font-weight:bold; color:#662483; }
-    .user { display:flex; align-items:center; gap:12px; font-size:0.9em; }
-    #reportContainer { flex:1; width:100%; height:calc(100vh - 60px); display:none; }
+    html, body {margin:0; height:100%; font-family:Arial,sans-serif; background:#f4f4f4;}
+    #auth-container,#dashboard {width:100%; height:100%;}
+    #auth-container {display:flex; align-items:center; justify-content:center;}
+    .container {background:#fff; padding:2em; border-radius:10px; box-shadow:0 0 15px rgba(0,0,0,0.1); max-width:400px; width:100%; text-align:center;}
+    input {width:100%; padding:10px; margin:10px 0; border:1px solid #ccc; border-radius:5px; box-sizing:border-box;}
+    button {width:100%; padding:10px; background:#662483; color:#fff; border:none; border-radius:5px; font-weight:bold; cursor:pointer;}
+    button:hover {background:#4a1960;}
+    .link a {color:#662483; text-decoration:none; display:inline-block; margin:5px 0;}
+    .message {color:red; font-size:0.9em; min-height:20px; text-align:center;}
+    #dashboard {display:none; flex-direction:column;}
+    header {background:#fff; padding:10px 20px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 4px rgba(0,0,0,0.1);}
+    #reportContainer {flex:1; width:100%; height:calc(100vh - 60px); display:none;}
   </style>
 </head>
 <body>
 
-  <!-- Login -->
+  <!-- LOGIN -->
   <div id="auth-container">
     <div class="container">
-      <img src="paex360-logo.png" alt="Logo PaEx360">
+      <img src="paex360-logo.png" alt="Logo PaEx360" width="100">
       <h2>Login PaEx360</h2>
       <div id="message" class="message"></div>
       <input type="email" id="email" placeholder="Correo electrónico">
@@ -50,19 +43,16 @@
     </div>
   </div>
 
-  <!-- Dashboard -->
+  <!-- DASHBOARD -->
   <div id="dashboard">
     <header>
-      <div class="header-left">
-        <img src="paex360-logo.png" alt="Logo pequeño">
-        <span class="title">Cuadro de Mando PaEx360</span>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <img src="paex360-logo.png" alt="Logo" width="36">
+        <span style="font-weight:bold; color:#662483;">Cuadro de Mando PaEx360</span>
       </div>
-      <div class="user">
+      <div style="display:flex; align-items:center; gap:12px; font-size:0.9em;">
         <span>Bienvenido, <b id="user-email"></b></span>
-        <button onclick="logout()" style="background:#fff;color:#662483;border:2px solid #662483;padding:5px 10px;border-radius:5px;display:flex;align-items:center;gap:6px;">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-            <path d="M16 13v-2H7V8l-5 4 5 4v-3h9zM20 3H4a2 2 0 0 0-2 2v4h2V5h16v14H4v-4H2v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"/>
-          </svg>
+        <button onclick="logout()" style="padding:5px 10px; background:#fff; color:#662483; border:2px solid #662483; border-radius:5px; cursor:pointer;">
           Cerrar sesión
         </button>
       </div>
@@ -71,7 +61,7 @@
   </div>
 
   <script>
-    // Firebase config
+    // --- Firebase init ---
     const firebaseConfig = {
       apiKey: "AIzaSyDFf8HvV2B5rkFt1qrYhcjWdpxKu5PCqnM",
       authDomain: "paex360.firebaseapp.com",
@@ -83,12 +73,12 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
 
-    // Login
+    // --- Login ---
     function login() {
       const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const msg = document.getElementById('message');
-      auth.signInWithEmailAndPassword(email, password)
+      const pass  = document.getElementById('password').value;
+      const msg   = document.getElementById('message');
+      auth.signInWithEmailAndPassword(email, pass)
         .then(() => {
           msg.textContent = '';
           document.getElementById('user-email').textContent = email;
@@ -100,10 +90,10 @@
         });
     }
 
-    // Reset password
+    // --- Reset Password ---
     function resetPassword() {
       const email = document.getElementById('email').value;
-      const msg = document.getElementById('message');
+      const msg   = document.getElementById('message');
       if (!email) {
         msg.textContent = 'Ingresa tu correo para cambiar la contraseña';
         return;
@@ -113,13 +103,11 @@
         .catch(e => { msg.textContent = e.message; });
     }
 
-    // Show dashboard
+    // --- Show/Hidel UI ---
     function showDashboard() {
       document.getElementById('auth-container').style.display  = 'none';
       document.getElementById('dashboard').style.display       = 'flex';
     }
-
-    // Logout
     function logout() {
       auth.signOut().then(() => {
         document.getElementById('dashboard').style.display      = 'none';
@@ -127,12 +115,12 @@
       });
     }
 
-    // Cargar Power BI
+    // --- Load PowerBI with full error display ---
     async function loadPowerBI() {
       const container = document.getElementById('reportContainer');
       container.style.display = 'block';
       container.innerHTML = '';
-      console.log('▶️ Invocando loadPowerBI()');
+      console.log('▶️ loadPowerBI() start');
 
       try {
         const resp = await fetch(
@@ -146,34 +134,34 @@
             })
           }
         );
-        console.log('⚙️ fetch status:', resp.status);
+        console.log('⚙️ status:', resp.status);
+        const text = await resp.text();
         if (!resp.ok) {
-          container.innerHTML =
-            '<p style="color:red;text-align:center;">No se pudo cargar el dashboard.</p>';
+          container.innerHTML = `<pre style="color:red; text-align:center;">Error ${resp.status}:\n${text}</pre>`;
           return;
         }
-        let { embedToken, embedUrl, reportId } = await resp.json();
-        console.log('Raw embedUrl:', embedUrl);
+        // parse JSON body
+        const { embedToken, embedUrl, reportId } = JSON.parse(text);
+        console.log('✔️ data:', { embedToken, embedUrl, reportId });
 
-        // 1) Decodificar &amp; a &
-        embedUrl = embedUrl.replace(/&amp;/g, '&');
-        console.log('Decoded embedUrl:', embedUrl);
+        // decode &amp; entities just in case
+        const url = embedUrl.replace(/&amp;/g, '&');
+        console.log('Decoded URL:', url);
 
-        // 2) Incrustar con Power BI client
+        // embed
         const models = window['powerbi-client'].models;
         powerbi.embed(container, {
           type:        'report',
           id:          reportId,
-          embedUrl:    embedUrl,
+          embedUrl:    url,
           accessToken: embedToken,
           tokenType:   models.TokenType.Embed,
           permissions: models.Permissions.Read,
           viewMode:    models.ViewMode.View
         });
       } catch (err) {
-        console.error('❌ Error interno loadPowerBI():', err);
-        container.innerHTML =
-          '<p style="color:red;text-align:center;">Error interno al cargar el dashboard.</p>';
+        console.error('❌ loadPowerBI() error:', err);
+        container.innerHTML = `<pre style="color:red; text-align:center;">Exception:\n${err.message}</pre>`;
       }
     }
   </script>

@@ -12,18 +12,67 @@
   <script src="https://cdn.jsdelivr.net/npm/powerbi-client@2/dist/powerbi.min.js"></script>
 
   <style>
-    html, body {margin:0; height:100%; font-family:Arial,sans-serif; background:#f4f4f4;}
-    #auth-container,#dashboard {width:100%; height:100%;}
-    #auth-container {display:flex; align-items:center; justify-content:center;}
-    .container {background:#fff; padding:2em; border-radius:10px; box-shadow:0 0 15px rgba(0,0,0,0.1); max-width:400px; width:100%; text-align:center;}
-    input {width:100%; padding:10px; margin:10px 0; border:1px solid #ccc; border-radius:5px; box-sizing:border-box;}
-    button {width:100%; padding:10px; background:#662483; color:#fff; border:none; border-radius:5px; font-weight:bold; cursor:pointer;}
-    button:hover {background:#4a1960;}
-    .link a {color:#662483; text-decoration:none; display:inline-block; margin:5px 0;}
-    .message {color:red; font-size:0.9em; min-height:20px; text-align:center;}
-    #dashboard {display:none; flex-direction:column;}
-    header {background:#fff; padding:10px 20px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 4px rgba(0,0,0,0.1);}
-    #reportContainer {flex:1; width:100%; height:calc(100vh - 60px); display:none;}
+    html, body { margin:0; height:100%; font-family:Arial,sans-serif; background:#f4f4f4; }
+    #auth-container, #dashboard { width:100%; height:100%; }
+    #auth-container { display:flex; align-items:center; justify-content:center; }
+    .container {
+      background:#fff;
+      padding:2em;
+      border-radius:10px;
+      box-shadow:0 0 15px rgba(0,0,0,0.1);
+      max-width:400px;
+      width:100%;
+      text-align:center;
+    }
+    .container img { width:100px; margin-bottom:10px; }
+    h2 { color:#662483; }
+    input {
+      width:100%;
+      padding:10px;
+      margin:10px 0;
+      border:1px solid #ccc;
+      border-radius:5px;
+      box-sizing:border-box;
+    }
+    button {
+      width:100%;
+      padding:10px;
+      background:#662483;
+      color:#fff;
+      border:none;
+      border-radius:5px;
+      font-weight:bold;
+      cursor:pointer;
+      margin-top:10px;
+    }
+    button:hover { background:#4a1960; }
+    .link a {
+      color:#662483;
+      text-decoration:none;
+      display:inline-block;
+      margin:5px 0;
+    }
+    .message {
+      color:red;
+      font-size:0.9em;
+      min-height:20px;
+      text-align:center;
+    }
+    #dashboard { display:none; flex-direction:column; }
+    header {
+      background:#fff;
+      padding:10px 20px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      box-shadow:0 2px 4px rgba(0,0,0,0.1);
+    }
+    #reportContainer {
+      flex:1;
+      width:100%;
+      height:calc(100vh - 60px);
+      display:none;
+    }
   </style>
 </head>
 <body>
@@ -38,7 +87,7 @@
       <input type="password" id="password" placeholder="Contraseña">
       <button onclick="login()">Ingresar</button>
       <div class="link">
-        <a href="#" onclick="resetPassword()">¿Cambiar contraseña?</a>
+        <a href="#" onclick="resetPassword()">¿Olvidaste tu contraseña?</a>
       </div>
     </div>
   </div>
@@ -99,17 +148,27 @@
         return;
       }
       auth.sendPasswordResetEmail(email)
-        .then(() => { msg.style.color='green'; msg.textContent='Correo enviado'; })
-        .catch(e => { msg.textContent = e.message; });
+        .then(() => {
+          msg.style.color = 'green';
+          msg.textContent = 'Correo enviado para restablecer contraseña';
+        })
+        .catch(e => {
+          msg.textContent = e.message;
+        });
     }
 
     // --- Show/Hidel UI ---
     function showDashboard() {
       document.getElementById('auth-container').style.display  = 'none';
-      document.getElementById('dashboard').style.display       = 'flex';
+      document.getElementById('dashboard').style.display      = 'flex';
     }
     function logout() {
       auth.signOut().then(() => {
+        // Limpiar campos de login
+        document.getElementById('email').value = '';
+        document.getElementById('password').value = '';
+        document.getElementById('message').textContent = '';
+        // Mostrar formulario de login
         document.getElementById('dashboard').style.display      = 'none';
         document.getElementById('auth-container').style.display = 'flex';
       });
@@ -140,15 +199,10 @@
           container.innerHTML = `<pre style="color:red; text-align:center;">Error ${resp.status}:\n${text}</pre>`;
           return;
         }
-        // parse JSON body
         const { embedToken, embedUrl, reportId } = JSON.parse(text);
         console.log('✔️ data:', { embedToken, embedUrl, reportId });
-
-        // decode &amp; entities just in case
         const url = embedUrl.replace(/&amp;/g, '&');
         console.log('Decoded URL:', url);
-
-        // embed
         const models = window['powerbi-client'].models;
         powerbi.embed(container, {
           type:        'report',

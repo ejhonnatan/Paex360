@@ -12,66 +12,142 @@
   <script src="https://cdn.jsdelivr.net/npm/powerbi-client@2/dist/powerbi.min.js"></script>
 
   <style>
-    html, body { margin:0; height:100%; font-family:Arial,sans-serif; background:#f4f4f4; }
-    #auth-container, #dashboard { width:100%; height:100%; }
-    #auth-container { display:flex; align-items:center; justify-content:center; }
-    .container {
-      background:#fff;
-      padding:2em;
-      border-radius:10px;
-      box-shadow:0 0 15px rgba(0,0,0,0.1);
-      max-width:400px;
-      width:100%;
-      text-align:center;
+    html, body {
+      margin: 0;
+      height: 100%;
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
     }
-    .container img { width:100px; margin-bottom:10px; }
-    h2 { color:#662483; }
+    #auth-container, #dashboard {
+      width: 100%;
+      height: 100%;
+    }
+    #auth-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      background: #fff;
+      padding: 2em;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      position: relative;
+    }
+    .container img {
+      width: 100px;
+      margin-bottom: 10px;
+    }
+    h2 {
+      color: #662483;
+      margin-bottom: 0.5em;
+    }
     input {
-      width:100%;
-      padding:10px;
-      margin:10px 0;
-      border:1px solid #ccc;
-      border-radius:5px;
-      box-sizing:border-box;
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
     }
     button {
-      width:100%;
-      padding:10px;
-      background:#662483;
-      color:#fff;
-      border:none;
-      border-radius:5px;
-      font-weight:bold;
-      cursor:pointer;
-      margin-top:10px;
+      width: 100%;
+      padding: 10px;
+      background: #662483;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: background 0.2s;
     }
-    button:hover { background:#4a1960; }
+    button:hover {
+      background: #4a1960;
+    }
     .link a {
-      color:#662483;
-      text-decoration:none;
-      display:inline-block;
-      margin:5px 0;
+      color: #662483;
+      text-decoration: none;
+      display: inline-block;
+      margin: 5px 0;
+      font-size: 0.9em;
+    }
+    .link a:hover {
+      text-decoration: underline;
     }
     .message {
-      color:red;
-      font-size:0.9em;
-      min-height:20px;
-      text-align:center;
+      color: red;
+      font-size: 0.9em;
+      min-height: 20px;
+      text-align: center;
+      margin-bottom: 0.5em;
     }
-    #dashboard { display:none; flex-direction:column; }
+    #dashboard {
+      display: none;
+      flex-direction: column;
+    }
     header {
-      background:#fff;
-      padding:10px 20px;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      box-shadow:0 2px 4px rgba(0,0,0,0.1);
+      background: #fff;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header-left img {
+      width: 36px;
+    }
+    .title {
+      font-weight: bold;
+      color: #662483;
+    }
+    .user {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.9em;
+    }
+    .logout-btn {
+      padding: 5px 10px;
+      background: #fff;
+      color: #662483;
+      border: 2px solid #662483;
+      border-radius: 5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s, color 0.2s;
+    }
+    .logout-btn:hover {
+      background: #662483;
+      color: #fff;
     }
     #reportContainer {
-      flex:1;
-      width:100%;
-      height:calc(100vh - 60px);
-      display:none;
+      flex: 1;
+      width: 100%;
+      height: calc(100vh - 60px);
+      display: none;
+    }
+    .powered {
+      font-size: 0.75em;
+      color: #999;
+      margin-top: 1em;
+    }
+    .powered a {
+      color: #999;
+      text-decoration: none;
+    }
+    .powered a:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
@@ -80,7 +156,7 @@
   <!-- LOGIN -->
   <div id="auth-container">
     <div class="container">
-      <img src="paex360-logo.png" alt="Logo PaEx360" width="100">
+      <img src="paex360-logo.png" alt="Logo PaEx360">
       <h2>Login PaEx360</h2>
       <div id="message" class="message"></div>
       <input type="email" id="email" placeholder="Correo electrónico">
@@ -89,19 +165,25 @@
       <div class="link">
         <a href="#" onclick="resetPassword()">¿Olvidaste tu contraseña?</a>
       </div>
+      <div class="powered">
+        Powered by <a href="https://www.opinat.com/es" target="_blank">Opinat</a>
+      </div>
     </div>
   </div>
 
   <!-- DASHBOARD -->
   <div id="dashboard">
     <header>
-      <div style="display:flex; align-items:center; gap:10px;">
+      <div class="header-left">
         <img src="paex360-logo.png" alt="Logo" width="36">
-        <span style="font-weight:bold; color:#662483;">Cuadro de Mando PaEx360</span>
+        <span class="title">Cuadro de Mando PaEx360</span>
       </div>
-      <div style="display:flex; align-items:center; gap:12px; font-size:0.9em;">
+      <div class="user">
         <span>Bienvenido, <b id="user-email"></b></span>
-        <button onclick="logout()" style="padding:5px 10px; background:#fff; color:#662483; border:2px solid #662483; border-radius:5px; cursor:pointer;">
+        <button class="logout-btn" onclick="logout()">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <path d="M16 13v-2H7V8l-5 4 5 4v-3h9zM20 3H4a2 2 0 0 0-2 2v4h2V5h16v14H4v-4H2v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"/>
+          </svg>
           Cerrar sesión
         </button>
       </div>

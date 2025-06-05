@@ -74,6 +74,7 @@
       display: inline-block;
       margin: 5px 0;
       font-size: 0.9em;
+      cursor: pointer;
     }
     .link a:hover {
       text-decoration: underline;
@@ -156,14 +157,15 @@
   <!-- LOGIN -->
   <div id="auth-container">
     <div class="container">
-      <img src="paex360-logo.png" alt="Logo PaEx360">
+      <img src="paex360-logo.png" alt="Logo PaEx360" width="100">
       <h2>Login PaEx360</h2>
       <div id="message" class="message"></div>
       <input type="email" id="email" placeholder="Correo electrónico">
       <input type="password" id="password" placeholder="Contraseña">
       <button onclick="login()">Ingresar</button>
       <div class="link">
-        <a href="#" onclick="resetPassword()">¿Olvidaste tu contraseña?</a>
+        <a onclick="resetPassword()">¿Olvidaste tu contraseña?</a><br>
+        <a onclick="resetPassword()">Cambiar contraseña</a>
       </div>
       <div class="powered">
         Powered by <a href="https://www.opinat.com/es" target="_blank">Opinat</a>
@@ -239,7 +241,7 @@
         });
     }
 
-    // --- Show/Hidel UI ---
+    // --- Show/Hide UI ---
     function showDashboard() {
       document.getElementById('auth-container').style.display  = 'none';
       document.getElementById('dashboard').style.display      = 'flex';

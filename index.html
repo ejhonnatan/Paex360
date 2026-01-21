@@ -18,78 +18,94 @@
       font-family: Arial, sans-serif;
       background: #f4f4f4;
     }
-    #auth-container, #dashboard {
+
+    #auth-container,
+    #dashboard,
+    #selector {
       width: 100%;
       height: 100%;
     }
-    #auth-container {
+
+    #auth-container,
+    #selector {
       display: flex;
       align-items: center;
       justify-content: center;
     }
+
     .container {
       background: #fff;
       padding: 2em;
       border-radius: 10px;
       box-shadow: 0 0 15px rgba(0,0,0,0.1);
-      max-width: 400px;
+      max-width: 420px;
       width: 100%;
       text-align: center;
-      position: relative;
     }
-    .container img {
-      width: 100px;
-      margin-bottom: 10px;
-    }
+
     h2 {
       color: #662483;
-      margin-bottom: 0.5em;
+      margin-bottom: 1em;
     }
+
     input {
       width: 100%;
       padding: 10px;
       margin: 10px 0;
       border: 1px solid #ccc;
       border-radius: 5px;
-      box-sizing: border-box;
     }
+
     button {
       width: 100%;
-      padding: 10px;
+      padding: 12px;
       background: #662483;
       color: #fff;
       border: none;
-      border-radius: 5px;
+      border-radius: 6px;
       font-weight: bold;
       cursor: pointer;
-      margin-top: 10px;
-      transition: background 0.2s;
+      margin-top: 12px;
     }
+
     button:hover {
       background: #4a1960;
     }
-    .link a {
-      color: #662483;
-      text-decoration: none;
-      display: inline-block;
-      margin: 5px 0;
-      font-size: 0.9em;
-      cursor: pointer;
-    }
-    .link a:hover {
-      text-decoration: underline;
-    }
+
     .message {
       color: red;
-      font-size: 0.9em;
-      min-height: 20px;
-      text-align: center;
-      margin-bottom: 0.5em;
+      min-height: 18px;
     }
+
+    /* Selector */
+    .selector-box {
+      display: flex;
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .selector-card {
+      flex: 1;
+      padding: 30px 20px;
+      border: 2px solid #662483;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: bold;
+      color: #662483;
+      transition: all 0.2s;
+    }
+
+    .selector-card:hover {
+      background: #662483;
+      color: #fff;
+    }
+
+    /* Dashboard */
     #dashboard {
       display: none;
       flex-direction: column;
     }
+
     header {
       background: #fff;
       padding: 10px 20px;
@@ -98,210 +114,115 @@
       align-items: center;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .header-left img {
-      width: 36px;
-    }
-    .title {
-      font-weight: bold;
-      color: #662483;
-    }
-    .user {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 0.9em;
-    }
-    .logout-btn {
-      padding: 5px 10px;
-      background: #fff;
-      color: #662483;
-      border: 2px solid #662483;
-      border-radius: 5px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: background 0.2s, color 0.2s;
-    }
-    .logout-btn:hover {
-      background: #662483;
-      color: #fff;
-    }
+
     #reportContainer {
       flex: 1;
       width: 100%;
       height: calc(100vh - 60px);
-      display: none;
-    }
-    .powered {
-      font-size: 0.75em;
-      color: #999;
-      margin-top: 1em;
-    }
-    .powered a {
-      color: #999;
-      text-decoration: none;
-    }
-    .powered a:hover {
-      text-decoration: underline;
     }
   </style>
 </head>
+
 <body>
 
-  <!-- LOGIN -->
-  <div id="auth-container">
-    <div class="container">
-      <img src="paex360-logo.png" alt="Logo PaEx360" width="100">
-      <h2>Login PaEx360</h2>
-      <div id="message" class="message"></div>
-      <input type="email" id="email" placeholder="Correo electrónico">
-      <input type="password" id="password" placeholder="Contraseña">
-      <button onclick="login()">Ingresar</button>
-      <div class="link">
-        <a onclick="resetPassword()">¿Olvidaste tu contraseña?</a><br>
-        <a onclick="resetPassword()">Cambiar contraseña</a>
+<!-- LOGIN -->
+<div id="auth-container">
+  <div class="container">
+    <img src="paex360-logo.png" width="90"><br><br>
+    <h2>Login PaEx360</h2>
+    <div id="message" class="message"></div>
+    <input type="email" id="email" placeholder="Correo electrónico">
+    <input type="password" id="password" placeholder="Contraseña">
+    <button onclick="login()">Ingresar</button>
+  </div>
+</div>
+
+<!-- SELECTOR -->
+<div id="selector" style="display:none;">
+  <div class="container">
+    <h2>Selecciona el tablero</h2>
+    <div class="selector-box">
+      <div class="selector-card" onclick="openDashboard('diagonal')">
+        Clínica Diagonal
       </div>
-      <div class="powered">
-        Powered by <a href="https://www.opinat.com/es" target="_blank">Opinat</a>
+      <div class="selector-card" onclick="openDashboard('salus')">
+        Clínica SALUS
       </div>
     </div>
   </div>
+</div>
 
-  <!-- DASHBOARD -->
-  <div id="dashboard">
-    <header>
-      <div class="header-left">
-        <img src="paex360-logo.png" alt="Logo" width="36">
-        <span class="title">Cuadro de Mando PaEx360</span>
-      </div>
-      <div class="user">
-        <span>Bienvenido, <b id="user-email"></b></span>
-        <button class="logout-btn" onclick="logout()">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-            <path d="M16 13v-2H7V8l-5 4 5 4v-3h9zM20 3H4a2 2 0 0 0-2 2v4h2V5h16v14H4v-4H2v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"/>
-          </svg>
-          Cerrar sesión
-        </button>
-      </div>
-    </header>
-    <div id="reportContainer"></div>
-  </div>
+<!-- DASHBOARD -->
+<div id="dashboard">
+  <header>
+    <b>PaEx360</b>
+    <button onclick="logout()">Cerrar sesión</button>
+  </header>
+  <div id="reportContainer"></div>
+</div>
 
-  <script>
-    // --- Firebase init ---
-    const firebaseConfig = {
-      apiKey: "AIzaSyDFf8HvV2B5rkFt1qrYhcjWdpxKu5PCqnM",
-      authDomain: "paex360.firebaseapp.com",
-      projectId: "paex360",
-      storageBucket: "paex360.firebasestorage.app",
-      messagingSenderId: "631937872255",
-      appId: "1:631937872255:web:c1777de83ce839bbbdea4a"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
+<script>
+  // Firebase
+  firebase.initializeApp({
+    apiKey: "AIzaSyDFf8HvV2B5rkFt1qrYhcjWdpxKu5PCqnM",
+    authDomain: "paex360.firebaseapp.com",
+    projectId: "paex360"
+  });
 
-    // --- Login ---
-    function login() {
-      const email = document.getElementById('email').value;
-      const pass  = document.getElementById('password').value;
-      const msg   = document.getElementById('message');
-      auth.signInWithEmailAndPassword(email, pass)
-        .then(() => {
-          msg.textContent = '';
-          document.getElementById('user-email').textContent = email;
-          showDashboard();
-          loadPowerBI();
-        })
-        .catch(() => {
-          msg.textContent = 'Credenciales inválidas. Verifica tus datos.';
-        });
-    }
+  const auth = firebase.auth();
 
-    // --- Reset Password ---
-    function resetPassword() {
-      const email = document.getElementById('email').value;
-      const msg   = document.getElementById('message');
-      if (!email) {
-        msg.textContent = 'Ingresa tu correo para cambiar la contraseña';
-        return;
-      }
-      auth.sendPasswordResetEmail(email)
-        .then(() => {
-          msg.style.color = 'green';
-          msg.textContent = 'Correo enviado para restablecer contraseña';
-        })
-        .catch(e => {
-          msg.textContent = e.message;
-        });
-    }
-
-    // --- Show/Hide UI ---
-    function showDashboard() {
-      document.getElementById('auth-container').style.display  = 'none';
-      document.getElementById('dashboard').style.display      = 'flex';
-    }
-    function logout() {
-      auth.signOut().then(() => {
-        // Limpiar campos de login
-        document.getElementById('email').value = '';
-        document.getElementById('password').value = '';
-        document.getElementById('message').textContent = '';
-        // Mostrar formulario de login
-        document.getElementById('dashboard').style.display      = 'none';
-        document.getElementById('auth-container').style.display = 'flex';
+  function login() {
+    const email = email.value;
+    const pass  = password.value;
+    auth.signInWithEmailAndPassword(email, pass)
+      .then(() => {
+        document.getElementById('auth-container').style.display = 'none';
+        document.getElementById('selector').style.display = 'flex';
+      })
+      .catch(() => {
+        message.textContent = 'Credenciales inválidas';
       });
-    }
+  }
 
-    // --- Load PowerBI with full error display ---
-    async function loadPowerBI() {
-      const container = document.getElementById('reportContainer');
-      container.style.display = 'block';
-      container.innerHTML = '';
-      console.log('▶️ loadPowerBI() start');
+  function logout() {
+    auth.signOut().then(() => location.reload());
+  }
 
-      try {
-        const resp = await fetch(
-          'https://lucky-palmier-ad2422.netlify.app/.netlify/functions/getPowerBI',
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              workspaceId: '7230301b-540b-4f1a-b94d-c3ff22d4564d',
-              reportId:   '4c205074-37ca-452d-b2cf-134e57e7cb96'
-            })
-          }
-        );
-        console.log('⚙️ status:', resp.status);
-        const text = await resp.text();
-        if (!resp.ok) {
-          container.innerHTML = `<pre style="color:red; text-align:center;">Error ${resp.status}:\n${text}</pre>`;
-          return;
-        }
-        const { embedToken, embedUrl, reportId } = JSON.parse(text);
-        console.log('✔️ data:', { embedToken, embedUrl, reportId });
-        const url = embedUrl.replace(/&amp;/g, '&');
-        console.log('Decoded URL:', url);
-        const models = window['powerbi-client'].models;
-        powerbi.embed(container, {
-          type:        'report',
-          id:          reportId,
-          embedUrl:    url,
-          accessToken: embedToken,
-          tokenType:   models.TokenType.Embed,
-          permissions: models.Permissions.Read,
-          viewMode:    models.ViewMode.View
-        });
-      } catch (err) {
-        console.error('❌ loadPowerBI() error:', err);
-        container.innerHTML = `<pre style="color:red; text-align:center;">Exception:\n${err.message}</pre>`;
+  function openDashboard(tipo) {
+    document.getElementById('selector').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'flex';
+    loadPowerBI();
+  }
+
+  async function loadPowerBI() {
+    const container = document.getElementById('reportContainer');
+    container.innerHTML = '';
+
+    const resp = await fetch(
+      'https://lucky-palmier-ad2422.netlify.app/.netlify/functions/getPowerBI',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          workspaceId: '7230301b-540b-4f1a-b94d-c3ff22d4564d',
+          reportId:   '4c205074-37ca-452d-b2cf-134e57e7cb96'
+        })
       }
-    }
-  </script>
+    );
+
+    const { embedToken, embedUrl, reportId } = await resp.json();
+    const models = window['powerbi-client'].models;
+
+    powerbi.embed(container, {
+      type: 'report',
+      id: reportId,
+      embedUrl: embedUrl,
+      accessToken: embedToken,
+      tokenType: models.TokenType.Embed,
+      permissions: models.Permissions.Read
+    });
+  }
+</script>
+
 </body>
 </html>

@@ -123,7 +123,6 @@
       z-index: 10;
     }
 
-    /* ===== USER MENU ===== */
     .user-menu {
       position: relative;
       display: flex;
@@ -206,8 +205,8 @@
 <!-- ================= SELECTOR ================= -->
 <div id="selector">
   <div class="selector-box">
-    <div class="selector-card" onclick="openDashboard()">Clínica Diagonal</div>
-    <div class="selector-card" onclick="openDashboard()">Clínica SALUS</div>
+    <div class="selector-card" onclick="openDashboard('DIAGONAL')">Clínica Diagonal</div>
+    <div class="selector-card" onclick="openDashboard('SALUS')">Clínica SALUS</div>
   </div>
 </div>
 
@@ -239,6 +238,14 @@
 
   const auth = firebase.auth();
 
+  /* ================= CONFIG REPORTES ================= */
+  const WORKSPACE_ID = '7230301b-540b-4f1a-b94d-c3ff22d4564d';
+
+  const REPORTES = {
+    DIAGONAL: 'c82cbcf1-7b93-458a-8f14-3b7a86800a23',
+    SALUS: 'be0ed5d8-4753-4dd0-b031-ed0b7ab57d96'
+  };
+
   /* ================= AUTH STATE ================= */
   auth.onAuthStateChanged(user => {
     if (user) {
@@ -267,10 +274,12 @@
   }
 
   /* ================= SELECTOR ================= */
-  function openDashboard() {
+  function openDashboard(tipo) {
     document.getElementById('selector').style.display = 'none';
     document.getElementById('dashboard').style.display = 'flex';
-    loadPowerBI();
+
+    const reportId = REPORTES[tipo];
+    loadPowerBI(reportId);
   }
 
   /* ================= USER MENU ================= */
@@ -291,20 +300,20 @@
   }
 
   /* ================= POWER BI ================= */
-  async function loadPowerBI() {
+  async function loadPowerBI(reportId) {
     const r = await fetch(
       'https://lucky-palmier-ad2422.netlify.app/.netlify/functions/getPowerBI',
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          workspaceId: '7230301b-540b-4f1a-b94d-c3ff22d4564d',
-          reportId: '4c205074-37ca-452d-b2cf-134e57e7cb96'
+          workspaceId: WORKSPACE_ID,
+          reportId: reportId
         })
       }
     );
 
-    const { embedToken, embedUrl, reportId } = await r.json();
+    const { embedToken, embedUrl } = await r.json();
     const models = window['powerbi-client'].models;
 
     powerbi.embed(reportContainer, {

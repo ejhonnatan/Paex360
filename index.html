@@ -73,37 +73,6 @@
       min-height: 18px;
     }
 
-    /* ================= SELECTOR ================= */
-    #selector {
-      display: none;
-      height: 100%;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .selector-box {
-      display: flex;
-      gap: 24px;
-    }
-
-    .selector-card {
-      width: 220px;
-      padding: 30px;
-      border-radius: 12px;
-      border: 2px solid #662483;
-      text-align: center;
-      cursor: pointer;
-      font-weight: 600;
-      color: #662483;
-      transition: .2s;
-      background: #fff;
-    }
-
-    .selector-card:hover {
-      background: #662483;
-      color: #fff;
-    }
-
     /* ================= DASHBOARD ================= */
     #dashboard {
       display: none;
@@ -151,16 +120,25 @@
       box-shadow: 0 6px 18px rgba(0,0,0,.15);
       overflow: hidden;
       z-index: 9999;
+      min-width: 240px;
     }
 
-    .menu div {
+    .menu .email {
+      padding: 10px 16px;
+      font-size: 13px;
+      color: #444;
+      border-bottom: 1px solid #eee;
+      cursor: default;
+      user-select: text;
+    }
+
+    .menu .item {
       padding: 10px 16px;
       cursor: pointer;
       font-size: 14px;
-      white-space: nowrap;
     }
 
-    .menu div:hover {
+    .menu .item:hover {
       background: #f3f2f1;
     }
 
@@ -184,23 +162,16 @@
   </div>
 </div>
 
-<!-- ================= SELECTOR ================= -->
-<div id="selector">
-  <div class="selector-box">
-    <div class="selector-card" onclick="openDashboard('DIAGONAL')">Clínica Diagonal</div>
-    <div class="selector-card" onclick="openDashboard('SALUS')">Clínica SALUS</div>
-  </div>
-</div>
-
 <!-- ================= DASHBOARD ================= -->
 <div id="dashboard">
   <header>
     <strong>PaEx360</strong>
+
     <div class="profile">
       <div id="avatar" class="avatar" onclick="toggleMenu()">U</div>
       <div id="menu" class="menu">
-        <div id="userEmail"></div>
-        <div onclick="logout()">Cerrar sesión</div>
+        <div id="userEmail" class="email"></div>
+        <div class="item" onclick="logout()">Cerrar sesión</div>
       </div>
     </div>
   </header>
@@ -220,75 +191,83 @@
 
   /* ================= LOGIN ================= */
   function login() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const error = document.getElementById('error');
-    error.textContent = '';
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+    const error = document.getElementById("error");
+    error.textContent = "";
 
     auth.signInWithEmailAndPassword(email, password)
-      .then(res => {
-        const user = res.user;
-        document.getElementById('avatar').textContent = user.email.charAt(0).toUpperCase();
-        document.getElementById('userEmail').textContent = user.email;
-
-        document.getElementById('auth-container').style.display = 'none';
-        document.getElementById('selector').style.display = 'flex';
-      })
       .catch(() => {
-        error.textContent = 'Usuario o contraseña incorrectos';
+        error.textContent = "Usuario o contraseña incorrectos";
       });
   }
 
-  /* ================= SELECTOR ================= */
-  let selectedClinic = null;
+  /* ================= AUTH STATE ================= */
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      // Mostrar dashboard
+      document.getElementById("auth-container").style.display = "none";
+      document.getElementById("dashboard").style.display = "flex";
 
-  function openDashboard(clinic) {
-    selectedClinic = clinic;
-    document.getElementById('selector').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'flex';
-    loadPowerBI();
-  }
+      // Pintar avatar y email
+      const email = user.email || "";
+      document.getElementById("avatar").textContent = email.charAt(0).toUpperCase();
+      document.getElementById("userEmail").textContent = email;
+
+      // Cargar Power BI
+      loadPowerBI();
+    } else {
+      // Mostrar login
+      document.getElementById("dashboard").style.display = "none";
+      document.getElementById("auth-container").style.display = "flex";
+    }
+  });
 
   /* ================= MENU PERFIL ================= */
   function toggleMenu() {
-    const menu = document.getElementById('menu');
-    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    const menu = document.getElementById("menu");
+    menu.style.display = (menu.style.display === "block") ? "none" : "block";
   }
 
-  document.addEventListener('click', e => {
-    if (!e.target.closest('.profile')) {
-      document.getElementById('menu').style.display = 'none';
+  document.addEventListener("click", e => {
+    if (!e.target.closest(".profile")) {
+      document.getElementById("menu").style.display = "none";
     }
   });
 
   function logout() {
-    auth.signOut().then(() => location.reload());
+    auth.signOut();
   }
 
   /* ================= POWER BI ================= */
   async function loadPowerBI() {
+    const reportContainer = document.getElementById("reportContainer");
+    powerbi.reset(reportContainer);
+
     const r = await fetch(
-      'https://lucky-palmier-ad2422.netlify.app/.netlify/functions/getPowerBI',
+      "https://lucky-palmier-ad2422.netlify.app/.netlify/functions/getPowerBI",
       {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          workspaceId: '7230301b-540b-4f1a-b94d-c3ff22d4564d',
-          reportId: '4c205074-37ca-452d-b2cf-134e57e7cb96'
+          workspaceId: "7230301b-540b-4f1a-b94d-c3ff22d4564d",
+          reportId: "4c205074-37ca-452d-b2cf-134e57e7cb96"
         })
       }
     );
 
     const data = await r.json();
-    if (data.error) {
-      alert('Error cargando Power BI: ' + data.error);
+
+    if (!r.ok) {
+      alert("Error cargando Power BI");
+      console.error(data);
       return;
     }
 
-    const models = window['powerbi-client'].models;
+    const models = window["powerbi-client"].models;
 
     powerbi.embed(reportContainer, {
-      type: 'report',
+      type: "report",
       id: data.reportId,
       embedUrl: data.embedUrl,
       accessToken: data.embedToken,

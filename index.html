@@ -238,7 +238,7 @@
 
   const auth = firebase.auth();
 
-  /* ================= CONFIG REPORTES ================= */
+  /* ================= CONFIG ================= */
   const WORKSPACE_ID = '7230301b-540b-4f1a-b94d-c3ff22d4564d';
 
   const REPORTES = {
@@ -246,12 +246,14 @@
     SALUS: 'be0ed5d8-4753-4dd0-b031-ed0b7ab57d96'
   };
 
+  const reportContainer = document.getElementById('reportContainer');
+
   /* ================= AUTH STATE ================= */
   auth.onAuthStateChanged(user => {
     if (user) {
-      const email = user.email;
-      document.getElementById('userAvatar').textContent = email.charAt(0).toUpperCase();
-      document.getElementById('userEmail').textContent = email;
+      document.getElementById('userAvatar').textContent =
+        user.email.charAt(0).toUpperCase();
+      document.getElementById('userEmail').textContent = user.email;
     }
   });
 
@@ -277,9 +279,7 @@
   function openDashboard(tipo) {
     document.getElementById('selector').style.display = 'none';
     document.getElementById('dashboard').style.display = 'flex';
-
-    const reportId = REPORTES[tipo];
-    loadPowerBI(reportId);
+    loadPowerBI(REPORTES[tipo]);
   }
 
   /* ================= USER MENU ================= */
@@ -301,6 +301,8 @@
 
   /* ================= POWER BI ================= */
   async function loadPowerBI(reportId) {
+    powerbi.reset(reportContainer);
+
     const r = await fetch(
       'https://lucky-palmier-ad2422.netlify.app/.netlify/functions/getPowerBI',
       {
@@ -313,16 +315,28 @@
       }
     );
 
-    const { embedToken, embedUrl } = await r.json();
+    const data = await r.json();
+
+    if (!data.embedToken || !data.embedUrl) {
+      console.error('Respuesta inválida del backend', data);
+      return;
+    }
+
     const models = window['powerbi-client'].models;
 
     powerbi.embed(reportContainer, {
       type: 'report',
       id: reportId,
-      embedUrl,
-      accessToken: embedToken,
+      embedUrl: data.embedUrl,
+      accessToken: data.embedToken,
       tokenType: models.TokenType.Embed,
-      permissions: models.Permissions.Read
+      permissions: models.Permissions.Read,
+      settings: {
+        panes: {
+          filters: { visible: false },
+          pageNavigation: { visible: false }
+        }
+      }
     });
   }
 </script>

@@ -4,76 +4,296 @@
   <meta charset="UTF-8">
   <title>PaEx360</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="paex360-logo.png">
 
+  <!-- SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/powerbi-client@2/dist/powerbi.min.js"></script>
 
   <style>
-    html, body { margin:0; height:100%; font-family:Segoe UI, Arial; }
-    header { height:48px; background:#662483; color:#fff; display:flex; align-items:center; padding:0 16px; }
-    #selector { height:calc(100vh - 48px); display:flex; align-items:center; justify-content:center; gap:20px; }
-    .card { padding:30px; border:2px solid #662483; cursor:pointer; }
-    #dashboard { display:none; height:calc(100vh - 48px); }
-    #reportContainer { height:100%; width:100%; }
+    html, body {
+      margin: 0;
+      height: 100%;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: #f3f2f1;
+    }
+
+    /* ================= LOGIN ================= */
+    #auth-container {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .login-card {
+      background: #fff;
+      width: 420px;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 8px 30px rgba(0,0,0,.12);
+      text-align: center;
+    }
+
+    .login-card img {
+      width: 110px;
+      margin-bottom: 20px;
+    }
+
+    .login-card input {
+      width: 100%;
+      padding: 12px;
+      margin-top: 14px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    .login-card button {
+      margin-top: 20px;
+      width: 100%;
+      padding: 12px;
+      background: #662483;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .login-card button:hover {
+      background: #4e1c63;
+    }
+
+    .error {
+      margin-top: 12px;
+      color: #c62828;
+      font-size: 13px;
+      min-height: 18px;
+    }
+
+    /* ================= SELECTOR ================= */
+    #selector {
+      display: none;
+      height: 100%;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .selector-box {
+      display: flex;
+      gap: 24px;
+    }
+
+    .selector-card {
+      width: 220px;
+      padding: 30px;
+      border-radius: 12px;
+      border: 2px solid #662483;
+      text-align: center;
+      cursor: pointer;
+      font-weight: 600;
+      color: #662483;
+      transition: .2s;
+      background: #fff;
+    }
+
+    .selector-card:hover {
+      background: #662483;
+      color: #fff;
+    }
+
+    /* ================= DASHBOARD ================= */
+    #dashboard {
+      display: none;
+      height: 100%;
+      flex-direction: column;
+    }
+
+    header {
+      height: 48px;
+      background: #662483;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .profile {
+      position: relative;
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #fff;
+      color: #662483;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .menu {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 42px;
+      background: #fff;
+      border-radius: 6px;
+      box-shadow: 0 6px 18px rgba(0,0,0,.15);
+      overflow: hidden;
+      z-index: 9999;
+    }
+
+    .menu div {
+      padding: 10px 16px;
+      cursor: pointer;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .menu div:hover {
+      background: #f3f2f1;
+    }
+
+    #reportContainer {
+      flex: 1;
+      background: #fff;
+    }
   </style>
 </head>
 
 <body>
 
-<header>PaEx360</header>
-
-<div id="selector">
-  <div class="card" onclick="openDashboard('DIAGONAL')">Clínica Diagonal</div>
-  <div class="card" onclick="openDashboard('SALUS')">Clínica SALUS</div>
+<!-- ================= LOGIN ================= -->
+<div id="auth-container">
+  <div class="login-card">
+    <img src="paex360-logo.png">
+    <input id="email" type="email" placeholder="Correo electrónico">
+    <input id="password" type="password" placeholder="Contraseña">
+    <button onclick="login()">Ingresar</button>
+    <div id="error" class="error"></div>
+  </div>
 </div>
 
+<!-- ================= SELECTOR ================= -->
+<div id="selector">
+  <div class="selector-box">
+    <div class="selector-card" onclick="openDashboard('DIAGONAL')">Clínica Diagonal</div>
+    <div class="selector-card" onclick="openDashboard('SALUS')">Clínica SALUS</div>
+  </div>
+</div>
+
+<!-- ================= DASHBOARD ================= -->
 <div id="dashboard">
+  <header>
+    <strong>PaEx360</strong>
+    <div class="profile">
+      <div id="avatar" class="avatar" onclick="toggleMenu()">U</div>
+      <div id="menu" class="menu">
+        <div id="userEmail"></div>
+        <div onclick="logout()">Cerrar sesión</div>
+      </div>
+    </div>
+  </header>
+
   <div id="reportContainer"></div>
 </div>
 
 <script>
-  const WORKSPACE_ID = "7230301b-540b-4f1a-b94d-c3ff22d4564d";
+  /* ================= FIREBASE ================= */
+  firebase.initializeApp({
+    apiKey: "AIzaSyDFf8HvV2B5rkFt1qrYhcjWdpxKu5PCqnM",
+    authDomain: "paex360.firebaseapp.com",
+    projectId: "paex360"
+  });
 
-  const REPORTES = {
-    DIAGONAL: { soapReportId: 101 },
-    SALUS:    { soapReportId: 102 }
-  };
+  const auth = firebase.auth();
 
-  const reportContainer = document.getElementById("reportContainer");
+  /* ================= LOGIN ================= */
+  function login() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const error = document.getElementById('error');
+    error.textContent = '';
 
-  async function openDashboard(tipo) {
-    document.getElementById("selector").style.display = "none";
-    document.getElementById("dashboard").style.display = "block";
+    auth.signInWithEmailAndPassword(email, password)
+      .then(res => {
+        const user = res.user;
+        document.getElementById('avatar').textContent = user.email.charAt(0).toUpperCase();
+        document.getElementById('userEmail').textContent = user.email;
 
-    powerbi.reset(reportContainer);
+        document.getElementById('auth-container').style.display = 'none';
+        document.getElementById('selector').style.display = 'flex';
+      })
+      .catch(() => {
+        error.textContent = 'Usuario o contraseña incorrectos';
+      });
+  }
 
+  /* ================= SELECTOR ================= */
+  let selectedClinic = null;
+
+  function openDashboard(clinic) {
+    selectedClinic = clinic;
+    document.getElementById('selector').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'flex';
+    loadPowerBI();
+  }
+
+  /* ================= MENU PERFIL ================= */
+  function toggleMenu() {
+    const menu = document.getElementById('menu');
+    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+  }
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.profile')) {
+      document.getElementById('menu').style.display = 'none';
+    }
+  });
+
+  function logout() {
+    auth.signOut().then(() => location.reload());
+  }
+
+  /* ================= POWER BI ================= */
+  async function loadPowerBI() {
     const r = await fetch(
-      "https://lucky-palmier-ad2422.netlify.app/.netlify/functions/getPowerBI",
+      'https://lucky-palmier-ad2422.netlify.app/.netlify/functions/getPowerBI',
       {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          workspaceId: WORKSPACE_ID,
-          reportId: REPORTES[tipo].soapReportId
+          workspaceId: '7230301b-540b-4f1a-b94d-c3ff22d4564d',
+          reportId: '4c205074-37ca-452d-b2cf-134e57e7cb96'
         })
       }
     );
 
     const data = await r.json();
-
     if (data.error) {
-      alert("Error backend: " + data.error);
-      console.error(data);
+      alert('Error cargando Power BI: ' + data.error);
       return;
     }
 
-    const models = window["powerbi-client"].models;
+    const models = window['powerbi-client'].models;
 
     powerbi.embed(reportContainer, {
-      type: "report",
+      type: 'report',
       id: data.reportId,
       embedUrl: data.embedUrl,
       accessToken: data.embedToken,
-      tokenType: models.TokenType.Embed
+      tokenType: models.TokenType.Embed,
+      permissions: models.Permissions.Read
     });
   }
 </script>

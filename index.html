@@ -6,341 +6,72 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="paex360-logo.png">
 
-  <!-- SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/powerbi-client@2/dist/powerbi.min.js"></script>
 
   <style>
-    html, body {
-      margin: 0;
-      height: 100%;
-      font-family: "Segoe UI", Arial, sans-serif;
-      background: #f3f2f1;
-    }
-
-    /* ================= LOGIN ================= */
-    #auth-container {
-      height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .login-card {
-      background: #fff;
-      width: 420px;
-      padding: 40px;
-      border-radius: 12px;
-      box-shadow: 0 8px 30px rgba(0,0,0,.12);
-      text-align: center;
-    }
-
-    .login-card img {
-      width: 110px;
-      margin-bottom: 20px;
-    }
-
-    .login-card input {
-      width: 100%;
-      padding: 12px;
-      margin-top: 14px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      font-size: 14px;
-    }
-
-    .login-card button {
-      margin-top: 20px;
-      width: 100%;
-      padding: 12px;
-      background: #662483;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .login-card button:hover {
-      background: #4e1c63;
-    }
-
-    .error {
-      margin-top: 12px;
-      color: #c62828;
-      font-size: 13px;
-      min-height: 18px;
-    }
-
-    /* ================= SELECTOR ================= */
-    #selector {
-      display: none;
-      height: 100vh;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .selector-box {
-      display: flex;
-      gap: 24px;
-    }
-
-    .selector-card {
-      width: 220px;
-      padding: 30px;
-      border-radius: 12px;
-      border: 2px solid #662483;
-      text-align: center;
-      cursor: pointer;
-      font-weight: 600;
-      color: #662483;
-      transition: .2s;
-      background: #fff;
-    }
-
-    .selector-card:hover {
-      background: #662483;
-      color: #fff;
-    }
-
-    /* ================= DASHBOARD ================= */
-    #dashboard {
-      display: none;
-      height: 100vh;
-      flex-direction: column;
-    }
-
-    header {
-      height: 48px;
-      background: #662483;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 16px;
-      flex-shrink: 0;
-    }
-
-    /* ===== USER MENU ===== */
-    .user-menu {
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
-
-    .user-avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: #fff;
-      color: #662483;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .user-dropdown {
-      display: none;
-      position: absolute;
-      top: 42px;
-      right: 0;
-      width: 240px;
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 6px 18px rgba(0,0,0,.15);
-      z-index: 9999;
-      overflow: hidden;
-    }
-
-    .user-dropdown.show {
-      display: block;
-    }
-
-    .user-email {
-      padding: 12px 16px;
-      font-size: 13px;
-      border-bottom: 1px solid #eee;
-      color: #333;
-      word-break: break-all;
-    }
-
-    .user-dropdown button {
-      width: 100%;
-      padding: 12px 16px;
-      border: none;
-      background: none;
-      text-align: left;
-      cursor: pointer;
-      font-size: 14px;
-    }
-
-    .user-dropdown button:hover {
-      background: #f3f2f1;
-    }
-
-    /* ===== CONTENEDOR POWER BI (FIX CRÍTICO) ===== */
-    #reportContainer {
-      width: 100%;
-      height: calc(100vh - 48px);
-      background: #fff;
-    }
+    html, body { margin:0; height:100%; font-family:Segoe UI, Arial; }
+    #dashboard { display:none; height:100vh; flex-direction:column; }
+    header { height:48px; background:#662483; color:#fff; display:flex; justify-content:space-between; align-items:center; padding:0 16px; }
+    #reportContainer { height:calc(100vh - 48px); width:100%; }
+    #selector { display:none; height:100vh; align-items:center; justify-content:center; gap:20px; }
+    .selector-card { padding:30px; border:2px solid #662483; cursor:pointer; }
   </style>
 </head>
 
 <body>
 
-<!-- ================= LOGIN ================= -->
-<div id="auth-container">
-  <div class="login-card">
-    <img src="paex360-logo.png">
-    <input id="email" type="email" placeholder="Correo electrónico">
-    <input id="password" type="password" placeholder="Contraseña">
-    <button onclick="login()">Ingresar</button>
-    <div id="error" class="error"></div>
-  </div>
-</div>
-
-<!-- ================= SELECTOR ================= -->
 <div id="selector">
-  <div class="selector-box">
-    <div class="selector-card" onclick="openDashboard('DIAGONAL')">Clínica Diagonal</div>
-    <div class="selector-card" onclick="openDashboard('SALUS')">Clínica SALUS</div>
-  </div>
+  <div class="selector-card" onclick="openDashboard('DIAGONAL')">DIAGONAL</div>
+  <div class="selector-card" onclick="openDashboard('SALUS')">SALUS</div>
 </div>
 
-<!-- ================= DASHBOARD ================= -->
 <div id="dashboard">
-  <header>
-    <strong>PaEx360</strong>
-
-    <div class="user-menu">
-      <div id="userAvatar" class="user-avatar">?</div>
-
-      <div id="userDropdown" class="user-dropdown">
-        <div id="userEmail" class="user-email"></div>
-        <button onclick="logout()">Cerrar sesión</button>
-      </div>
-    </div>
-  </header>
-
+  <header>PaEx360</header>
   <div id="reportContainer"></div>
 </div>
 
 <script>
-  /* ================= FIREBASE ================= */
-  firebase.initializeApp({
-    apiKey: "AIzaSyDFf8HvV2B5rkFt1qrYhcjWdpxKu5PCqnM",
-    authDomain: "paex360.firebaseapp.com",
-    projectId: "paex360"
-  });
-
-  const auth = firebase.auth();
-
-  /* ================= CONFIG ================= */
-  const WORKSPACE_ID = '7230301b-540b-4f1a-b94d-c3ff22d4564d';
+  const WORKSPACE_ID = "7230301b-540b-4f1a-b94d-c3ff22d4564d";
 
   const REPORTES = {
-    DIAGONAL: 'c82cbcf1-7b93-458a-8f14-3b7a86800a23',
-    SALUS: 'be0ed5d8-4753-4dd0-b031-ed0b7ab57d96'
+    DIAGONAL: "c82cbcf1-7b93-458a-8f14-3b7a86800a23",
+    SALUS: "be0ed5d8-4753-4dd0-b031-ed0b7ab57d96"
   };
 
-  const reportContainer = document.getElementById('reportContainer');
+  const reportContainer = document.getElementById("reportContainer");
 
-  /* ================= AUTH STATE ================= */
-  auth.onAuthStateChanged(user => {
-    if (user) {
-      document.getElementById('userAvatar').textContent =
-        user.email.charAt(0).toUpperCase();
-      document.getElementById('userEmail').textContent = user.email;
-    }
-  });
+  async function openDashboard(tipo) {
+    document.getElementById("selector").style.display = "none";
+    document.getElementById("dashboard").style.display = "flex";
 
-  /* ================= LOGIN ================= */
-  function login() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const error = document.getElementById('error');
-
-    error.textContent = '';
-
-    auth.signInWithEmailAndPassword(email, password)
-      .then(() => {
-        document.getElementById('auth-container').style.display = 'none';
-        document.getElementById('selector').style.display = 'flex';
-      })
-      .catch(() => {
-        error.textContent = 'Usuario o contraseña incorrectos';
-      });
-  }
-
-  /* ================= SELECTOR ================= */
-  function openDashboard(tipo) {
-    document.getElementById('selector').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'flex';
-    loadPowerBI(REPORTES[tipo]);
-  }
-
-  /* ================= USER MENU ================= */
-  const avatar = document.getElementById('userAvatar');
-  const dropdown = document.getElementById('userDropdown');
-
-  avatar.addEventListener('click', e => {
-    e.stopPropagation();
-    dropdown.classList.toggle('show');
-  });
-
-  document.addEventListener('click', () => {
-    dropdown.classList.remove('show');
-  });
-
-  function logout() {
-    auth.signOut().then(() => location.reload());
-  }
-
-  /* ================= POWER BI ================= */
-  async function loadPowerBI(reportId) {
     powerbi.reset(reportContainer);
 
     const r = await fetch(
-      'https://lucky-palmier-ad2422.netlify.app/.netlify/functions/getPowerBI',
+      "https://lucky-palmier-ad2422.netlify.app/.netlify/functions/getPowerBI",
       {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           workspaceId: WORKSPACE_ID,
-          reportId: reportId
+          reportId: REPORTES[tipo]
         })
       }
     );
 
     const data = await r.json();
 
-    if (!data.embedToken || !data.embedUrl) {
-      console.error('Error backend Power BI', data);
+    if (data.error) {
+      console.error("Power BI backend error:", data);
+      alert("Error cargando Power BI. Revisa consola.");
       return;
     }
 
-    const models = window['powerbi-client'].models;
+    const models = window["powerbi-client"].models;
 
     powerbi.embed(reportContainer, {
-      type: 'report',
-      id: reportId,
+      type: "report",
+      id: data.reportId,
       embedUrl: data.embedUrl,
-      accessToken: data.embedToken,
-      tokenType: models.TokenType.Embed,
-      permissions: models.Permissions.Read,
-      settings: {
-        panes: {
-          filters: { visible: false },
-          pageNavigation: { visible: false }
-        }
-      }
-    });
-  }
-</script>
-
-</body>
-</html>
+      accessToken:

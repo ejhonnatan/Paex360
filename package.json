@@ -1,5 +1,7 @@
 {
+  "name": "paex360-netlify-functions",
+  "version": "1.0.0",
   "dependencies": {
-    "soap": "^0.42.0"
+    "soap": "^0.45.0"
   }
 }

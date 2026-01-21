@@ -20,8 +20,8 @@
     }
 
     #auth-container,
-    #dashboard,
-    #selector {
+    #selector,
+    #dashboard {
       width: 100%;
       height: 100%;
     }
@@ -75,6 +75,7 @@
     .message {
       color: red;
       min-height: 18px;
+      margin-bottom: 10px;
     }
 
     /* Selector */
@@ -137,7 +138,7 @@
   </div>
 </div>
 
-<!-- SELECTOR -->
+<!-- SELECTOR DE TABLEROS -->
 <div id="selector" style="display:none;">
   <div class="container">
     <h2>Selecciona el tablero</h2>
@@ -162,65 +163,96 @@
 </div>
 
 <script>
-  // Firebase
-  firebase.initializeApp({
+  // --------------------
+  // Firebase Init
+  // --------------------
+  const firebaseConfig = {
     apiKey: "AIzaSyDFf8HvV2B5rkFt1qrYhcjWdpxKu5PCqnM",
     authDomain: "paex360.firebaseapp.com",
-    projectId: "paex360"
-  });
+    projectId: "paex360",
+    storageBucket: "paex360.firebasestorage.app",
+    messagingSenderId: "631937872255",
+    appId: "1:631937872255:web:c1777de83ce839bbbdea4a"
+  };
 
+  firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
 
+  // --------------------
+  // Login
+  // --------------------
   function login() {
-    const email = email.value;
-    const pass  = password.value;
+    const email = document.getElementById('email').value;
+    const pass  = document.getElementById('password').value;
+    const msg   = document.getElementById('message');
+
     auth.signInWithEmailAndPassword(email, pass)
       .then(() => {
+        msg.textContent = '';
         document.getElementById('auth-container').style.display = 'none';
         document.getElementById('selector').style.display = 'flex';
       })
-      .catch(() => {
-        message.textContent = 'Credenciales inválidas';
+      .catch(error => {
+        console.error(error);
+        msg.textContent = 'Credenciales inválidas. Verifica tus datos.';
       });
   }
 
+  // --------------------
+  // Logout
+  // --------------------
   function logout() {
-    auth.signOut().then(() => location.reload());
+    auth.signOut().then(() => {
+      location.reload();
+    });
   }
 
+  // --------------------
+  // Selector
+  // --------------------
   function openDashboard(tipo) {
     document.getElementById('selector').style.display = 'none';
     document.getElementById('dashboard').style.display = 'flex';
     loadPowerBI();
   }
 
+  // --------------------
+  // Power BI Embed
+  // --------------------
   async function loadPowerBI() {
     const container = document.getElementById('reportContainer');
     container.innerHTML = '';
 
-    const resp = await fetch(
-      'https://lucky-palmier-ad2422.netlify.app/.netlify/functions/getPowerBI',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          workspaceId: '7230301b-540b-4f1a-b94d-c3ff22d4564d',
-          reportId:   '4c205074-37ca-452d-b2cf-134e57e7cb96'
-        })
-      }
-    );
+    try {
+      const resp = await fetch(
+        'https://lucky-palmier-ad2422.netlify.app/.netlify/functions/getPowerBI',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            workspaceId: '7230301b-540b-4f1a-b94d-c3ff22d4564d',
+            reportId:   '4c205074-37ca-452d-b2cf-134e57e7cb96'
+          })
+        }
+      );
 
-    const { embedToken, embedUrl, reportId } = await resp.json();
-    const models = window['powerbi-client'].models;
+      const { embedToken, embedUrl, reportId } = await resp.json();
+      const models = window['powerbi-client'].models;
 
-    powerbi.embed(container, {
-      type: 'report',
-      id: reportId,
-      embedUrl: embedUrl,
-      accessToken: embedToken,
-      tokenType: models.TokenType.Embed,
-      permissions: models.Permissions.Read
-    });
+      powerbi.embed(container, {
+        type: 'report',
+        id: reportId,
+        embedUrl: embedUrl,
+        accessToken: embedToken,
+        tokenType: models.TokenType.Embed,
+        permissions: models.Permissions.Read,
+        viewMode: models.ViewMode.View
+      });
+
+    } catch (err) {
+      container.innerHTML = `<pre style="color:red">Error cargando Power BI</pre>`;
+      console.error(err);
+    }
   }
 </script>
 

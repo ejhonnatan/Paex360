@@ -19,7 +19,7 @@
       background: #f3f2f1;
     }
 
-    /* ---------- LOGIN ---------- */
+    /* ================= LOGIN ================= */
     #auth-container {
       height: 100%;
       display: flex;
@@ -73,7 +73,7 @@
       min-height: 18px;
     }
 
-    /* ---------- SELECTOR ---------- */
+    /* ================= SELECTOR ================= */
     #selector {
       display: none;
       height: 100%;
@@ -104,7 +104,7 @@
       color: #fff;
     }
 
-    /* ---------- DASHBOARD ---------- */
+    /* ================= DASHBOARD ================= */
     #dashboard {
       display: none;
       height: 100%;
@@ -119,6 +119,10 @@
       align-items: center;
       justify-content: space-between;
       padding: 0 16px;
+
+      /* 🔴 FIX CLAVE */
+      position: relative;
+      z-index: 10;
     }
 
     .profile {
@@ -136,6 +140,7 @@
       justify-content: center;
       font-weight: 700;
       cursor: pointer;
+      user-select: none;
     }
 
     .menu {
@@ -147,7 +152,9 @@
       border-radius: 6px;
       box-shadow: 0 6px 18px rgba(0,0,0,.15);
       overflow: hidden;
-      z-index: 100;
+
+      /* 🔴 FIX CLAVE */
+      z-index: 9999;
     }
 
     .menu div {
@@ -170,7 +177,7 @@
 
 <body>
 
-<!-- LOGIN -->
+<!-- ================= LOGIN ================= -->
 <div id="auth-container">
   <div class="login-card">
     <img src="paex360-logo.png">
@@ -181,7 +188,7 @@
   </div>
 </div>
 
-<!-- SELECTOR -->
+<!-- ================= SELECTOR ================= -->
 <div id="selector">
   <div class="selector-box">
     <div class="selector-card" onclick="openDashboard()">Clínica Diagonal</div>
@@ -189,7 +196,7 @@
   </div>
 </div>
 
-<!-- DASHBOARD -->
+<!-- ================= DASHBOARD ================= -->
 <div id="dashboard">
   <header>
     <strong>PaEx360</strong>
@@ -200,10 +207,12 @@
       </div>
     </div>
   </header>
+
   <div id="reportContainer"></div>
 </div>
 
 <script>
+  /* ================= FIREBASE ================= */
   firebase.initializeApp({
     apiKey: "AIzaSyDFf8HvV2B5rkFt1qrYhcjWdpxKu5PCqnM",
     authDomain: "paex360.firebaseapp.com",
@@ -212,6 +221,7 @@
 
   const auth = firebase.auth();
 
+  /* ================= LOGIN ================= */
   function login() {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
@@ -230,44 +240,17 @@
       });
   }
 
+  /* ================= SELECTOR ================= */
   function openDashboard() {
     document.getElementById('selector').style.display = 'none';
     document.getElementById('dashboard').style.display = 'flex';
     loadPowerBI();
   }
 
+  /* ================= MENU PERFIL ================= */
   function toggleMenu() {
-    const m = document.getElementById('menu');
-    m.style.display = m.style.display === 'block' ? 'none' : 'block';
-  }
-
-  function logout() {
-    auth.signOut().then(() => location.reload());
-  }
-
-  async function loadPowerBI() {
-    const r = await fetch(
-      'https://lucky-palmier-ad2422.netlify.app/.netlify/functions/getPowerBI',
-      {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({
-          workspaceId:'7230301b-540b-4f1a-b94d-c3ff22d4564d',
-          reportId:'4c205074-37ca-452d-b2cf-134e57e7cb96'
-        })
-      }
-    );
-
-    const {embedToken, embedUrl, reportId} = await r.json();
-    const models = window['powerbi-client'].models;
-
-    powerbi.embed(reportContainer, {
-      type:'report',
-      id:reportId,
-      embedUrl,
-      accessToken:embedToken,
-      tokenType:models.TokenType.Embed
-    });
+    const menu = document.getElementById('menu');
+    menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
   }
 
   document.addEventListener('click', e => {
@@ -275,6 +258,37 @@
       document.getElementById('menu').style.display = 'none';
     }
   });
+
+  function logout() {
+    auth.signOut().then(() => location.reload());
+  }
+
+  /* ================= POWER BI ================= */
+  async function loadPowerBI() {
+    const r = await fetch(
+      'https://lucky-palmier-ad2422.netlify.app/.netlify/functions/getPowerBI',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          workspaceId: '7230301b-540b-4f1a-b94d-c3ff22d4564d',
+          reportId: '4c205074-37ca-452d-b2cf-134e57e7cb96'
+        })
+      }
+    );
+
+    const { embedToken, embedUrl, reportId } = await r.json();
+    const models = window['powerbi-client'].models;
+
+    powerbi.embed(reportContainer, {
+      type: 'report',
+      id: reportId,
+      embedUrl,
+      accessToken: embedToken,
+      tokenType: models.TokenType.Embed,
+      permissions: models.Permissions.Read
+    });
+  }
 </script>
 
 </body>

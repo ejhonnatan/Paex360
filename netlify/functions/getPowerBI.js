@@ -2,16 +2,16 @@
 const soap = require("soap");
 
 exports.handler = async (event) => {
-  // ================= CORS =================
+
   if (event.httpMethod === "OPTIONS") {
     return {
       statusCode: 200,
       headers: {
         "Access-Control-Allow-Origin": "https://ejhonnatan.github.io",
         "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Allow-Headers": "Content-Type"
       },
-      body: JSON.stringify({ ok: true }),
+      body: JSON.stringify({ ok: true })
     };
   }
 
@@ -28,38 +28,25 @@ exports.handler = async (event) => {
       username,
       password,
       workspace_id: workspaceId,
-      report_id: reportId,
+      report_id: reportId // 👈 ESTE ES EL ID SOAP (NO GUID)
     });
 
     const jsonString = raw?.return?.$value;
-    if (!jsonString) {
+
+    if (!jsonString || jsonString.startsWith("KO")) {
       return {
-        statusCode: 500,
+        statusCode: 400,
         headers: {
-          "Access-Control-Allow-Origin": "https://ejhonnatan.github.io",
+          "Access-Control-Allow-Origin": "https://ejhonnatan.github.io"
         },
         body: JSON.stringify({
-          error: "Respuesta SOAP sin valor",
-          raw,
-        }),
+          error: "SOAP rechazó el Report ID",
+          raw: jsonString
+        })
       };
     }
 
-    let data;
-    try {
-      data = JSON.parse(jsonString);
-    } catch (e) {
-      return {
-        statusCode: 500,
-        headers: {
-          "Access-Control-Allow-Origin": "https://ejhonnatan.github.io",
-        },
-        body: JSON.stringify({
-          error: "JSON inválido devuelto por SOAP",
-          raw: jsonString,
-        }),
-      };
-    }
+    const data = JSON.parse(jsonString);
 
     const embedToken = data.embedToken?.token;
     const embedUrl = data.embedReports?.[0]?.embedUrl;
@@ -69,37 +56,36 @@ exports.handler = async (event) => {
       return {
         statusCode: 500,
         headers: {
-          "Access-Control-Allow-Origin": "https://ejhonnatan.github.io",
+          "Access-Control-Allow-Origin": "https://ejhonnatan.github.io"
         },
         body: JSON.stringify({
-          error: "Estructura inesperada del SOAP",
-          data,
-        }),
+          error: "Respuesta SOAP incompleta",
+          data
+        })
       };
     }
 
     return {
       statusCode: 200,
       headers: {
-        "Access-Control-Allow-Origin": "https://ejhonnatan.github.io",
+        "Access-Control-Allow-Origin": "https://ejhonnatan.github.io"
       },
       body: JSON.stringify({
         embedToken,
         embedUrl,
-        reportId: outReportId,
-      }),
+        reportId: outReportId
+      })
     };
 
   } catch (err) {
     return {
       statusCode: 500,
       headers: {
-        "Access-Control-Allow-Origin": "https://ejhonnatan.github.io",
+        "Access-Control-Allow-Origin": "https://ejhonnatan.github.io"
       },
       body: JSON.stringify({
-        error: err.message,
-        stack: err.stack,
-      }),
+        error: err.message
+      })
     };
   }
 };

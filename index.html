@@ -110,7 +110,6 @@
       user-select: none;
     }
 
-    /* 🔴 FIX DEFINITIVO DEL MENÚ */
     .menu {
       display: none;
       position: absolute;
@@ -129,8 +128,6 @@
       font-size: 13px;
       color: #444;
       border-bottom: 1px solid #eee;
-      user-select: text;
-      cursor: default;
       white-space: nowrap;
     }
 
@@ -154,7 +151,7 @@
 
 <body>
 
-<!-- ================= LOGIN ================= -->
+<!-- LOGIN -->
 <div id="auth-container">
   <div class="login-card">
     <img src="paex360-logo.png">
@@ -165,7 +162,7 @@
   </div>
 </div>
 
-<!-- ================= DASHBOARD ================= -->
+<!-- DASHBOARD -->
 <div id="dashboard">
   <header>
     <strong>PaEx360</strong>
@@ -183,7 +180,8 @@
 </div>
 
 <script>
-  /* ================= FIREBASE ================= */
+
+  /* FIREBASE */
   firebase.initializeApp({
     apiKey: "AIzaSyDFf8HvV2B5rkFt1qrYhcjWdpxKu5PCqnM",
     authDomain: "paex360.firebaseapp.com",
@@ -192,7 +190,7 @@
 
   const auth = firebase.auth();
 
-  /* ================= LOGIN ================= */
+  /* LOGIN */
   function login() {
     const email = document.getElementById("email").value.trim();
     const password = document.getElementById("password").value;
@@ -205,24 +203,7 @@
       });
   }
 
-  /* ================= AUTH STATE ================= */
-  auth.onAuthStateChanged(user => {
-    if (user) {
-      document.getElementById("auth-container").style.display = "none";
-      document.getElementById("dashboard").style.display = "flex";
-
-      const email = user.email || "";
-      document.getElementById("avatar").textContent = email.charAt(0).toUpperCase();
-      document.getElementById("userEmail").textContent = email;
-
-      loadPowerBI();
-    } else {
-      document.getElementById("dashboard").style.display = "none";
-      document.getElementById("auth-container").style.display = "flex";
-    }
-  });
-
-  /* ================= MENU PERFIL ================= */
+  /* PERFIL MENU */
   function toggleMenu() {
     const menu = document.getElementById("menu");
     menu.style.display = menu.style.display === "block" ? "none" : "block";
@@ -238,7 +219,56 @@
     auth.signOut();
   }
 
-  /* ================= POWER BI ================= */
+  /* ================= AUTO LOGOUT 30 MIN ================= */
+
+  let inactivityTimer;
+  const INACTIVITY_TIME = 30 * 60 * 1000;
+
+  function startInactivityTimer() {
+    resetInactivityTimer();
+
+    document.addEventListener("mousemove", resetInactivityTimer);
+    document.addEventListener("keydown", resetInactivityTimer);
+    document.addEventListener("click", resetInactivityTimer);
+    document.addEventListener("scroll", resetInactivityTimer);
+  }
+
+  function resetInactivityTimer() {
+    clearTimeout(inactivityTimer);
+    inactivityTimer = setTimeout(() => {
+      alert("Sesión cerrada por inactividad (30 minutos)");
+      auth.signOut();
+    }, INACTIVITY_TIME);
+  }
+
+  function stopInactivityTimer() {
+    clearTimeout(inactivityTimer);
+    document.removeEventListener("mousemove", resetInactivityTimer);
+    document.removeEventListener("keydown", resetInactivityTimer);
+    document.removeEventListener("click", resetInactivityTimer);
+    document.removeEventListener("scroll", resetInactivityTimer);
+  }
+
+  /* AUTH STATE */
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      document.getElementById("auth-container").style.display = "none";
+      document.getElementById("dashboard").style.display = "flex";
+
+      const email = user.email || "";
+      document.getElementById("avatar").textContent = email.charAt(0).toUpperCase();
+      document.getElementById("userEmail").textContent = email;
+
+      loadPowerBI();
+      startInactivityTimer();
+    } else {
+      stopInactivityTimer();
+      document.getElementById("dashboard").style.display = "none";
+      document.getElementById("auth-container").style.display = "flex";
+    }
+  });
+
+  /* POWER BI */
   async function loadPowerBI() {
     const reportContainer = document.getElementById("reportContainer");
     powerbi.reset(reportContainer);
@@ -273,6 +303,7 @@
       permissions: models.Permissions.Read
     });
   }
+
 </script>
 
 </body>

@@ -211,21 +211,25 @@
       display:none;
     }
 
-    /* =========================
-       ✅ NUEVO: Panel imagen derecha
-       (SOLO visual)
-       ========================= */
-    .panel-hero{
-      padding: 0;                 /* para que la imagen ocupe todo */
-      overflow: hidden;
-    }
-    .hero-img{
-      width: 50%;
-      height: 50%;
-      display: block;
-      object-fit: cover;          /* llena el panel sin deformar */
-      border-radius: 14px;        /* igual al panel */
-    }
+/* =========================
+   ✅ NUEVO: Panel imagen derecha
+   (SOLO visual)
+   ========================= */
+.panel-hero{
+  padding: 0;                 
+  overflow: hidden;
+  display: flex;              /* ✅ centra contenido */
+  align-items: center;        /* ✅ vertical */
+  justify-content: center;    /* ✅ horizontal */
+}
+
+.hero-img{
+  width: 50%;
+  height: 50%;
+  display: block;
+  object-fit: contain;        /* ✅ no recorta, mantiene proporción */
+  border-radius: 14px;
+}
 
     /* =========================
        ✅ NUEVO: Logo Opinat pequeño en footer

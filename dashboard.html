@@ -8,24 +8,24 @@
 
   <style>
     /* =========================
-       0) Fondo blanco (como antes)
+       0) SIN FONDO (TRANSPARENTE)
        ========================= */
     body{
       margin:0;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background:#ffffff;         /* ✅ blanco */
+      background: transparent;     /* ✅ sin fondo */
       color:#111827;
     }
 
     /* =========================
-       1) Topbar
+       1) Topbar (se mantiene)
        ========================= */
     .topbar{
       display:flex;
       align-items:center;
       justify-content:space-between;
       padding:12px 16px;
-      background: #ffffff;        /* ✅ blanco */
+      background: #ffffff;
       border-bottom: 1px solid #e5e7eb;
       position: sticky;
       top:0;
@@ -70,11 +70,11 @@
     }
 
     /* =========================
-       2) Contenido
+       2) Contenido (TRANSPARENTE)
        ========================= */
     .wrap{
       padding: 14px;
-      background:#ffffff;         /* ✅ blanco */
+      background: transparent;     /* ✅ sin fondo */
     }
 
     .msg{
@@ -100,15 +100,15 @@
     }
 
     /* =========================
-       3) Contenedor Power BI
+       3) Contenedor Power BI (TRANSPARENTE)
        ========================= */
     #reportContainer{
       width: 100%;
       height: calc(100vh - 90px);
       border-radius: 12px;
       overflow: hidden;
-      background: #ffffff;        /* ✅ blanco */
-      border: 1px solid #e5e7eb;  /* ✅ borde sutil */
+      background: transparent;     /* ✅ sin fondo */
+      border: none;                /* ✅ sin borde */
     }
   </style>
 </head>
@@ -218,7 +218,7 @@
     };
 
     // =========================
-    // 6) Llamar getPowerBI.js (POST) - tu contrato actual
+    // 6) Llamar getPowerBI.js (POST)
     // =========================
     async function pedirEmbedData(workspaceId, reportId){
       const resp = await fetch("/.netlify/functions/getPowerBI", {
@@ -238,7 +238,8 @@
     }
 
     // =========================
-    // 7) Embebido real con powerbi-client
+    // 7) Embebido con powerbi-client
+    //    (FONDO: Default para respetar el fondo del reporte)
     // =========================
     function embedReport(embedUrl, embedToken){
       powerbi.reset(reportContainer);
@@ -255,8 +256,7 @@
             filters: { visible: false },
             pageNavigation: { visible: true }
           },
-          // ✅ Esto ya no te pinta azul porque el CSS es blanco.
-          background: models.BackgroundType.Transparent
+          background: models.BackgroundType.Default  /* ✅ respeta fondo del reporte */
         }
       };
 

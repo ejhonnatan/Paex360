@@ -257,7 +257,7 @@
 
           <div class="divider"></div>
           <div class="small">
-            Si tu usuario existe en Firebase pero no aparece el centro, es porque no tiene permisos en <b>Permisos_pagina.csv</b>.
+            Desarrollado por <b>Opinat</b>.
           </div>
         </div>
 
@@ -272,7 +272,7 @@
           <div id="mensaje-permisos" class="notice"></div>
 
           <div class="small" style="margin-top:10px;">
-            Si no aparece ningún botón, revisa el CSV y el email del usuario.
+            Si no aparece ningún botón, solicita a paula.fernandez@atheneasolutions.com el acceso.
           </div>
         </div>
 
@@ -374,6 +374,42 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+
+    // =========================
+    // 2.1) Cierre automático por inactividad (30 min)
+    // =========================
+    const INACTIVITY_LIMIT_MS = 30 * 60 * 1000; // 30 minutos
+    let inactivityTimer = null;
+
+    function clearInactivityTimer(){
+      if (inactivityTimer) {
+        clearTimeout(inactivityTimer);
+        inactivityTimer = null;
+      }
+    }
+
+    async function forceLogoutByInactivity(){
+      try{
+        await signOut(auth);
+      }catch(e){
+        console.warn("Logout por inactividad falló:", e);
+      }finally{
+        showLogin();
+      }
+    }
+
+    function resetInactivityTimer(){
+      clearInactivityTimer();
+      inactivityTimer = setTimeout(forceLogoutByInactivity, INACTIVITY_LIMIT_MS);
+    }
+
+    // Solo debe contar si hay usuario logueado
+    function attachActivityListeners(){
+      const events = ["mousemove","mousedown","keydown","scroll","touchstart","click"];
+      events.forEach(evt => window.addEventListener(evt, resetInactivityTimer, { passive: true }));
+    }
+
+    attachActivityListeners();
 
     // =========================
     // 3) Llamar permisos (getPermissions) + render botones
@@ -486,9 +522,13 @@
     // =========================
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
+        clearInactivityTimer();     // ✅ no contar si no hay sesión
         showLogin();
         return;
       }
+
+      // ✅ arranca/reinicia el timer al detectar sesión
+      resetInactivityTimer();
 
       showCentros(user.email);
       await cargarPermisosYRender(user.email);

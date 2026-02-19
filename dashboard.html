@@ -7,70 +7,108 @@
   <link rel="icon" href="paex360-logo.png" type="image/png">
 
   <style>
+    /* =========================
+       0) Fondo blanco (como antes)
+       ========================= */
     body{
       margin:0;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background:#0b0f19;
-      color:#fff;
+      background:#ffffff;         /* ✅ blanco */
+      color:#111827;
     }
+
+    /* =========================
+       1) Topbar
+       ========================= */
     .topbar{
       display:flex;
       align-items:center;
       justify-content:space-between;
       padding:12px 16px;
-      background: rgba(255,255,255,.06);
-      border-bottom: 1px solid rgba(255,255,255,.10);
+      background: #ffffff;        /* ✅ blanco */
+      border-bottom: 1px solid #e5e7eb;
       position: sticky;
       top:0;
-      backdrop-filter: blur(10px);
       z-index: 5;
     }
+
     .brand{
       display:flex;
       align-items:center;
       gap:10px;
       font-weight:900;
       letter-spacing:.2px;
+      color:#111827;
     }
-    .brand img{ width:28px; height:28px; border-radius:8px; }
-    .actions{ display:flex; gap:10px; align-items:center; }
+
+    .brand img{
+      width:28px;
+      height:28px;
+      border-radius:8px;
+      background:#fff;
+      border:1px solid #e5e7eb;
+    }
+
+    .actions{
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+
     .btn{
       cursor:pointer;
-      border: 1px solid rgba(255,255,255,.18);
-      background: rgba(255,255,255,.08);
-      color:#fff;
+      border: 1px solid #e5e7eb;
+      background: #ffffff;
+      color:#111827;
       padding:10px 12px;
       border-radius: 10px;
       font-weight:900;
       font-size:13px;
     }
-    .btn:hover{ background: rgba(255,255,255,.12); }
-    .wrap{ padding: 14px; }
+    .btn:hover{
+      background:#f9fafb;
+    }
+
+    /* =========================
+       2) Contenido
+       ========================= */
+    .wrap{
+      padding: 14px;
+      background:#ffffff;         /* ✅ blanco */
+    }
+
     .msg{
       padding: 14px;
-      background: rgba(220,38,38,.12);
-      border: 1px solid rgba(220,38,38,.35);
+      background: rgba(220,38,38,.08);
+      border: 1px solid rgba(220,38,38,.25);
       border-radius: 12px;
       margin: 14px 0;
       display:none;
       font-weight:900;
+      color:#991b1b;
     }
+
     .loader{
       padding: 12px 14px;
-      background: rgba(255,255,255,.06);
-      border: 1px solid rgba(255,255,255,.12);
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
       border-radius: 12px;
       margin: 14px 0;
       display:none;
       font-weight:900;
-      color:#cbd5e1;
+      color:#374151;
     }
+
+    /* =========================
+       3) Contenedor Power BI
+       ========================= */
     #reportContainer{
       width: 100%;
       height: calc(100vh - 90px);
       border-radius: 12px;
       overflow: hidden;
-      background: #111827;
+      background: #ffffff;        /* ✅ blanco */
+      border: 1px solid #e5e7eb;  /* ✅ borde sutil */
     }
   </style>
 </head>
@@ -100,7 +138,7 @@
 
   <script type="module">
     // =========================
-    // 1) Constantes del embedding (ANTES te funcionaban así)
+    // 1) Constantes del embedding
     // =========================
     const WORKSPACE_ID = "7230301b-540b-4f1a-b94d-c3ff22d4564d";
 
@@ -180,7 +218,7 @@
     };
 
     // =========================
-    // 6) Llamar getPowerBI.js (POST) - TU MISMO CONTRATO
+    // 6) Llamar getPowerBI.js (POST) - tu contrato actual
     // =========================
     async function pedirEmbedData(workspaceId, reportId){
       const resp = await fetch("/.netlify/functions/getPowerBI", {
@@ -192,7 +230,6 @@
       const data = await resp.json().catch(() => ({}));
 
       if (!resp.ok) {
-        // Te muestro el raw si viene
         const extra = data?.raw ? ` | raw: ${data.raw}` : "";
         throw new Error((data?.error || "Error getPowerBI") + extra);
       }
@@ -201,10 +238,9 @@
     }
 
     // =========================
-    // 7) Embebido real con powerbi-client (NO iframe)
+    // 7) Embebido real con powerbi-client
     // =========================
     function embedReport(embedUrl, embedToken){
-      // limpiar embeds previos
       powerbi.reset(reportContainer);
 
       const models = window["powerbi-client"].models;
@@ -215,7 +251,11 @@
         accessToken: embedToken,
         embedUrl: embedUrl,
         settings: {
-          panes: { filters: { visible: false }, pageNavigation: { visible: true } },
+          panes: {
+            filters: { visible: false },
+            pageNavigation: { visible: true }
+          },
+          // ✅ Esto ya no te pinta azul porque el CSS es blanco.
           background: models.BackgroundType.Transparent
         }
       };
@@ -224,7 +264,7 @@
     }
 
     // =========================
-    // 8) Flujo principal: si hay sesión -> pedir token -> embed
+    // 8) Flujo principal
     // =========================
     onAuthStateChanged(auth, async (user) => {
       if (!user) {

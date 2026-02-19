@@ -211,34 +211,31 @@
       display:none;
     }
 
-/* =========================
-   ✅ NUEVO: Panel imagen derecha
-   (SOLO visual)
-   ========================= */
-/* =========================
-   ✅ Panel imagen derecha (centrado real)
-   ========================= */
-.panel.panel-hero{
-  padding: 0;                 /* ✅ pisa el padding de .panel */
-  overflow: hidden;
-  display: flex;
-  align-items: center;        /* ✅ centro vertical */
-  justify-content: center;    /* ✅ centro horizontal */
-}
-
-/* ✅ Imagen centrada y sin deformar */
-.panel.panel-hero .hero-img{
-  display: block;
-  margin: auto;              /* ✅ centro adicional */
-  max-width: 80%;
-  max-height: 80%;
-  width: auto;
-  height: auto;
-  object-fit: contain;
-  border-radius: 14px;
-}
     /* =========================
-       ✅ NUEVO: Logo Opinat pequeño en footer
+       ✅ Panel imagen derecha (centrado real)
+       ========================= */
+    .panel.panel-hero{
+      padding: 0;                 /* ✅ pisa el padding de .panel */
+      overflow: hidden;
+      display: flex;
+      align-items: center;        /* ✅ centro vertical */
+      justify-content: center;    /* ✅ centro horizontal */
+    }
+
+    /* ✅ Imagen centrada y sin deformar */
+    .panel.panel-hero .hero-img{
+      display: block;
+      margin: auto;              /* ✅ centro adicional */
+      max-width: 80%;
+      max-height: 80%;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      border-radius: 14px;
+    }
+
+    /* =========================
+       ✅ Logo Opinat pequeño en footer
        ========================= */
     .opinat-inline{
       display:inline-flex;
@@ -299,14 +296,16 @@
           <div class="divider"></div>
           <div class="small">
             <span class="opinat-inline">
-              Desarrollado por <b>Opinat</b>.
-              <img class="opinat-logo" src="LogoOpinat.png" alt="Opinat">
+              Desarrollado por
+              <a href="https://www.opinat.com/" target="_blank" rel="noopener noreferrer">
+                <img class="opinat-logo" src="LogoOpinat.png" alt="Opinat">
+              </a>
             </span>
           </div>
         </div>
 
         <!-- =========================
-             ✅ NUEVO: PANEL IMAGEN DERECHA
+             ✅ PANEL IMAGEN DERECHA
              ========================= -->
         <div class="panel panel-hero" id="heroPanel">
           <img class="hero-img" src="PAEX360 CAST.jpg" alt="Paex360 Cast">
@@ -358,7 +357,7 @@
     function showLogin() {
       loginPanel.style.display = "block";
       centrosPanel.style.display = "none";
-      heroPanel.style.display = "block"; // ✅ NUEVO (mostrar imagen en login)
+      heroPanel.style.display = "block"; // ✅ mostrar imagen en login
       logoutBtn.style.display = "none";
       userEmailEl.textContent = "";
       centrosContainer.innerHTML = "";
@@ -369,7 +368,7 @@
     function showCentros(email) {
       loginPanel.style.display = "none";
       centrosPanel.style.display = "block";
-      heroPanel.style.display = "none"; // ✅ NUEVO (ocultar imagen en centros)
+      heroPanel.style.display = "none"; // ✅ ocultar imagen en centros
       logoutBtn.style.display = "inline-block";
       userEmailEl.textContent = email;
     }
@@ -457,7 +456,6 @@
       inactivityTimer = setTimeout(forceLogoutByInactivity, INACTIVITY_LIMIT_MS);
     }
 
-    // Solo debe contar si hay usuario logueado
     function attachActivityListeners(){
       const events = ["mousemove","mousedown","keydown","scroll","touchstart","click"];
       events.forEach(evt => window.addEventListener(evt, resetInactivityTimer, { passive: true }));
@@ -576,12 +574,11 @@
     // =========================
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        clearInactivityTimer();     // ✅ no contar si no hay sesión
+        clearInactivityTimer();
         showLogin();
         return;
       }
 
-      // ✅ arranca/reinicia el timer al detectar sesión
       resetInactivityTimer();
 
       showCentros(user.email);

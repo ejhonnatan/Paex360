@@ -1,24 +1,64 @@
 // netlify/functions/getPermissions.js
 const https = require("https");
 
+const CSV_URL = "https://opinatlatam-my.sharepoint.com/:x:/g/personal/jecheverri_opinatlatam_onmicrosoft_com/IQC52WfdqM15QaCqWN0Wqsi-AY1RKp9z0nHaqH6s9XNP46c?download=1";
+
+function fetchUrl(url, depth = 0) {
+  return new Promise((resolve, reject) => {
+    if (depth > 5) return reject(new Error("Too many redirects"));
+
+    https.get(url, (res) => {
+      const status = res.statusCode || 0;
+      const loc = res.headers.location;
+
+      // Follow redirects (301/302/303/307/308)
+      if ([301, 302, 303, 307, 308].includes(status) && loc) {
+        const nextUrl = loc.startsWith("http") ? loc : new URL(loc, url).toString();
+        res.resume(); // discard data
+        return resolve(fetchUrl(nextUrl, depth + 1));
+      }
+
+      let data = "";
+      res.on("data", (chunk) => (data += chunk));
+      res.on("end", () => resolve({ status, headers: res.headers, body: data }));
+    }).on("error", reject);
+  });
+}
+
 exports.handler = async () => {
-  const CSV_URL = "https://opinatlatam-my.sharepoint.com/:x:/g/personal/jecheverri_opinatlatam_onmicrosoft_com/IQC52WfdqM15QaCqWN0Wqsi-AY1RKp9z0nHaqH6s9XNP46c?download=1";
-
   try {
-    const csvData = await new Promise((resolve, reject) => {
-      https.get(CSV_URL, (res) => {
-        let data = "";
-        res.on("data", (chunk) => (data += chunk));
-        res.on("end", () => resolve(data));
-      }).on("error", reject);
-    });
+    const { status, headers, body } = await fetchUrl(CSV_URL);
 
-    // Quitar BOM si viene desde Excel
-    let text = csvData.replace(/^\uFEFF/, "");
+    // Si no es 200, devuelvo error con pista
+    if (status !== 200) {
+      return {
+        statusCode: 500,
+        headers: { "Access-Control-Allow-Origin": "*" },
+        body: JSON.stringify({
+          error: `No pude descargar CSV (HTTP ${status})`,
+          contentType: headers["content-type"] || null
+        })
+      };
+    }
 
-    // Normalizar saltos
+    // Quitar BOM
+    let text = String(body || "").replace(/^\uFEFF/, "");
+
+    // Si SharePoint devolvió HTML en vez de CSV, lo detectamos
+    const looksHtml = /^\s*</.test(text);
+    if (looksHtml) {
+      return {
+        statusCode: 500,
+        headers: { "Access-Control-Allow-Origin": "*" },
+        body: JSON.stringify({
+          error: "SharePoint devolvió HTML (no CSV). El link no es de descarga directa real.",
+          contentType: headers["content-type"] || null
+        })
+      };
+    }
+
     const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-    if (lines.length === 0) {
+    if (lines.length < 2) {
       return {
         statusCode: 200,
         headers: { "Access-Control-Allow-Origin": "*" },
@@ -26,19 +66,13 @@ exports.handler = async () => {
       };
     }
 
-    // Detectar separador por header (coma o punto y coma)
-    const header = lines[0];
-    const delimiter = header.includes(";") ? ";" : ",";
+    const delimiter = lines[0].includes(";") ? ";" : ",";
 
-    // Helper: limpiar comillas y espacios
     const clean = (s) => String(s || "").trim().replace(/^"|"$/g, "");
 
-    // Construir mapa: emailLower -> [centros]
     const permissions = {};
-
     for (let i = 1; i < lines.length; i++) {
       const parts = lines[i].split(delimiter);
-
       const email = clean(parts[0]).toLowerCase();
       const center = clean(parts[1]);
 
@@ -53,11 +87,12 @@ exports.handler = async () => {
       headers: { "Access-Control-Allow-Origin": "*" },
       body: JSON.stringify(permissions)
     };
-  } catch (error) {
+
+  } catch (e) {
     return {
       statusCode: 500,
       headers: { "Access-Control-Allow-Origin": "*" },
-      body: JSON.stringify({ error: error.message })
+      body: JSON.stringify({ error: e.message })
     };
   }
 };

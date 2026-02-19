@@ -1,50 +1,115 @@
-// netlify/functions/getPermissions.js
 const fs = require("fs");
 const path = require("path");
 
-exports.handler = async () => {
+exports.handler = async (event) => {
   try {
-    const filePath = path.join(process.cwd(), "Permisos_pagina.csv");
-    const csvData = fs.readFileSync(filePath, "utf8");
-
-    const text = String(csvData || "").replace(/^\uFEFF/, "");
-    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-
-    if (lines.length < 2) {
+    // =============================
+    // 1️⃣ Validar método
+    // =============================
+    if (event.httpMethod !== "POST") {
       return {
-        statusCode: 200,
-        headers: { "Access-Control-Allow-Origin": "*" },
-        body: JSON.stringify({})
+        statusCode: 405,
+        body: JSON.stringify({ error: "Method Not Allowed" })
       };
     }
 
-    const delimiter = lines[0].includes(";") ? ";" : ",";
+    // =============================
+    // 2️⃣ Obtener email del body
+    // =============================
+    const body = JSON.parse(event.body || "{}");
+    const email = (body.email || "").toLowerCase().trim();
 
-    const clean = (s) => String(s || "").trim().replace(/^"|"$/g, "");
-
-    const permissions = {};
-    for (let i = 1; i < lines.length; i++) {
-      const parts = lines[i].split(delimiter);
-      const email = clean(parts[0]).toLowerCase();
-      const center = clean(parts[1]);
-
-      if (!email || !center) continue;
-
-      if (!permissions[email]) permissions[email] = [];
-      if (!permissions[email].includes(center)) permissions[email].push(center);
+    if (!email) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: "Email requerido" })
+      };
     }
+
+    // =============================
+    // 3️⃣ Leer CSV correctamente
+    // =============================
+    const filePath = path.join(__dirname, "Permisos_pagina.csv");
+
+    if (!fs.existsSync(filePath)) {
+      return {
+        statusCode: 500,
+        body: JSON.stringify({
+          error: "Archivo CSV no encontrado",
+          filePath,
+          filesDisponibles: fs.readdirSync(__dirname)
+        })
+      };
+    }
+
+    const csvData = fs.readFileSync(filePath, "utf8");
+
+    // =============================
+    // 4️⃣ Parsear CSV
+    // Formato esperado:
+    // email,Clinica_Diagonal,Clinica_Salus
+    // usuario@email.com,true,false
+    // =============================
+
+    const lines = csvData
+      .split("\n")
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
+
+    const headers = lines[0].split(",").map(h => h.trim());
+
+    const records = lines.slice(1).map(line => {
+      const values = line.split(",").map(v => v.trim());
+      let obj = {};
+      headers.forEach((header, index) => {
+        obj[header] = values[index];
+      });
+      return obj;
+    });
+
+    // =============================
+    // 5️⃣ Buscar usuario
+    // =============================
+
+    const user = records.find(r =>
+      r.email && r.email.toLowerCase() === email
+    );
+
+    if (!user) {
+      return {
+        statusCode: 403,
+        body: JSON.stringify({
+          error: "Usuario no autorizado"
+        })
+      };
+    }
+
+    // =============================
+    // 6️⃣ Construir respuesta
+    // =============================
+
+    const permissions = {
+      Clinica_Diagonal: user.Clinica_Diagonal === "true",
+      Clinica_Salus: user.Clinica_Salus === "true"
+    };
 
     return {
       statusCode: 200,
-      headers: { "Access-Control-Allow-Origin": "*" },
-      body: JSON.stringify(permissions)
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        permissions
+      })
     };
 
-  } catch (e) {
+  } catch (error) {
     return {
       statusCode: 500,
-      headers: { "Access-Control-Allow-Origin": "*" },
-      body: JSON.stringify({ error: e.message })
+      body: JSON.stringify({
+        error: "Error interno del servidor",
+        message: error.message,
+        stack: error.stack
+      })
     };
   }
 };

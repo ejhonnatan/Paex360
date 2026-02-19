@@ -29,7 +29,7 @@
       display:flex;
       align-items:center;
       gap:10px;
-      font-weight:800;
+      font-weight:900;
       letter-spacing:.2px;
     }
     .brand img{ width:28px; height:28px; border-radius:8px; }
@@ -41,20 +41,11 @@
       color:#fff;
       padding:10px 12px;
       border-radius: 10px;
-      font-weight:700;
+      font-weight:900;
       font-size:13px;
     }
     .btn:hover{ background: rgba(255,255,255,.12); }
-    .wrap{
-      padding: 14px;
-    }
-    .frame{
-      width: 100%;
-      height: calc(100vh - 70px);
-      border: 0;
-      border-radius: 12px;
-      background: #111827;
-    }
+    .wrap{ padding: 14px; }
     .msg{
       padding: 14px;
       background: rgba(220,38,38,.12);
@@ -62,7 +53,24 @@
       border-radius: 12px;
       margin: 14px 0;
       display:none;
-      font-weight:800;
+      font-weight:900;
+    }
+    .loader{
+      padding: 12px 14px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 12px;
+      margin: 14px 0;
+      display:none;
+      font-weight:900;
+      color:#cbd5e1;
+    }
+    #reportContainer{
+      width: 100%;
+      height: calc(100vh - 90px);
+      border-radius: 12px;
+      overflow: hidden;
+      background: #111827;
     }
   </style>
 </head>
@@ -81,20 +89,46 @@
 
   <div class="wrap">
     <div class="msg" id="msg"></div>
-    <iframe id="pbiFrame" class="frame" src=""></iframe>
+    <div class="loader" id="loader">Cargando dashboard...</div>
+    <div id="reportContainer"></div>
   </div>
+
+  <!-- =========================
+       Power BI Client (Embed)
+       ========================= -->
+  <script src="https://cdn.jsdelivr.net/npm/powerbi-client@2.23.1/dist/powerbi.min.js"></script>
 
   <script type="module">
     // =========================
-    // 1) Utilidades
+    // 1) Constantes del embedding (ANTES te funcionaban así)
+    // =========================
+    const WORKSPACE_ID = "7230301b-540b-4f1a-b94d-c3ff22d4564d";
+
+    const CENTERS = {
+      salus:    { label: "Clínica SALUS",    reportId: "be0ed5d8-4753-4dd0-b031-ed0b7ab57d96" },
+      diagonal: { label: "Clínica Diagonal", reportId: "c82cbcf1-7b93-458a-8f14-3b7a86800a23" }
+    };
+
+    // =========================
+    // 2) Utilidades UI
     // =========================
     const msg = document.getElementById("msg");
-    const frame = document.getElementById("pbiFrame");
+    const loader = document.getElementById("loader");
     const centerTitle = document.getElementById("centerTitle");
+    const reportContainer = document.getElementById("reportContainer");
 
     function showError(text){
       msg.style.display = "block";
       msg.textContent = text;
+      loader.style.display = "none";
+    }
+
+    function setLoading(on){
+      loader.style.display = on ? "block" : "none";
+      if(on){
+        msg.style.display = "none";
+        msg.textContent = "";
+      }
     }
 
     function getQueryParam(name){
@@ -103,24 +137,21 @@
     }
 
     // =========================
-    // 2) Center seleccionado
+    // 3) Leer center desde URL
     // =========================
-    const center = getQueryParam("center").toLowerCase();
+    const centerKey = getQueryParam("center").toLowerCase();
+    const centerCfg = CENTERS[centerKey];
 
-    const CENTER_LABEL = {
-      diagonal: "Clínica Diagonal",
-      salus: "Clínica SALUS"
-    };
-
-    if (!center || !CENTER_LABEL[center]) {
+    if (!centerCfg) {
       showError("Centro inválido. Vuelve y selecciona un centro.");
       centerTitle.textContent = "Dashboard";
-    } else {
-      centerTitle.textContent = CENTER_LABEL[center];
+      throw new Error("Invalid center");
     }
 
+    centerTitle.textContent = centerCfg.label;
+
     // =========================
-    // 3) Firebase config desde getConfig
+    // 4) Firebase config desde getConfig
     // =========================
     let firebaseConfig = null;
     try {
@@ -134,7 +165,7 @@
     }
 
     // =========================
-    // 4) Firebase Auth (validar sesión)
+    // 5) Firebase Auth: proteger la página
     // =========================
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -142,33 +173,6 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
-    // =========================
-    // 5) Cargar URL Power BI desde function getPowerBI
-    //    (aquí conectas tu WORKSPACE_ID + reportId)
-    // =========================
-    async function cargarPowerBI(centerKey){
-      try{
-        // Espera respuesta tipo: { url: "https://app.powerbi.com/view?r=..." }
-        const r = await fetch(`/.netlify/functions/getPowerBI?center=${encodeURIComponent(centerKey)}`);
-        const data = await r.json().catch(() => ({}));
-
-        if(!r.ok){
-          throw new Error(data?.error || "getPowerBI no respondió OK");
-        }
-
-        const url = data.url || data.embedUrl || data.reportUrl || "";
-        if(!url) throw new Error("getPowerBI respondió sin URL.");
-
-        frame.src = url;
-      }catch(e){
-        console.error(e);
-        showError("No se pudo cargar el dashboard (revisa getPowerBI.js).");
-      }
-    }
-
-    // =========================
-    // 6) Botones
-    // =========================
     document.getElementById("backBtn").onclick = () => window.location.href = "index.html";
     document.getElementById("logoutBtn").onclick = async () => {
       await signOut(auth);
@@ -176,17 +180,79 @@
     };
 
     // =========================
-    // 7) Proteger ruta: si no hay sesión -> volver a login
+    // 6) Llamar getPowerBI.js (POST) - TU MISMO CONTRATO
+    // =========================
+    async function pedirEmbedData(workspaceId, reportId){
+      const resp = await fetch("/.netlify/functions/getPowerBI", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ workspaceId, reportId })
+      });
+
+      const data = await resp.json().catch(() => ({}));
+
+      if (!resp.ok) {
+        // Te muestro el raw si viene
+        const extra = data?.raw ? ` | raw: ${data.raw}` : "";
+        throw new Error((data?.error || "Error getPowerBI") + extra);
+      }
+
+      return data; // { embedToken, embedUrl, reportId }
+    }
+
+    // =========================
+    // 7) Embebido real con powerbi-client (NO iframe)
+    // =========================
+    function embedReport(embedUrl, embedToken){
+      // limpiar embeds previos
+      powerbi.reset(reportContainer);
+
+      const models = window["powerbi-client"].models;
+
+      const config = {
+        type: "report",
+        tokenType: models.TokenType.Embed,
+        accessToken: embedToken,
+        embedUrl: embedUrl,
+        settings: {
+          panes: { filters: { visible: false }, pageNavigation: { visible: true } },
+          background: models.BackgroundType.Transparent
+        }
+      };
+
+      powerbi.embed(reportContainer, config);
+    }
+
+    // =========================
+    // 8) Flujo principal: si hay sesión -> pedir token -> embed
     // =========================
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         window.location.href = "index.html";
         return;
       }
-      if (center && CENTER_LABEL[center]) {
-        await cargarPowerBI(center);
+
+      try {
+        setLoading(true);
+
+        const data = await pedirEmbedData(WORKSPACE_ID, centerCfg.reportId);
+
+        const embedToken = data.embedToken;
+        const embedUrl = data.embedUrl;
+
+        if (!embedToken || !embedUrl) {
+          throw new Error("Respuesta incompleta: falta embedToken o embedUrl");
+        }
+
+        embedReport(embedUrl, embedToken);
+        setLoading(false);
+
+      } catch (e) {
+        console.error(e);
+        showError("No se pudo cargar el dashboard: " + e.message);
       }
     });
+
   </script>
 </body>
 </html>

@@ -32,9 +32,7 @@
       padding: 24px;
     }
 
-    .wrap{
-      width: min(1100px, 100%);
-    }
+    .wrap{ width: min(1100px, 100%); }
 
     .topbar{
       display:flex;
@@ -80,10 +78,7 @@
       font-weight: 600;
       font-size: 13px;
     }
-    .btn:disabled{
-      opacity:.55;
-      cursor:not-allowed;
-    }
+    .btn:disabled{ opacity:.55; cursor:not-allowed; }
     .btn-primary{
       background: var(--primary);
       color:#fff;
@@ -144,9 +139,7 @@
       font-size: 14px;
       background:#fff;
     }
-    input:focus{
-      border-color: #9ca3af;
-    }
+    input:focus{ border-color: #9ca3af; }
 
     .error{
       color: var(--danger);
@@ -170,9 +163,7 @@
       font-weight: 800;
       font-size: 13px;
     }
-    .centro-btn:hover{
-      border-color: #9ca3af;
-    }
+    .centro-btn:hover{ border-color: #9ca3af; }
 
     .notice{
       margin-top: 10px;
@@ -187,24 +178,17 @@
       margin: 14px 0;
     }
 
-    .iframe-wrap{
-      margin-top: 14px;
-      border:1px solid var(--border);
-      border-radius: 14px;
-      overflow:hidden;
-      height: 640px;
-      background:#fff;
-      display:none;
-    }
-    iframe{
-      width:100%;
-      height:100%;
-      border:0;
-    }
-
     .small{
       font-size: 12px;
       color: var(--muted);
+    }
+
+    .loader{
+      display:none;
+      margin-top:10px;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
     }
   </style>
 </head>
@@ -212,6 +196,9 @@
 <body>
   <div class="wrap">
 
+    <!-- =========================
+         TOPBAR (Marca + Usuario)
+         ========================= -->
     <div class="topbar">
       <div class="brand">
         <img src="paex360-logo.png" alt="Paex360">
@@ -227,7 +214,9 @@
     <div class="card">
       <div class="grid">
 
-        <!-- PANEL LOGIN -->
+        <!-- =========================
+             PANEL LOGIN
+             ========================= -->
         <div class="panel" id="loginPanel">
           <h2 class="title">Acceso</h2>
           <p class="subtitle">Inicia sesión para ver los centros habilitados.</p>
@@ -244,6 +233,7 @@
 
           <button class="btn btn-primary" id="loginBtn">Ingresar</button>
           <div id="loginError" class="error" style="display:none;"></div>
+          <div id="loginLoader" class="loader">Procesando...</div>
 
           <div class="divider"></div>
           <div class="small">
@@ -251,7 +241,9 @@
           </div>
         </div>
 
-        <!-- PANEL SELECCION -->
+        <!-- =========================
+             PANEL SELECCIÓN CENTRO
+             ========================= -->
         <div class="panel" id="centrosPanel" style="display:none;">
           <h2 class="title">Selecciona un centro</h2>
           <p class="subtitle">Se mostrarán únicamente los centros autorizados para tu usuario.</p>
@@ -259,42 +251,94 @@
           <div id="centros-container" class="centros"></div>
           <div id="mensaje-permisos" class="notice" style="display:none;"></div>
 
-          <div class="iframe-wrap" id="iframeWrap">
-            <iframe id="pbiFrame" src=""></iframe>
-          </div>
-
           <div class="small" style="margin-top:10px;">
-            Si al hacer clic no carga el tablero, revisa tu function <b>getPowerBI.js</b> (debe devolver una URL).
+            Si no aparece ningún botón, revisa el CSV y el email del usuario.
           </div>
         </div>
 
       </div>
     </div>
+
   </div>
 
-  <!-- Firebase + lógica -->
+  <!-- =========================
+       SCRIPT PRINCIPAL (ESM)
+       ========================= -->
   <script type="module">
+
     // =========================
-    // 1) Firebase config
+    // 0) Helpers UI
     // =========================
-    // Opción A (recomendada): config.js exportando firebaseConfig
-    // export const firebaseConfig = { ... }
+    const loginPanel = document.getElementById("loginPanel");
+    const centrosPanel = document.getElementById("centrosPanel");
+    const loginBtn = document.getElementById("loginBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const loginError = document.getElementById("loginError");
+    const loginLoader = document.getElementById("loginLoader");
+    const userEmailEl = document.getElementById("userEmail");
+
+    const centrosContainer = document.getElementById("centros-container");
+    const mensajePermisos = document.getElementById("mensaje-permisos");
+
+    function showLogin() {
+      loginPanel.style.display = "block";
+      centrosPanel.style.display = "none";
+      logoutBtn.style.display = "none";
+      userEmailEl.textContent = "";
+      centrosContainer.innerHTML = "";
+      mensajePermisos.style.display = "none";
+      mensajePermisos.textContent = "";
+      setLoginError("");
+    }
+
+    function showCentros(email) {
+      loginPanel.style.display = "none";
+      centrosPanel.style.display = "block";
+      logoutBtn.style.display = "inline-block";
+      userEmailEl.textContent = email;
+    }
+
+    function setLoginError(msg) {
+      loginError.style.display = msg ? "block" : "none";
+      loginError.textContent = msg || "";
+    }
+
+    function setLoader(on) {
+      loginLoader.style.display = on ? "block" : "none";
+      loginBtn.disabled = on;
+    }
+
+    function mostrarSinPermisos(texto) {
+      centrosContainer.innerHTML = "";
+      mensajePermisos.style.display = "block";
+      mensajePermisos.textContent = texto;
+    }
+
+    function limpiarMensajePermisos() {
+      mensajePermisos.style.display = "none";
+      mensajePermisos.textContent = "";
+    }
+
+    // =========================
+    // 1) Firebase config desde Netlify Function (robusto)
+    // =========================
     let firebaseConfig = null;
 
     try {
-      const cfg = await import("./config.js");
-      firebaseConfig = cfg.firebaseConfig || null;
-    } catch (e) {
-      // Si falla import, intentamos getConfig function (si la tienes)
-      try {
-        const r = await fetch("/.netlify/functions/getConfig");
-        if (r.ok) firebaseConfig = await r.json();
-      } catch (e2) {}
-    }
+      const r = await fetch("/.netlify/functions/getConfig", { cache: "no-store" });
+      const cfg = await r.json().catch(() => ({}));
 
-    if (!firebaseConfig) {
+      if (!r.ok) throw new Error(cfg?.error || "getConfig no respondió OK");
+
+      // por si devuelves { firebaseConfig: {...} }
+      firebaseConfig = cfg.firebaseConfig || cfg;
+
+      console.log("✅ Firebase config cargado OK");
+
+    } catch (e) {
       alert("No se pudo cargar la configuración de Firebase (config.js / getConfig).");
-      throw new Error("Missing Firebase config");
+      console.error("❌ Error cargando Firebase config:", e);
+      throw e;
     }
 
     // =========================
@@ -312,57 +356,7 @@
     const auth = getAuth(app);
 
     // =========================
-    // 3) UI helpers
-    // =========================
-    const loginPanel = document.getElementById("loginPanel");
-    const centrosPanel = document.getElementById("centrosPanel");
-    const loginBtn = document.getElementById("loginBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
-    const loginError = document.getElementById("loginError");
-    const userEmailEl = document.getElementById("userEmail");
-
-    const centrosContainer = document.getElementById("centros-container");
-    const mensajePermisos = document.getElementById("mensaje-permisos");
-
-    const iframeWrap = document.getElementById("iframeWrap");
-    const pbiFrame = document.getElementById("pbiFrame");
-
-    function showLogin() {
-      loginPanel.style.display = "block";
-      centrosPanel.style.display = "none";
-      logoutBtn.style.display = "none";
-      userEmailEl.textContent = "";
-      iframeWrap.style.display = "none";
-      pbiFrame.src = "";
-    }
-
-    function showCentros(email) {
-      loginPanel.style.display = "none";
-      centrosPanel.style.display = "block";
-      logoutBtn.style.display = "inline-block";
-      userEmailEl.textContent = email;
-    }
-
-    function setLoginError(msg) {
-      loginError.style.display = msg ? "block" : "none";
-      loginError.textContent = msg || "";
-    }
-
-    function mostrarSinPermisos(texto) {
-      centrosContainer.innerHTML = "";
-      mensajePermisos.style.display = "block";
-      mensajePermisos.textContent = texto;
-      iframeWrap.style.display = "none";
-      pbiFrame.src = "";
-    }
-
-    function limpiarMensajePermisos() {
-      mensajePermisos.style.display = "none";
-      mensajePermisos.textContent = "";
-    }
-
-    // =========================
-    // 4) Permissions + render
+    // 3) Consultar permisos (getPermissions)
     // =========================
     async function cargarPermisosYRender(email) {
       const cleanEmail = (email || "").toLowerCase().trim();
@@ -409,16 +403,17 @@
       renderBotonesCentros({ puedeDiagonal, puedeSalus });
     }
 
+    // =========================
+    // 4) Render botones centros
+    // =========================
     function renderBotonesCentros({ puedeDiagonal, puedeSalus }) {
       centrosContainer.innerHTML = "";
-      iframeWrap.style.display = "none";
-      pbiFrame.src = "";
 
       if (puedeDiagonal) {
         const btn = document.createElement("button");
         btn.className = "centro-btn";
         btn.textContent = "Clínica Diagonal";
-        btn.onclick = () => abrirCentro("diagonal");
+        btn.onclick = () => window.location.href = "dashboard.html?center=diagonal";
         centrosContainer.appendChild(btn);
       }
 
@@ -426,42 +421,13 @@
         const btn = document.createElement("button");
         btn.className = "centro-btn";
         btn.textContent = "Clínica SALUS";
-        btn.onclick = () => abrirCentro("salus");
+        btn.onclick = () => window.location.href = "dashboard.html?center=salus";
         centrosContainer.appendChild(btn);
       }
     }
 
     // =========================
-    // 5) Abrir centro (Power BI)
-    // =========================
-    async function abrirCentro(centerKey) {
-      // Intento 1: usar getPowerBI.js (si tu function devuelve URL)
-      // Espera algo como: { url: "https://app.powerbi.com/view?r=..." }
-      try {
-        const r = await fetch(`/.netlify/functions/getPowerBI?center=${encodeURIComponent(centerKey)}`);
-        const data = await r.json().catch(() => ({}));
-
-        if (!r.ok) {
-          throw new Error(data?.error || "getPowerBI no respondió OK");
-        }
-
-        const url = data.url || data.embedUrl || data.reportUrl || "";
-        if (!url) {
-          throw new Error("getPowerBI respondió sin URL (url/embedUrl/reportUrl).");
-        }
-
-        iframeWrap.style.display = "block";
-        pbiFrame.src = url;
-        return;
-
-      } catch (e) {
-        console.error("❌ Error abriendo centro:", e);
-        mostrarSinPermisos("No se pudo cargar el tablero. Revisa getPowerBI.js (debe devolver una URL).");
-      }
-    }
-
-    // =========================
-    // 6) Login / Logout handlers
+    // 5) Login handler
     // =========================
     loginBtn.addEventListener("click", async () => {
       setLoginError("");
@@ -474,25 +440,28 @@
         return;
       }
 
-      loginBtn.disabled = true;
+      setLoader(true);
 
       try {
         await signInWithEmailAndPassword(auth, email, pass);
       } catch (e) {
-        console.error(e);
+        console.error("❌ Login error:", e);
         setLoginError("Credenciales inválidas o usuario no existe.");
       } finally {
-        loginBtn.disabled = false;
+        setLoader(false);
       }
     });
 
+    // =========================
+    // 6) Logout handler
+    // =========================
     logoutBtn.addEventListener("click", async () => {
       await signOut(auth);
       showLogin();
     });
 
     // =========================
-    // 7) Auth state
+    // 7) Auth state (cuando cambia la sesión)
     // =========================
     onAuthStateChanged(auth, async (user) => {
       if (!user) {

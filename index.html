@@ -34,6 +34,9 @@
 
     .wrap{ width: min(1100px, 100%); }
 
+    /* =========================
+       Topbar
+       ========================= */
     .topbar{
       display:flex;
       align-items:center;
@@ -57,7 +60,7 @@
     .brand h1{
       font-size: 16px;
       margin: 0;
-      font-weight: 700;
+      font-weight: 800;
       letter-spacing: .2px;
     }
 
@@ -67,6 +70,7 @@
       gap: 10px;
       color: var(--muted);
       font-size: 13px;
+      font-weight: 700;
     }
 
     .btn{
@@ -75,7 +79,7 @@
       padding: 10px 12px;
       border-radius: 10px;
       cursor:pointer;
-      font-weight: 600;
+      font-weight: 800;
       font-size: 13px;
     }
     .btn:disabled{ opacity:.55; cursor:not-allowed; }
@@ -85,24 +89,14 @@
       border-color: var(--primary);
     }
 
+    /* =========================
+       Card / Layout
+       ========================= */
     .card{
       background: var(--card);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       padding: 28px;
-    }
-
-    .title{
-      margin:0 0 8px 0;
-      font-size: 18px;
-      font-weight: 800;
-    }
-
-    .subtitle{
-      margin:0 0 20px 0;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.4;
     }
 
     .grid{
@@ -120,17 +114,36 @@
       padding: 18px;
     }
 
+    .title{
+      margin:0 0 8px 0;
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .subtitle{
+      margin:0 0 20px 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+      font-weight: 600;
+    }
+
+    /* =========================
+       Form
+       ========================= */
     .field{
       display:flex;
       flex-direction:column;
       gap:6px;
       margin-bottom: 12px;
     }
+
     label{
       font-size: 12px;
       color: var(--muted);
-      font-weight: 700;
+      font-weight: 900;
     }
+
     input{
       padding: 12px 12px;
       border-radius: 12px;
@@ -144,32 +157,9 @@
     .error{
       color: var(--danger);
       font-size: 13px;
-      font-weight: 700;
+      font-weight: 900;
       margin-top: 8px;
-    }
-
-    .centros{
-      display:flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-top: 10px;
-    }
-    .centro-btn{
-      padding: 12px 14px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      background: #fff;
-      cursor: pointer;
-      font-weight: 800;
-      font-size: 13px;
-    }
-    .centro-btn:hover{ border-color: #9ca3af; }
-
-    .notice{
-      margin-top: 10px;
-      color: var(--danger);
-      font-weight: 800;
-      font-size: 13px;
+      display:none;
     }
 
     .divider{
@@ -181,6 +171,7 @@
     .small{
       font-size: 12px;
       color: var(--muted);
+      font-weight: 600;
     }
 
     .loader{
@@ -188,7 +179,36 @@
       margin-top:10px;
       font-size: 12px;
       color: var(--muted);
-      font-weight: 700;
+      font-weight: 800;
+    }
+
+    /* =========================
+       Centros
+       ========================= */
+    .centros{
+      display:flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .centro-btn{
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #fff;
+      cursor: pointer;
+      font-weight: 900;
+      font-size: 13px;
+    }
+    .centro-btn:hover{ border-color: #9ca3af; }
+
+    .notice{
+      margin-top: 10px;
+      color: var(--danger);
+      font-weight: 900;
+      font-size: 13px;
+      display:none;
     }
   </style>
 </head>
@@ -232,7 +252,7 @@
           </div>
 
           <button class="btn btn-primary" id="loginBtn">Ingresar</button>
-          <div id="loginError" class="error" style="display:none;"></div>
+          <div id="loginError" class="error"></div>
           <div id="loginLoader" class="loader">Procesando...</div>
 
           <div class="divider"></div>
@@ -249,7 +269,7 @@
           <p class="subtitle">Se mostrarán únicamente los centros autorizados para tu usuario.</p>
 
           <div id="centros-container" class="centros"></div>
-          <div id="mensaje-permisos" class="notice" style="display:none;"></div>
+          <div id="mensaje-permisos" class="notice"></div>
 
           <div class="small" style="margin-top:10px;">
             Si no aparece ningún botón, revisa el CSV y el email del usuario.
@@ -261,33 +281,35 @@
 
   </div>
 
-  <!-- =========================
-       SCRIPT PRINCIPAL (ESM)
-       ========================= -->
   <script type="module">
 
     // =========================
-    // 0) Helpers UI
+    // 0) Referencias UI
     // =========================
     const loginPanel = document.getElementById("loginPanel");
     const centrosPanel = document.getElementById("centrosPanel");
+
     const loginBtn = document.getElementById("loginBtn");
     const logoutBtn = document.getElementById("logoutBtn");
+
     const loginError = document.getElementById("loginError");
     const loginLoader = document.getElementById("loginLoader");
+
     const userEmailEl = document.getElementById("userEmail");
 
     const centrosContainer = document.getElementById("centros-container");
     const mensajePermisos = document.getElementById("mensaje-permisos");
 
+    // =========================
+    // 0.1) Helpers UI
+    // =========================
     function showLogin() {
       loginPanel.style.display = "block";
       centrosPanel.style.display = "none";
       logoutBtn.style.display = "none";
       userEmailEl.textContent = "";
       centrosContainer.innerHTML = "";
-      mensajePermisos.style.display = "none";
-      mensajePermisos.textContent = "";
+      hidePermMessage();
       setLoginError("");
     }
 
@@ -308,13 +330,12 @@
       loginBtn.disabled = on;
     }
 
-    function mostrarSinPermisos(texto) {
-      centrosContainer.innerHTML = "";
+    function showPermMessage(msg) {
       mensajePermisos.style.display = "block";
-      mensajePermisos.textContent = texto;
+      mensajePermisos.textContent = msg;
     }
 
-    function limpiarMensajePermisos() {
+    function hidePermMessage() {
       mensajePermisos.style.display = "none";
       mensajePermisos.textContent = "";
     }
@@ -330,13 +351,12 @@
 
       if (!r.ok) throw new Error(cfg?.error || "getConfig no respondió OK");
 
-      // por si devuelves { firebaseConfig: {...} }
       firebaseConfig = cfg.firebaseConfig || cfg;
 
       console.log("✅ Firebase config cargado OK");
 
     } catch (e) {
-      alert("No se pudo cargar la configuración de Firebase (config.js / getConfig).");
+      alert("No se pudo cargar la configuración de Firebase (getConfig).");
       console.error("❌ Error cargando Firebase config:", e);
       throw e;
     }
@@ -356,14 +376,14 @@
     const auth = getAuth(app);
 
     // =========================
-    // 3) Consultar permisos (getPermissions)
+    // 3) Llamar permisos (getPermissions) + render botones
     // =========================
     async function cargarPermisosYRender(email) {
       const cleanEmail = (email || "").toLowerCase().trim();
       console.log("🔎 Email logueado:", cleanEmail);
 
       if (!cleanEmail) {
-        mostrarSinPermisos("No se pudo leer el email del usuario logueado.");
+        showPermMessage("No se pudo leer el email del usuario logueado.");
         return;
       }
 
@@ -379,12 +399,13 @@
         console.log("✅ Respuesta getPermissions:", data);
 
         if (!resp.ok) {
-          mostrarSinPermisos(data?.error || "No autorizado.");
+          showPermMessage(data?.error || "No autorizado.");
           return;
         }
+
       } catch (e) {
         console.error("❌ Error llamando getPermissions:", e);
-        mostrarSinPermisos("No se pudo consultar permisos (error de red).");
+        showPermMessage("No se pudo consultar permisos (error de red).");
         return;
       }
 
@@ -395,16 +416,16 @@
       console.log("🎯 Permisos parseados:", { puedeDiagonal, puedeSalus });
 
       if (!puedeDiagonal && !puedeSalus) {
-        mostrarSinPermisos("No tienes permisos para visualizar ningún tablero.");
+        showPermMessage("No tienes permisos para visualizar ningún tablero.");
         return;
       }
 
-      limpiarMensajePermisos();
+      hidePermMessage();
       renderBotonesCentros({ puedeDiagonal, puedeSalus });
     }
 
     // =========================
-    // 4) Render botones centros
+    // 4) Render botones centros (redirige a dashboard.html)
     // =========================
     function renderBotonesCentros({ puedeDiagonal, puedeSalus }) {
       centrosContainer.innerHTML = "";
@@ -461,7 +482,7 @@
     });
 
     // =========================
-    // 7) Auth state (cuando cambia la sesión)
+    // 7) Auth state (sesión)
     // =========================
     onAuthStateChanged(auth, async (user) => {
       if (!user) {

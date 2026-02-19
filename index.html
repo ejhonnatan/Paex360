@@ -1,366 +1,509 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>PaEx360</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" href="paex360-logo.png">
-
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/powerbi-client@2/dist/powerbi.min.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Paex360 - Acceso</title>
+  <link rel="icon" href="paex360-logo.png" type="image/png">
 
   <style>
-    html, body {
+    :root{
+      --bg: #f3f2f0;
+      --card: #ffffff;
+      --text: #111827;
+      --muted:#6b7280;
+      --danger:#dc2626;
+      --primary:#111827;
+      --border:#e5e7eb;
+      --shadow: 0 10px 30px rgba(0,0,0,.10);
+      --radius: 14px;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 24px;
+    }
+
+    .wrap{
+      width: min(1100px, 100%);
+    }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom: 14px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+
+    .brand img{
+      height: 34px;
+      width: 34px;
+      border-radius: 10px;
+      object-fit: cover;
+    }
+
+    .brand h1{
+      font-size: 16px;
       margin: 0;
-      height: 100%;
-      font-family: "Segoe UI", Arial, sans-serif;
-      background: #f3f2f1;
-    }
-
-    #auth-container {
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .login-card {
-      background: #fff;
-      width: 420px;
-      padding: 40px;
-      border-radius: 12px;
-      box-shadow: 0 8px 30px rgba(0,0,0,.12);
-      text-align: center;
-    }
-
-    .login-card img {
-      width: 110px;
-      margin-bottom: 20px;
-    }
-
-    .login-card input {
-      width: 100%;
-      padding: 12px;
-      margin-top: 14px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      font-size: 14px;
-    }
-
-    .login-card button {
-      margin-top: 20px;
-      width: 100%;
-      padding: 12px;
-      background: #662483;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .error {
-      margin-top: 12px;
-      color: #c62828;
-      font-size: 13px;
-      min-height: 18px;
-    }
-
-    #dashboard {
-      display: none;
-      height: 100%;
-      flex-direction: column;
-    }
-
-    header {
-      height: 48px;
-      background: #662483;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 16px;
-    }
-
-    .profile {
-      position: relative;
-    }
-
-    .avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: #fff;
-      color: #662483;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       font-weight: 700;
-      cursor: pointer;
+      letter-spacing: .2px;
     }
 
-    .menu {
-      display: none;
-      position: absolute;
-      right: 0;
-      top: 42px;
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 6px 18px rgba(0,0,0,.15);
-      min-width: 260px;
-      padding: 6px 0;
-      z-index: 9999;
-    }
-
-    .menu .email {
-      padding: 10px 16px;
+    .userbar{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      color: var(--muted);
       font-size: 13px;
-      border-bottom: 1px solid #eee;
-      white-space: nowrap;
     }
 
-    .menu .item {
-      padding: 12px 16px;
-      cursor: pointer;
-      font-size: 14px;
+    .btn{
+      border:1px solid var(--border);
+      background:#fff;
+      padding: 10px 12px;
+      border-radius: 10px;
+      cursor:pointer;
+      font-weight: 600;
+      font-size: 13px;
+    }
+    .btn:disabled{
+      opacity:.55;
+      cursor:not-allowed;
+    }
+    .btn-primary{
+      background: var(--primary);
+      color:#fff;
+      border-color: var(--primary);
     }
 
-    .menu .item:hover {
-      background: #f3f2f1;
+    .card{
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 28px;
     }
 
-    #centerSelector {
-      flex: 1;
-      display: none;
-      align-items: center;
-      justify-content: center;
+    .title{
+      margin:0 0 8px 0;
+      font-size: 18px;
+      font-weight: 800;
     }
 
-    .center-card {
-      width: min(900px, 95vw);
-      background: #fff;
+    .subtitle{
+      margin:0 0 20px 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+    @media(max-width: 900px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    .panel{
+      border:1px solid var(--border);
       border-radius: 14px;
-      box-shadow: 0 8px 30px rgba(0,0,0,.10);
-      padding: 26px;
-    }
-
-    .center-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 14px;
-    }
-
-    .center-btn {
-      border: 1px solid #e6e6e6;
-      background: #fafafa;
-      border-radius: 12px;
       padding: 18px;
-      cursor: pointer;
     }
 
-    .center-btn:hover {
-      background: #fff;
-      box-shadow: 0 6px 18px rgba(0,0,0,.10);
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      margin-bottom: 12px;
     }
-
-    .no-access {
-      color: #c62828;
+    label{
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    input{
+      padding: 12px 12px;
+      border-radius: 12px;
+      border:1px solid var(--border);
+      outline:none;
       font-size: 14px;
-      padding: 10px 0;
+      background:#fff;
+    }
+    input:focus{
+      border-color: #9ca3af;
     }
 
-    #reportContainer {
-      flex: 1;
-      display: none;
+    .error{
+      color: var(--danger);
+      font-size: 13px;
+      font-weight: 700;
+      margin-top: 8px;
+    }
+
+    .centros{
+      display:flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .centro-btn{
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #fff;
+      cursor: pointer;
+      font-weight: 800;
+      font-size: 13px;
+    }
+    .centro-btn:hover{
+      border-color: #9ca3af;
+    }
+
+    .notice{
+      margin-top: 10px;
+      color: var(--danger);
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .divider{
+      height:1px;
+      background: var(--border);
+      margin: 14px 0;
+    }
+
+    .iframe-wrap{
+      margin-top: 14px;
+      border:1px solid var(--border);
+      border-radius: 14px;
+      overflow:hidden;
+      height: 640px;
+      background:#fff;
+      display:none;
+    }
+    iframe{
+      width:100%;
+      height:100%;
+      border:0;
+    }
+
+    .small{
+      font-size: 12px;
+      color: var(--muted);
     }
   </style>
 </head>
 
 <body>
+  <div class="wrap">
 
-<div id="auth-container">
-  <div class="login-card">
-    <img src="paex360-logo.png">
-    <input id="email" type="email" placeholder="Correo electrónico">
-    <input id="password" type="password" placeholder="Contraseña">
-    <button onclick="login()">Ingresar</button>
-    <div id="error" class="error"></div>
-  </div>
-</div>
+    <div class="topbar">
+      <div class="brand">
+        <img src="paex360-logo.png" alt="Paex360">
+        <h1>Paex360</h1>
+      </div>
 
-<div id="dashboard">
-  <header>
-    <strong id="appTitle">PaEx360</strong>
-    <div class="profile">
-      <div id="avatar" class="avatar" onclick="toggleMenu()">U</div>
-      <div id="menu" class="menu">
-        <div id="userEmail" class="email"></div>
-        <div class="item" onclick="openCenterSelector()">Cambiar centro</div>
-        <div class="item" onclick="logout()">Cerrar sesión</div>
+      <div class="userbar">
+        <span id="userEmail"></span>
+        <button class="btn" id="logoutBtn" style="display:none;">Cerrar sesión</button>
       </div>
     </div>
-  </header>
 
-  <div id="centerSelector">
-    <div class="center-card">
-      <h3>Selecciona un centro</h3>
-      <div id="centerGrid" class="center-grid"></div>
-      <div id="noAccessMsg" class="no-access" style="display:none;">
-        No tienes permisos para visualizar ningún tablero.
+    <div class="card">
+      <div class="grid">
+
+        <!-- PANEL LOGIN -->
+        <div class="panel" id="loginPanel">
+          <h2 class="title">Acceso</h2>
+          <p class="subtitle">Inicia sesión para ver los centros habilitados.</p>
+
+          <div class="field">
+            <label for="loginEmail">Correo</label>
+            <input id="loginEmail" type="email" placeholder="tu_correo@dominio.com" autocomplete="email">
+          </div>
+
+          <div class="field">
+            <label for="loginPass">Contraseña</label>
+            <input id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password">
+          </div>
+
+          <button class="btn btn-primary" id="loginBtn">Ingresar</button>
+          <div id="loginError" class="error" style="display:none;"></div>
+
+          <div class="divider"></div>
+          <div class="small">
+            Si tu usuario existe en Firebase pero no aparece el centro, es porque no tiene permisos en <b>Permisos_pagina.csv</b>.
+          </div>
+        </div>
+
+        <!-- PANEL SELECCION -->
+        <div class="panel" id="centrosPanel" style="display:none;">
+          <h2 class="title">Selecciona un centro</h2>
+          <p class="subtitle">Se mostrarán únicamente los centros autorizados para tu usuario.</p>
+
+          <div id="centros-container" class="centros"></div>
+          <div id="mensaje-permisos" class="notice" style="display:none;"></div>
+
+          <div class="iframe-wrap" id="iframeWrap">
+            <iframe id="pbiFrame" src=""></iframe>
+          </div>
+
+          <div class="small" style="margin-top:10px;">
+            Si al hacer clic no carga el tablero, revisa tu function <b>getPowerBI.js</b> (debe devolver una URL).
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
 
-  <div id="reportContainer"></div>
-</div>
+  <!-- Firebase + lógica -->
+  <script type="module">
+    // =========================
+    // 1) Firebase config
+    // =========================
+    // Opción A (recomendada): config.js exportando firebaseConfig
+    // export const firebaseConfig = { ... }
+    let firebaseConfig = null;
 
-<script>
-
-let auth;
-
-const WORKSPACE_ID = "7230301b-540b-4f1a-b94d-c3ff22d4564d";
-
-const CENTERS = {
-  "Salus": { reportId: "be0ed5d8-4753-4dd0-b031-ed0b7ab57d96" },
-  "Diagonal": { reportId: "c82cbcf1-7b93-458a-8f14-3b7a86800a23" }
-};
-
-async function initFirebase() {
-  const r = await fetch("/.netlify/functions/getConfig");
-  const cfg = await r.json();
-
-  firebase.initializeApp({
-    apiKey: cfg.apiKey,
-    authDomain: cfg.authDomain,
-    projectId: cfg.projectId
-  });
-
-  auth = firebase.auth();
-
-  auth.onAuthStateChanged(async user => {
-    if (user) {
-      document.getElementById("auth-container").style.display = "none";
-      document.getElementById("dashboard").style.display = "flex";
-
-      const email = user.email || "";
-      document.getElementById("avatar").textContent = email.charAt(0).toUpperCase();
-      document.getElementById("userEmail").textContent = email;
-
-      openCenterSelector();
-
-      const permissions = await fetchPermissionsMap();
-      renderCentersForUser(email, permissions);
-
-    } else {
-      document.getElementById("dashboard").style.display = "none";
-      document.getElementById("auth-container").style.display = "flex";
+    try {
+      const cfg = await import("./config.js");
+      firebaseConfig = cfg.firebaseConfig || null;
+    } catch (e) {
+      // Si falla import, intentamos getConfig function (si la tienes)
+      try {
+        const r = await fetch("/.netlify/functions/getConfig");
+        if (r.ok) firebaseConfig = await r.json();
+      } catch (e2) {}
     }
-  });
-}
 
-function login() {
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
-  document.getElementById("error").textContent = "";
+    if (!firebaseConfig) {
+      alert("No se pudo cargar la configuración de Firebase (config.js / getConfig).");
+      throw new Error("Missing Firebase config");
+    }
 
-  if (!auth) return;
+    // =========================
+    // 2) Firebase SDK (CDN)
+    // =========================
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getAuth,
+      signInWithEmailAndPassword,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-  auth.signInWithEmailAndPassword(email, password)
-    .catch(() => {
-      document.getElementById("error").textContent = "Usuario o contraseña incorrectos";
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // =========================
+    // 3) UI helpers
+    // =========================
+    const loginPanel = document.getElementById("loginPanel");
+    const centrosPanel = document.getElementById("centrosPanel");
+    const loginBtn = document.getElementById("loginBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const loginError = document.getElementById("loginError");
+    const userEmailEl = document.getElementById("userEmail");
+
+    const centrosContainer = document.getElementById("centros-container");
+    const mensajePermisos = document.getElementById("mensaje-permisos");
+
+    const iframeWrap = document.getElementById("iframeWrap");
+    const pbiFrame = document.getElementById("pbiFrame");
+
+    function showLogin() {
+      loginPanel.style.display = "block";
+      centrosPanel.style.display = "none";
+      logoutBtn.style.display = "none";
+      userEmailEl.textContent = "";
+      iframeWrap.style.display = "none";
+      pbiFrame.src = "";
+    }
+
+    function showCentros(email) {
+      loginPanel.style.display = "none";
+      centrosPanel.style.display = "block";
+      logoutBtn.style.display = "inline-block";
+      userEmailEl.textContent = email;
+    }
+
+    function setLoginError(msg) {
+      loginError.style.display = msg ? "block" : "none";
+      loginError.textContent = msg || "";
+    }
+
+    function mostrarSinPermisos(texto) {
+      centrosContainer.innerHTML = "";
+      mensajePermisos.style.display = "block";
+      mensajePermisos.textContent = texto;
+      iframeWrap.style.display = "none";
+      pbiFrame.src = "";
+    }
+
+    function limpiarMensajePermisos() {
+      mensajePermisos.style.display = "none";
+      mensajePermisos.textContent = "";
+    }
+
+    // =========================
+    // 4) Permissions + render
+    // =========================
+    async function cargarPermisosYRender(email) {
+      const cleanEmail = (email || "").toLowerCase().trim();
+      console.log("🔎 Email logueado:", cleanEmail);
+
+      if (!cleanEmail) {
+        mostrarSinPermisos("No se pudo leer el email del usuario logueado.");
+        return;
+      }
+
+      let data;
+      try {
+        const resp = await fetch("/.netlify/functions/getPermissions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: cleanEmail })
+        });
+
+        data = await resp.json().catch(() => ({}));
+        console.log("✅ Respuesta getPermissions:", data);
+
+        if (!resp.ok) {
+          mostrarSinPermisos(data?.error || "No autorizado.");
+          return;
+        }
+      } catch (e) {
+        console.error("❌ Error llamando getPermissions:", e);
+        mostrarSinPermisos("No se pudo consultar permisos (error de red).");
+        return;
+      }
+
+      const perms = data?.permissions || {};
+      const puedeDiagonal = perms.Clinica_Diagonal === true;
+      const puedeSalus = perms.Clinica_Salus === true;
+
+      console.log("🎯 Permisos parseados:", { puedeDiagonal, puedeSalus });
+
+      if (!puedeDiagonal && !puedeSalus) {
+        mostrarSinPermisos("No tienes permisos para visualizar ningún tablero.");
+        return;
+      }
+
+      limpiarMensajePermisos();
+      renderBotonesCentros({ puedeDiagonal, puedeSalus });
+    }
+
+    function renderBotonesCentros({ puedeDiagonal, puedeSalus }) {
+      centrosContainer.innerHTML = "";
+      iframeWrap.style.display = "none";
+      pbiFrame.src = "";
+
+      if (puedeDiagonal) {
+        const btn = document.createElement("button");
+        btn.className = "centro-btn";
+        btn.textContent = "Clínica Diagonal";
+        btn.onclick = () => abrirCentro("diagonal");
+        centrosContainer.appendChild(btn);
+      }
+
+      if (puedeSalus) {
+        const btn = document.createElement("button");
+        btn.className = "centro-btn";
+        btn.textContent = "Clínica SALUS";
+        btn.onclick = () => abrirCentro("salus");
+        centrosContainer.appendChild(btn);
+      }
+    }
+
+    // =========================
+    // 5) Abrir centro (Power BI)
+    // =========================
+    async function abrirCentro(centerKey) {
+      // Intento 1: usar getPowerBI.js (si tu function devuelve URL)
+      // Espera algo como: { url: "https://app.powerbi.com/view?r=..." }
+      try {
+        const r = await fetch(`/.netlify/functions/getPowerBI?center=${encodeURIComponent(centerKey)}`);
+        const data = await r.json().catch(() => ({}));
+
+        if (!r.ok) {
+          throw new Error(data?.error || "getPowerBI no respondió OK");
+        }
+
+        const url = data.url || data.embedUrl || data.reportUrl || "";
+        if (!url) {
+          throw new Error("getPowerBI respondió sin URL (url/embedUrl/reportUrl).");
+        }
+
+        iframeWrap.style.display = "block";
+        pbiFrame.src = url;
+        return;
+
+      } catch (e) {
+        console.error("❌ Error abriendo centro:", e);
+        mostrarSinPermisos("No se pudo cargar el tablero. Revisa getPowerBI.js (debe devolver una URL).");
+      }
+    }
+
+    // =========================
+    // 6) Login / Logout handlers
+    // =========================
+    loginBtn.addEventListener("click", async () => {
+      setLoginError("");
+
+      const email = document.getElementById("loginEmail").value.trim();
+      const pass = document.getElementById("loginPass").value;
+
+      if (!email || !pass) {
+        setLoginError("Debes ingresar correo y contraseña.");
+        return;
+      }
+
+      loginBtn.disabled = true;
+
+      try {
+        await signInWithEmailAndPassword(auth, email, pass);
+      } catch (e) {
+        console.error(e);
+        setLoginError("Credenciales inválidas o usuario no existe.");
+      } finally {
+        loginBtn.disabled = false;
+      }
     });
-}
 
-function logout() {
-  if (auth) auth.signOut();
-}
+    logoutBtn.addEventListener("click", async () => {
+      await signOut(auth);
+      showLogin();
+    });
 
-function toggleMenu() {
-  const menu = document.getElementById("menu");
-  menu.style.display = menu.style.display === "block" ? "none" : "block";
-}
+    // =========================
+    // 7) Auth state
+    // =========================
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        showLogin();
+        return;
+      }
 
-function openCenterSelector() {
-  document.getElementById("menu").style.display = "none";
-  document.getElementById("reportContainer").style.display = "none";
-  document.getElementById("centerSelector").style.display = "flex";
-  document.getElementById("appTitle").textContent = "PaEx360";
-}
+      showCentros(user.email);
+      await cargarPermisosYRender(user.email);
+    });
 
-function selectCenter(centerName) {
-  document.getElementById("centerSelector").style.display = "none";
-  document.getElementById("reportContainer").style.display = "block";
-  document.getElementById("appTitle").textContent = `PaEx360 · ${centerName}`;
-  loadPowerBI(CENTERS[centerName].reportId);
-}
-
-async function fetchPermissionsMap() {
-  const r = await fetch("/.netlify/functions/getPermissions");
-  return await r.json();
-}
-
-function renderCentersForUser(email, permissions) {
-  const grid = document.getElementById("centerGrid");
-  const noAccess = document.getElementById("noAccessMsg");
-
-  grid.innerHTML = "";
-  noAccess.style.display = "none";
-
-  const key = email.toLowerCase();
-  const allowed = permissions[key] || [];
-
-  if (allowed.length === 0) {
-    noAccess.style.display = "block";
-    return;
-  }
-
-  allowed.forEach(center => {
-    if (!CENTERS[center]) return;
-
-    const div = document.createElement("div");
-    div.className = "center-btn";
-    div.onclick = () => selectCenter(center);
-    div.innerHTML = `<strong>${center}</strong><br>Abrir tablero`;
-    grid.appendChild(div);
-  });
-}
-
-async function loadPowerBI(reportId) {
-  const container = document.getElementById("reportContainer");
-  powerbi.reset(container);
-
-  const r = await fetch("/.netlify/functions/getPowerBI", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      workspaceId: WORKSPACE_ID,
-      reportId
-    })
-  });
-
-  const data = await r.json();
-
-  if (!r.ok) {
-    alert(data?.error || "Error cargando Power BI");
-    return;
-  }
-
-  const models = window["powerbi-client"].models;
-
-  powerbi.embed(container, {
-    type: "report",
-    id: data.reportId,
-    embedUrl: data.embedUrl,
-    accessToken: data.embedToken,
-    tokenType: models.TokenType.Embed,
-    permissions: models.Permissions.Read
-  });
-}
-
-initFirebase();
-
-</script>
-
+  </script>
 </body>
 </html>

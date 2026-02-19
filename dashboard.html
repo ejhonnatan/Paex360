@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Paex360 - Dashboard</title>
+  <link rel="icon" href="paex360-logo.png" type="image/png">
+
+  <style>
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:#0b0f19;
+      color:#fff;
+    }
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:12px 16px;
+      background: rgba(255,255,255,.06);
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      position: sticky;
+      top:0;
+      backdrop-filter: blur(10px);
+      z-index: 5;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-weight:800;
+      letter-spacing:.2px;
+    }
+    .brand img{ width:28px; height:28px; border-radius:8px; }
+    .actions{ display:flex; gap:10px; align-items:center; }
+    .btn{
+      cursor:pointer;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.08);
+      color:#fff;
+      padding:10px 12px;
+      border-radius: 10px;
+      font-weight:700;
+      font-size:13px;
+    }
+    .btn:hover{ background: rgba(255,255,255,.12); }
+    .wrap{
+      padding: 14px;
+    }
+    .frame{
+      width: 100%;
+      height: calc(100vh - 70px);
+      border: 0;
+      border-radius: 12px;
+      background: #111827;
+    }
+    .msg{
+      padding: 14px;
+      background: rgba(220,38,38,.12);
+      border: 1px solid rgba(220,38,38,.35);
+      border-radius: 12px;
+      margin: 14px 0;
+      display:none;
+      font-weight:800;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="topbar">
+    <div class="brand">
+      <img src="paex360-logo.png" alt="Paex360">
+      <span id="centerTitle">Dashboard</span>
+    </div>
+    <div class="actions">
+      <button class="btn" id="backBtn">Volver</button>
+      <button class="btn" id="logoutBtn">Cerrar sesión</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="msg" id="msg"></div>
+    <iframe id="pbiFrame" class="frame" src=""></iframe>
+  </div>
+
+  <script type="module">
+    // =========================
+    // 1) Utilidades
+    // =========================
+    const msg = document.getElementById("msg");
+    const frame = document.getElementById("pbiFrame");
+    const centerTitle = document.getElementById("centerTitle");
+
+    function showError(text){
+      msg.style.display = "block";
+      msg.textContent = text;
+    }
+
+    function getQueryParam(name){
+      const url = new URL(window.location.href);
+      return (url.searchParams.get(name) || "").trim();
+    }
+
+    // =========================
+    // 2) Center seleccionado
+    // =========================
+    const center = getQueryParam("center").toLowerCase();
+
+    const CENTER_LABEL = {
+      diagonal: "Clínica Diagonal",
+      salus: "Clínica SALUS"
+    };
+
+    if (!center || !CENTER_LABEL[center]) {
+      showError("Centro inválido. Vuelve y selecciona un centro.");
+      centerTitle.textContent = "Dashboard";
+    } else {
+      centerTitle.textContent = CENTER_LABEL[center];
+    }
+
+    // =========================
+    // 3) Firebase config desde getConfig
+    // =========================
+    let firebaseConfig = null;
+    try {
+      const r = await fetch("/.netlify/functions/getConfig", { cache: "no-store" });
+      const cfg = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(cfg?.error || "getConfig no respondió OK");
+      firebaseConfig = cfg.firebaseConfig || cfg;
+    } catch (e) {
+      showError("No se pudo cargar la configuración de Firebase.");
+      throw e;
+    }
+
+    // =========================
+    // 4) Firebase Auth (validar sesión)
+    // =========================
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // =========================
+    // 5) Cargar URL Power BI desde function getPowerBI
+    //    (aquí conectas tu WORKSPACE_ID + reportId)
+    // =========================
+    async function cargarPowerBI(centerKey){
+      try{
+        // Espera respuesta tipo: { url: "https://app.powerbi.com/view?r=..." }
+        const r = await fetch(`/.netlify/functions/getPowerBI?center=${encodeURIComponent(centerKey)}`);
+        const data = await r.json().catch(() => ({}));
+
+        if(!r.ok){
+          throw new Error(data?.error || "getPowerBI no respondió OK");
+        }
+
+        const url = data.url || data.embedUrl || data.reportUrl || "";
+        if(!url) throw new Error("getPowerBI respondió sin URL.");
+
+        frame.src = url;
+      }catch(e){
+        console.error(e);
+        showError("No se pudo cargar el dashboard (revisa getPowerBI.js).");
+      }
+    }
+
+    // =========================
+    // 6) Botones
+    // =========================
+    document.getElementById("backBtn").onclick = () => window.location.href = "index.html";
+    document.getElementById("logoutBtn").onclick = async () => {
+      await signOut(auth);
+      window.location.href = "index.html";
+    };
+
+    // =========================
+    // 7) Proteger ruta: si no hay sesión -> volver a login
+    // =========================
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "index.html";
+        return;
+      }
+      if (center && CENTER_LABEL[center]) {
+        await cargarPowerBI(center);
+      }
+    });
+  </script>
+</body>
+</html>

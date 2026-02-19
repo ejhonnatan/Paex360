@@ -1,63 +1,15 @@
 // netlify/functions/getPermissions.js
-const https = require("https");
-
-const CSV_URL = "https://opinatlatam-my.sharepoint.com/:x:/g/personal/jecheverri_opinatlatam_onmicrosoft_com/IQC52WfdqM15QaCqWN0Wqsi-AY1RKp9z0nHaqH6s9XNP46c?download=1";
-
-function fetchUrl(url, depth = 0) {
-  return new Promise((resolve, reject) => {
-    if (depth > 5) return reject(new Error("Too many redirects"));
-
-    https.get(url, (res) => {
-      const status = res.statusCode || 0;
-      const loc = res.headers.location;
-
-      // Follow redirects (301/302/303/307/308)
-      if ([301, 302, 303, 307, 308].includes(status) && loc) {
-        const nextUrl = loc.startsWith("http") ? loc : new URL(loc, url).toString();
-        res.resume(); // discard data
-        return resolve(fetchUrl(nextUrl, depth + 1));
-      }
-
-      let data = "";
-      res.on("data", (chunk) => (data += chunk));
-      res.on("end", () => resolve({ status, headers: res.headers, body: data }));
-    }).on("error", reject);
-  });
-}
+const fs = require("fs");
+const path = require("path");
 
 exports.handler = async () => {
   try {
-    const { status, headers, body } = await fetchUrl(CSV_URL);
+    const filePath = path.join(process.cwd(), "Permisos_pagina.csv");
+    const csvData = fs.readFileSync(filePath, "utf8");
 
-    // Si no es 200, devuelvo error con pista
-    if (status !== 200) {
-      return {
-        statusCode: 500,
-        headers: { "Access-Control-Allow-Origin": "*" },
-        body: JSON.stringify({
-          error: `No pude descargar CSV (HTTP ${status})`,
-          contentType: headers["content-type"] || null
-        })
-      };
-    }
-
-    // Quitar BOM
-    let text = String(body || "").replace(/^\uFEFF/, "");
-
-    // Si SharePoint devolvió HTML en vez de CSV, lo detectamos
-    const looksHtml = /^\s*</.test(text);
-    if (looksHtml) {
-      return {
-        statusCode: 500,
-        headers: { "Access-Control-Allow-Origin": "*" },
-        body: JSON.stringify({
-          error: "SharePoint devolvió HTML (no CSV). El link no es de descarga directa real.",
-          contentType: headers["content-type"] || null
-        })
-      };
-    }
-
+    const text = String(csvData || "").replace(/^\uFEFF/, "");
     const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+
     if (lines.length < 2) {
       return {
         statusCode: 200,

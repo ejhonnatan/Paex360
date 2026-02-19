@@ -6,218 +6,42 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="paex360-logo.png">
 
-  <!-- SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/powerbi-client@2/dist/powerbi.min.js"></script>
 
   <style>
-    html, body {
-      margin: 0;
-      height: 100%;
-      font-family: "Segoe UI", Arial, sans-serif;
-      background: #f3f2f1;
-    }
+    html, body { margin:0; height:100%; font-family:"Segoe UI", Arial, sans-serif; background:#f3f2f1; }
 
-    /* ================= LOGIN ================= */
-    #auth-container {
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+    #auth-container { height:100%; display:flex; align-items:center; justify-content:center; }
+    .login-card { background:#fff; width:420px; padding:40px; border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,.12); text-align:center; }
+    .login-card img { width:110px; margin-bottom:20px; }
+    .login-card input { width:100%; padding:12px; margin-top:14px; border-radius:6px; border:1px solid #ccc; font-size:14px; }
+    .login-card button { margin-top:20px; width:100%; padding:12px; background:#662483; color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer; }
+    .error { margin-top:12px; color:#c62828; font-size:13px; min-height:18px; }
 
-    .login-card {
-      background: #fff;
-      width: 420px;
-      padding: 40px;
-      border-radius: 12px;
-      box-shadow: 0 8px 30px rgba(0,0,0,.12);
-      text-align: center;
-    }
+    #dashboard { display:none; height:100%; flex-direction:column; }
+    header { height:48px; background:#662483; color:#fff; display:flex; align-items:center; justify-content:space-between; padding:0 16px; }
+    .profile { position:relative; }
+    .avatar { width:32px; height:32px; border-radius:50%; background:#fff; color:#662483; display:flex; align-items:center; justify-content:center; font-weight:700; cursor:pointer; }
+    .menu { display:none; position:absolute; right:0; top:42px; background:#fff; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,.15); min-width:260px; padding:6px 0; }
+    .menu .email { padding:10px 16px; font-size:13px; border-bottom:1px solid #eee; }
+    .menu .item { padding:12px 16px; cursor:pointer; font-size:14px; }
+    .menu .item:hover { background:#f3f2f1; }
 
-    .login-card img {
-      width: 110px;
-      margin-bottom: 20px;
-    }
+    #centerSelector { flex:1; display:none; align-items:center; justify-content:center; }
+    .center-card { width:min(900px, 95vw); background:#fff; border-radius:14px; box-shadow:0 8px 30px rgba(0,0,0,.10); padding:26px; }
+    .center-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:14px; }
+    .center-btn { border:1px solid #e6e6e6; background:#fafafa; border-radius:12px; padding:18px; cursor:pointer; }
+    .center-btn:hover { background:#fff; box-shadow:0 6px 18px rgba(0,0,0,.10); }
+    .no-access { color:#c62828; font-size:14px; padding:10px 0; }
 
-    .login-card input {
-      width: 100%;
-      padding: 12px;
-      margin-top: 14px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      font-size: 14px;
-    }
-
-    .login-card button {
-      margin-top: 20px;
-      width: 100%;
-      padding: 12px;
-      background: #662483;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .login-card button:hover {
-      background: #4e1c63;
-    }
-
-    .error {
-      margin-top: 12px;
-      color: #c62828;
-      font-size: 13px;
-      min-height: 18px;
-    }
-
-    /* ================= DASHBOARD ================= */
-    #dashboard {
-      display: none;
-      height: 100%;
-      flex-direction: column;
-    }
-
-    header {
-      height: 48px;
-      background: #662483;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 16px;
-      position: relative;
-      z-index: 10;
-    }
-
-    .profile {
-      position: relative;
-    }
-
-    .avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: #fff;
-      color: #662483;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    .menu {
-      display: none;
-      position: absolute;
-      right: 0;
-      top: 42px;
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 6px 18px rgba(0,0,0,.15);
-      z-index: 9999;
-      min-width: 260px;
-      padding: 6px 0;
-    }
-
-    .menu .email {
-      padding: 10px 16px;
-      font-size: 13px;
-      color: #444;
-      border-bottom: 1px solid #eee;
-      white-space: nowrap;
-    }
-
-    .menu .item {
-      padding: 12px 16px;
-      cursor: pointer;
-      font-size: 14px;
-      color: #333;
-    }
-
-    .menu .item:hover {
-      background: #f3f2f1;
-    }
-
-    /* ================= SELECTOR CENTRO ================= */
-    #centerSelector {
-      flex: 1;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-    }
-
-    .center-card {
-      width: min(900px, 95vw);
-      background: #fff;
-      border-radius: 14px;
-      box-shadow: 0 8px 30px rgba(0,0,0,.10);
-      padding: 26px;
-    }
-
-    .center-title {
-      margin: 0 0 14px 0;
-      font-size: 18px;
-      color: #2b2b2b;
-    }
-
-    .center-subtitle {
-      margin: 0 0 20px 0;
-      font-size: 13px;
-      color: #666;
-    }
-
-    .center-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 14px;
-    }
-
-    .center-btn {
-      border: 1px solid #e6e6e6;
-      background: #fafafa;
-      border-radius: 12px;
-      padding: 18px;
-      cursor: pointer;
-      text-align: left;
-      transition: transform .06s ease, box-shadow .06s ease, background .06s ease;
-    }
-
-    .center-btn:hover {
-      background: #ffffff;
-      box-shadow: 0 6px 18px rgba(0,0,0,.10);
-      transform: translateY(-1px);
-    }
-
-    .center-name {
-      font-size: 16px;
-      font-weight: 700;
-      color: #1f1f1f;
-      margin-bottom: 6px;
-    }
-
-    .center-desc {
-      font-size: 13px;
-      color: #666;
-      line-height: 1.3;
-    }
-
-    /* ================= POWER BI CONTAINER ================= */
-    #reportContainer {
-      flex: 1;
-      background: #fff;
-      display: none;
-    }
+    #reportContainer { flex:1; display:none; }
   </style>
 </head>
 
 <body>
 
-<!-- LOGIN -->
 <div id="auth-container">
   <div class="login-card">
     <img src="paex360-logo.png">
@@ -228,11 +52,9 @@
   </div>
 </div>
 
-<!-- DASHBOARD -->
 <div id="dashboard">
   <header>
     <strong id="appTitle">PaEx360</strong>
-
     <div class="profile">
       <div id="avatar" class="avatar" onclick="toggleMenu()">U</div>
       <div id="menu" class="menu">
@@ -243,210 +65,155 @@
     </div>
   </header>
 
-  <!-- Selector -->
   <div id="centerSelector">
     <div class="center-card">
-      <h2 class="center-title">Selecciona un centro</h2>
-      <p class="center-subtitle">Elige el centro para cargar su tablero de Power BI.</p>
-
-      <div class="center-grid">
-        <div class="center-btn" onclick="selectCenter('Salus')">
-          <div class="center-name">Salus</div>
-          <div class="center-desc">Abre el tablero correspondiente a Clínica SALUS.</div>
-        </div>
-
-        <div class="center-btn" onclick="selectCenter('Diagonal')">
-          <div class="center-name">Diagonal</div>
-          <div class="center-desc">Abre el tablero correspondiente a Clínica Diagonal.</div>
-        </div>
+      <h3>Selecciona un centro</h3>
+      <div id="centerGrid" class="center-grid"></div>
+      <div id="noAccessMsg" class="no-access" style="display:none;">
+        No tienes permisos para visualizar ningún tablero.
       </div>
     </div>
   </div>
 
-  <!-- Report -->
   <div id="reportContainer"></div>
 </div>
 
 <script>
-  /* ================= FIREBASE ================= */
-  firebase.initializeApp({
-    apiKey: "AIzaSyDFf8HvV2B5rkFt1qrYhcjWdpxKu5PCqnM",
-    authDomain: "paex360.firebaseapp.com",
-    projectId: "paex360"
-  });
+firebase.initializeApp({
+  apiKey: "AIzaSyDFf8HvV2B5rkFt1qrYhcjWdpxKu5PCqnM",
+  authDomain: "paex360.firebaseapp.com",
+  projectId: "paex360"
+});
 
-  const auth = firebase.auth();
+const auth = firebase.auth();
 
-  /* ================= CONFIG ================= */
-  const WORKSPACE_ID = "7230301b-540b-4f1a-b94d-c3ff22d4564d";
+const WORKSPACE_ID = "7230301b-540b-4f1a-b94d-c3ff22d4564d";
 
-  // Report GUIDs (Power BI)
-  const CENTERS = {
-    "Salus": {
-      reportId: "be0ed5d8-4753-4dd0-b031-ed0b7ab57d96"
-    },
-    "Diagonal": {
-      reportId: "c82cbcf1-7b93-458a-8f14-3b7a86800a23"
-    }
-  };
+const CENTERS = {
+  "Salus": { reportId: "be0ed5d8-4753-4dd0-b031-ed0b7ab57d96" },
+  "Diagonal": { reportId: "c82cbcf1-7b93-458a-8f14-3b7a86800a23" }
+};
 
-  const NETLIFY_FN_URL = "https://lucky-palmier-ad2422.netlify.app/.netlify/functions/getPowerBI";
+function login() {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  document.getElementById("error").textContent = "";
 
-  let currentCenter = null;
+  auth.signInWithEmailAndPassword(email, password)
+    .catch(() => {
+      document.getElementById("error").textContent = "Usuario o contraseña incorrectos";
+    });
+}
 
-  /* ================= LOGIN ================= */
-  function login() {
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value;
-    const error = document.getElementById("error");
-    error.textContent = "";
+function toggleMenu() {
+  const menu = document.getElementById("menu");
+  menu.style.display = menu.style.display === "block" ? "none" : "block";
+}
 
-    auth.signInWithEmailAndPassword(email, password)
-      .catch(() => {
-        error.textContent = "Usuario o contraseña incorrectos";
-      });
-  }
-
-  /* ================= PERFIL MENU ================= */
-  function toggleMenu() {
-    const menu = document.getElementById("menu");
-    menu.style.display = menu.style.display === "block" ? "none" : "block";
-  }
-
-  document.addEventListener("click", e => {
-    if (!e.target.closest(".profile")) {
-      document.getElementById("menu").style.display = "none";
-    }
-  });
-
-  function logout() {
-    auth.signOut();
-  }
-
-  /* ================= AUTO LOGOUT 30 MIN ================= */
-  let inactivityTimer;
-  const INACTIVITY_TIME = 30 * 60 * 1000;
-
-  function startInactivityTimer() {
-    resetInactivityTimer();
-    document.addEventListener("mousemove", resetInactivityTimer);
-    document.addEventListener("keydown", resetInactivityTimer);
-    document.addEventListener("click", resetInactivityTimer);
-    document.addEventListener("scroll", resetInactivityTimer);
-  }
-
-  function resetInactivityTimer() {
-    clearTimeout(inactivityTimer);
-    inactivityTimer = setTimeout(() => {
-      alert("Sesión cerrada por inactividad (30 minutos)");
-      auth.signOut();
-    }, INACTIVITY_TIME);
-  }
-
-  function stopInactivityTimer() {
-    clearTimeout(inactivityTimer);
-    document.removeEventListener("mousemove", resetInactivityTimer);
-    document.removeEventListener("keydown", resetInactivityTimer);
-    document.removeEventListener("click", resetInactivityTimer);
-    document.removeEventListener("scroll", resetInactivityTimer);
-  }
-
-  /* ================= UI HELPERS ================= */
-  function openCenterSelector() {
+document.addEventListener("click", e => {
+  if (!e.target.closest(".profile")) {
     document.getElementById("menu").style.display = "none";
+  }
+});
 
-    const reportContainer = document.getElementById("reportContainer");
-    powerbi.reset(reportContainer);
+function logout() { auth.signOut(); }
 
-    reportContainer.style.display = "none";
-    document.getElementById("centerSelector").style.display = "flex";
-    document.getElementById("appTitle").textContent = "PaEx360";
-    currentCenter = null;
+function openCenterSelector() {
+  document.getElementById("menu").style.display = "none";
+  document.getElementById("reportContainer").style.display = "none";
+  document.getElementById("centerSelector").style.display = "flex";
+  document.getElementById("appTitle").textContent = "PaEx360";
+}
+
+function selectCenter(centerName) {
+  document.getElementById("centerSelector").style.display = "none";
+  document.getElementById("reportContainer").style.display = "block";
+  document.getElementById("appTitle").textContent = `PaEx360 · ${centerName}`;
+  loadPowerBI(CENTERS[centerName].reportId);
+}
+
+async function fetchPermissionsMap() {
+  const r = await fetch("/.netlify/functions/getPermissions");
+  if (!r.ok) throw new Error("No se pudieron cargar permisos");
+  return await r.json();
+}
+
+function renderCentersForUser(email, permissions) {
+  const grid = document.getElementById("centerGrid");
+  const noAccess = document.getElementById("noAccessMsg");
+  grid.innerHTML = "";
+  noAccess.style.display = "none";
+
+  const allowed = permissions[email] || [];
+  const validCenters = allowed.filter(c => CENTERS[c]);
+
+  if (validCenters.length === 0) {
+    noAccess.style.display = "block";
+    return;
   }
 
-  function selectCenter(centerName) {
-    if (!CENTERS[centerName]) {
-      alert("Centro no configurado");
-      return;
-    }
-
-    currentCenter = centerName;
-
-    document.getElementById("centerSelector").style.display = "none";
-    document.getElementById("reportContainer").style.display = "block";
-    document.getElementById("appTitle").textContent = `PaEx360 · ${centerName}`;
-
-    loadPowerBI(CENTERS[centerName].reportId);
-  }
-
-  /* ================= AUTH STATE ================= */
-  auth.onAuthStateChanged(user => {
-    if (user) {
-      document.getElementById("auth-container").style.display = "none";
-      document.getElementById("dashboard").style.display = "flex";
-
-      const email = user.email || "";
-      document.getElementById("avatar").textContent = email.charAt(0).toUpperCase();
-      document.getElementById("userEmail").textContent = email;
-
-      openCenterSelector();
-      startInactivityTimer();
-    } else {
-      stopInactivityTimer();
-      currentCenter = null;
-
-      document.getElementById("dashboard").style.display = "none";
-      document.getElementById("auth-container").style.display = "flex";
-
-      // Limpia UI
-      document.getElementById("centerSelector").style.display = "none";
-      document.getElementById("reportContainer").style.display = "none";
-      document.getElementById("appTitle").textContent = "PaEx360";
-      document.getElementById("email").value = "";
-      document.getElementById("password").value = "";
-      document.getElementById("error").textContent = "";
-    }
+  validCenters.forEach(center => {
+    const div = document.createElement("div");
+    div.className = "center-btn";
+    div.onclick = () => selectCenter(center);
+    div.innerHTML = `<strong>${center}</strong><br>Abrir tablero`;
+    grid.appendChild(div);
   });
+}
 
-  /* ================= POWER BI ================= */
-  async function loadPowerBI(selectedReportId) {
-    const reportContainer = document.getElementById("reportContainer");
-    powerbi.reset(reportContainer);
+auth.onAuthStateChanged(async user => {
+  if (user) {
+    document.getElementById("auth-container").style.display = "none";
+    document.getElementById("dashboard").style.display = "flex";
+
+    const email = user.email;
+    document.getElementById("avatar").textContent = email.charAt(0).toUpperCase();
+    document.getElementById("userEmail").textContent = email;
+
+    openCenterSelector();
 
     try {
-      const r = await fetch(NETLIFY_FN_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          workspaceId: WORKSPACE_ID,
-          reportId: selectedReportId
-        })
-      });
-
-      const data = await r.json();
-
-      if (!r.ok) {
-        alert("Error cargando Power BI (revisa permisos o Report ID)");
-        console.error(data);
-        return;
-      }
-
-      const models = window["powerbi-client"].models;
-
-      powerbi.embed(reportContainer, {
-        type: "report",
-        id: data.reportId,
-        embedUrl: data.embedUrl,
-        accessToken: data.embedToken,
-        tokenType: models.TokenType.Embed,
-        permissions: models.Permissions.Read
-      });
-
-    } catch (err) {
-      alert("Error de red cargando Power BI");
-      console.error(err);
+      const permissions = await fetchPermissionsMap();
+      renderCentersForUser(email, permissions);
+    } catch (e) {
+      alert(e.message);
     }
+  } else {
+    document.getElementById("dashboard").style.display = "none";
+    document.getElementById("auth-container").style.display = "flex";
   }
+});
+
+async function loadPowerBI(reportId) {
+  const container = document.getElementById("reportContainer");
+  powerbi.reset(container);
+
+  const r = await fetch("/.netlify/functions/getPowerBI", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      workspaceId: WORKSPACE_ID,
+      reportId: reportId
+    })
+  });
+
+  const data = await r.json();
+  if (!r.ok) {
+    alert("Error cargando Power BI");
+    return;
+  }
+
+  const models = window["powerbi-client"].models;
+
+  powerbi.embed(container, {
+    type: "report",
+    id: data.reportId,
+    embedUrl: data.embedUrl,
+    accessToken: data.embedToken,
+    tokenType: models.TokenType.Embed,
+    permissions: models.Permissions.Read
+  });
+}
 </script>
 
 </body>

@@ -215,26 +215,27 @@
    ✅ NUEVO: Panel imagen derecha
    (SOLO visual)
    ========================= */
+/* =========================
+   ✅ Panel imagen derecha (centrado)
+   ========================= */
 .panel-hero{
   padding: 0;
   overflow: hidden;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: center;        /* ✅ centra vertical */
+  justify-content: center;    /* ✅ centra horizontal */
 }
 
-/* La clave: limitar por el tamaño del panel, no “agrandar” el panel */
+/* ✅ Imagen centrada y con tamaño controlado */
 .hero-img{
-  max-width: 80%;     /* ✅ baja el tamaño dentro del panel */
-  max-height: 80%;    /* ✅ baja el tamaño dentro del panel */
+  max-width: 80%;
+  max-height: 80%;
   width: auto;
   height: auto;
   display: block;
   object-fit: contain;
   border-radius: 14px;
 }
-
-
     /* =========================
        ✅ NUEVO: Logo Opinat pequeño en footer
        ========================= */

@@ -210,6 +210,37 @@
       font-size: 13px;
       display:none;
     }
+
+    /* =========================
+       ✅ NUEVO: Panel imagen derecha
+       (SOLO visual)
+       ========================= */
+    .panel-hero{
+      padding: 0;                 /* para que la imagen ocupe todo */
+      overflow: hidden;
+    }
+    .hero-img{
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;          /* llena el panel sin deformar */
+      border-radius: 14px;        /* igual al panel */
+    }
+
+    /* =========================
+       ✅ NUEVO: Logo Opinat pequeño en footer
+       ========================= */
+    .opinat-inline{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+    .opinat-logo{
+      height: 14px;               /* pequeño */
+      width: auto;
+      vertical-align: middle;
+      display:inline-block;
+    }
   </style>
 </head>
 
@@ -257,8 +288,18 @@
 
           <div class="divider"></div>
           <div class="small">
-            Desarrollado por <b>Opinat</b>.
+            <span class="opinat-inline">
+              Desarrollado por <b>Opinat</b>.
+              <img class="opinat-logo" src="LogoOpinat.png" alt="Opinat">
+            </span>
           </div>
+        </div>
+
+        <!-- =========================
+             ✅ NUEVO: PANEL IMAGEN DERECHA
+             ========================= -->
+        <div class="panel panel-hero" id="heroPanel">
+          <img class="hero-img" src="PAEX360 CAST.jpg" alt="Paex360 Cast">
         </div>
 
         <!-- =========================
@@ -288,6 +329,7 @@
     // =========================
     const loginPanel = document.getElementById("loginPanel");
     const centrosPanel = document.getElementById("centrosPanel");
+    const heroPanel = document.getElementById("heroPanel"); // ✅ NUEVO
 
     const loginBtn = document.getElementById("loginBtn");
     const logoutBtn = document.getElementById("logoutBtn");
@@ -306,6 +348,7 @@
     function showLogin() {
       loginPanel.style.display = "block";
       centrosPanel.style.display = "none";
+      heroPanel.style.display = "block"; // ✅ NUEVO (mostrar imagen en login)
       logoutBtn.style.display = "none";
       userEmailEl.textContent = "";
       centrosContainer.innerHTML = "";
@@ -316,6 +359,7 @@
     function showCentros(email) {
       loginPanel.style.display = "none";
       centrosPanel.style.display = "block";
+      heroPanel.style.display = "none"; // ✅ NUEVO (ocultar imagen en centros)
       logoutBtn.style.display = "inline-block";
       userEmailEl.textContent = email;
     }

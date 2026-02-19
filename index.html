@@ -216,23 +216,24 @@
    (SOLO visual)
    ========================= */
 /* =========================
-   ✅ Panel imagen derecha (centrado)
+   ✅ Panel imagen derecha (centrado real)
    ========================= */
-.panel-hero{
-  padding: 0;
+.panel.panel-hero{
+  padding: 0;                 /* ✅ pisa el padding de .panel */
   overflow: hidden;
   display: flex;
-  align-items: center;        /* ✅ centra vertical */
-  justify-content: center;    /* ✅ centra horizontal */
+  align-items: center;        /* ✅ centro vertical */
+  justify-content: center;    /* ✅ centro horizontal */
 }
 
-/* ✅ Imagen centrada y con tamaño controlado */
-.hero-img{
+/* ✅ Imagen centrada y sin deformar */
+.panel.panel-hero .hero-img{
+  display: block;
+  margin: auto;              /* ✅ centro adicional */
   max-width: 80%;
   max-height: 80%;
   width: auto;
   height: auto;
-  display: block;
   object-fit: contain;
   border-radius: 14px;
 }

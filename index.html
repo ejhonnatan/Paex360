@@ -24,8 +24,8 @@
     header { height:48px; background:#662483; color:#fff; display:flex; align-items:center; justify-content:space-between; padding:0 16px; }
     .profile { position:relative; }
     .avatar { width:32px; height:32px; border-radius:50%; background:#fff; color:#662483; display:flex; align-items:center; justify-content:center; font-weight:700; cursor:pointer; }
-    .menu { display:none; position:absolute; right:0; top:42px; background:#fff; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,.15); min-width:260px; padding:6px 0; }
-    .menu .email { padding:10px 16px; font-size:13px; border-bottom:1px solid #eee; }
+    .menu { display:none; position:absolute; right:0; top:42px; background:#fff; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,.15); min-width:260px; padding:6px 0; z-index:9999; }
+    .menu .email { padding:10px 16px; font-size:13px; border-bottom:1px solid #eee; white-space:nowrap; }
     .menu .item { padding:12px 16px; cursor:pointer; font-size:14px; }
     .menu .item:hover { background:#f3f2f1; }
 
@@ -79,141 +79,142 @@
 </div>
 
 <script>
-firebase.initializeApp({
-  apiKey: "AIzaSyDFf8HvV2B5rkFt1qrYhcjWdpxKu5PCqnM",
-  authDomain: "paex360.firebaseapp.com",
-  projectId: "paex360"
-});
-
-const auth = firebase.auth();
-
-const WORKSPACE_ID = "7230301b-540b-4f1a-b94d-c3ff22d4564d";
-
-const CENTERS = {
-  "Salus": { reportId: "be0ed5d8-4753-4dd0-b031-ed0b7ab57d96" },
-  "Diagonal": { reportId: "c82cbcf1-7b93-458a-8f14-3b7a86800a23" }
-};
-
-function login() {
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
-  document.getElementById("error").textContent = "";
-
-  auth.signInWithEmailAndPassword(email, password)
-    .catch(() => {
-      document.getElementById("error").textContent = "Usuario o contraseña incorrectos";
-    });
-}
-
-function toggleMenu() {
-  const menu = document.getElementById("menu");
-  menu.style.display = menu.style.display === "block" ? "none" : "block";
-}
-
-document.addEventListener("click", e => {
-  if (!e.target.closest(".profile")) {
-    document.getElementById("menu").style.display = "none";
-  }
-});
-
-function logout() { auth.signOut(); }
-
-function openCenterSelector() {
-  document.getElementById("menu").style.display = "none";
-  document.getElementById("reportContainer").style.display = "none";
-  document.getElementById("centerSelector").style.display = "flex";
-  document.getElementById("appTitle").textContent = "PaEx360";
-}
-
-function selectCenter(centerName) {
-  document.getElementById("centerSelector").style.display = "none";
-  document.getElementById("reportContainer").style.display = "block";
-  document.getElementById("appTitle").textContent = `PaEx360 · ${centerName}`;
-  loadPowerBI(CENTERS[centerName].reportId);
-}
-
-async function fetchPermissionsMap() {
-  const r = await fetch("/.netlify/functions/getPermissions");
-  if (!r.ok) throw new Error("No se pudieron cargar permisos");
-  return await r.json();
-}
-
-function renderCentersForUser(email, permissions) {
-  const grid = document.getElementById("centerGrid");
-  const noAccess = document.getElementById("noAccessMsg");
-  grid.innerHTML = "";
-  noAccess.style.display = "none";
-
-  const allowed = permissions[email] || [];
-  const validCenters = allowed.filter(c => CENTERS[c]);
-
-  if (validCenters.length === 0) {
-    noAccess.style.display = "block";
-    return;
-  }
-
-  validCenters.forEach(center => {
-    const div = document.createElement("div");
-    div.className = "center-btn";
-    div.onclick = () => selectCenter(center);
-    div.innerHTML = `<strong>${center}</strong><br>Abrir tablero`;
-    grid.appendChild(div);
+  firebase.initializeApp({
+    apiKey: "AIzaSyDFf8HvV2B5rkFt1qrYhcjWdpxKu5PCqnM",
+    authDomain: "paex360.firebaseapp.com",
+    projectId: "paex360"
   });
-}
 
-auth.onAuthStateChanged(async user => {
-  if (user) {
-    document.getElementById("auth-container").style.display = "none";
-    document.getElementById("dashboard").style.display = "flex";
+  const auth = firebase.auth();
 
-    const email = user.email;
-    document.getElementById("avatar").textContent = email.charAt(0).toUpperCase();
-    document.getElementById("userEmail").textContent = email;
+  const WORKSPACE_ID = "7230301b-540b-4f1a-b94d-c3ff22d4564d";
 
-    openCenterSelector();
+  const CENTERS = {
+    "Salus": { reportId: "be0ed5d8-4753-4dd0-b031-ed0b7ab57d96" },
+    "Diagonal": { reportId: "c82cbcf1-7b93-458a-8f14-3b7a86800a23" }
+  };
 
-    try {
-      const permissions = await fetchPermissionsMap();
-      renderCentersForUser(email, permissions);
-    } catch (e) {
-      alert(e.message);
+  function login() {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+    document.getElementById("error").textContent = "";
+
+    auth.signInWithEmailAndPassword(email, password)
+      .catch(() => {
+        document.getElementById("error").textContent = "Usuario o contraseña incorrectos";
+      });
+  }
+
+  function toggleMenu() {
+    const menu = document.getElementById("menu");
+    menu.style.display = menu.style.display === "block" ? "none" : "block";
+  }
+
+  document.addEventListener("click", e => {
+    if (!e.target.closest(".profile")) {
+      document.getElementById("menu").style.display = "none";
     }
-  } else {
-    document.getElementById("dashboard").style.display = "none";
-    document.getElementById("auth-container").style.display = "flex";
-  }
-});
-
-async function loadPowerBI(reportId) {
-  const container = document.getElementById("reportContainer");
-  powerbi.reset(container);
-
-  const r = await fetch("/.netlify/functions/getPowerBI", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      workspaceId: WORKSPACE_ID,
-      reportId: reportId
-    })
   });
 
-  const data = await r.json();
-  if (!r.ok) {
-    alert("Error cargando Power BI");
-    return;
+  function logout() { auth.signOut(); }
+
+  function openCenterSelector() {
+    document.getElementById("menu").style.display = "none";
+    document.getElementById("reportContainer").style.display = "none";
+    document.getElementById("centerSelector").style.display = "flex";
+    document.getElementById("appTitle").textContent = "PaEx360";
   }
 
-  const models = window["powerbi-client"].models;
+  function selectCenter(centerName) {
+    document.getElementById("centerSelector").style.display = "none";
+    document.getElementById("reportContainer").style.display = "block";
+    document.getElementById("appTitle").textContent = `PaEx360 · ${centerName}`;
+    loadPowerBI(CENTERS[centerName].reportId);
+  }
 
-  powerbi.embed(container, {
-    type: "report",
-    id: data.reportId,
-    embedUrl: data.embedUrl,
-    accessToken: data.embedToken,
-    tokenType: models.TokenType.Embed,
-    permissions: models.Permissions.Read
+  async function fetchPermissionsMap() {
+    const r = await fetch("/.netlify/functions/getPermissions");
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data?.error || "No se pudieron cargar permisos");
+    return data;
+  }
+
+  function renderCentersForUser(email, permissions) {
+    const grid = document.getElementById("centerGrid");
+    const noAccess = document.getElementById("noAccessMsg");
+    grid.innerHTML = "";
+    noAccess.style.display = "none";
+
+    const key = (email || "").toLowerCase();
+    const allowed = permissions[key] || [];
+    const validCenters = allowed.map(c => String(c).trim()).filter(c => CENTERS[c]);
+
+    if (validCenters.length === 0) {
+      noAccess.style.display = "block";
+      return;
+    }
+
+    validCenters.forEach(center => {
+      const div = document.createElement("div");
+      div.className = "center-btn";
+      div.onclick = () => selectCenter(center);
+      div.innerHTML = `<strong>${center}</strong><br>Abrir tablero`;
+      grid.appendChild(div);
+    });
+  }
+
+  auth.onAuthStateChanged(async user => {
+    if (user) {
+      document.getElementById("auth-container").style.display = "none";
+      document.getElementById("dashboard").style.display = "flex";
+
+      const email = user.email || "";
+      document.getElementById("avatar").textContent = email.charAt(0).toUpperCase();
+      document.getElementById("userEmail").textContent = email;
+
+      openCenterSelector();
+
+      try {
+        const permissions = await fetchPermissionsMap();
+        renderCentersForUser(email, permissions);
+      } catch (e) {
+        alert(e.message);
+        console.error(e);
+      }
+    } else {
+      document.getElementById("dashboard").style.display = "none";
+      document.getElementById("auth-container").style.display = "flex";
+    }
   });
-}
+
+  async function loadPowerBI(reportId) {
+    const container = document.getElementById("reportContainer");
+    powerbi.reset(container);
+
+    const r = await fetch("/.netlify/functions/getPowerBI", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ workspaceId: WORKSPACE_ID, reportId })
+    });
+
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      alert(data?.error || "Error cargando Power BI");
+      console.error(data);
+      return;
+    }
+
+    const models = window["powerbi-client"].models;
+
+    powerbi.embed(container, {
+      type: "report",
+      id: data.reportId,
+      embedUrl: data.embedUrl,
+      accessToken: data.embedToken,
+      tokenType: models.TokenType.Embed,
+      permissions: models.Permissions.Read
+    });
+  }
 </script>
 
 </body>

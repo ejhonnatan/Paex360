@@ -218,6 +218,41 @@
     };
 
     // =========================
+    // 5.1) Cierre automático por inactividad (30 min)
+    // =========================
+    const INACTIVITY_LIMIT_MS = 30 * 60 * 1000; // 30 minutos
+    let inactivityTimer = null;
+
+    function clearInactivityTimer(){
+      if (inactivityTimer) {
+        clearTimeout(inactivityTimer);
+        inactivityTimer = null;
+      }
+    }
+
+    async function forceLogoutByInactivity(){
+      try{
+        await signOut(auth);
+      }catch(e){
+        console.warn("Logout por inactividad falló:", e);
+      }finally{
+        window.location.href = "index.html";
+      }
+    }
+
+    function resetInactivityTimer(){
+      clearInactivityTimer();
+      inactivityTimer = setTimeout(forceLogoutByInactivity, INACTIVITY_LIMIT_MS);
+    }
+
+    function attachActivityListeners(){
+      const events = ["mousemove","mousedown","keydown","scroll","touchstart","click"];
+      events.forEach(evt => window.addEventListener(evt, resetInactivityTimer, { passive: true }));
+    }
+
+    attachActivityListeners();
+
+    // =========================
     // 6) Llamar getPowerBI.js (POST)
     // =========================
     async function pedirEmbedData(workspaceId, reportId){
@@ -268,9 +303,13 @@
     // =========================
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
+        clearInactivityTimer(); // ✅ no contar si no hay sesión
         window.location.href = "index.html";
         return;
       }
+
+      // ✅ arranca/reinicia el timer al detectar sesión
+      resetInactivityTimer();
 
       try {
         setLoading(true);

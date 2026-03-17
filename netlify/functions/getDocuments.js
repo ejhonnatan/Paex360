@@ -59,7 +59,7 @@ exports.handler = async (event) => {
     const puedeSalus = toBool(userRow.Clinica_Salus);
 
     const tienePermisoCentro =
-      (center === "diagonal" && puedeDiagonal) ||
+      (center === "Clinica_Diagonal" && puedeDiagonal) ||
       (center === "Clinica_Salus" && puedeSalus);
 
     if (!tienePermisoCentro) {

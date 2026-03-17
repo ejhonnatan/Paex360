@@ -60,7 +60,7 @@ exports.handler = async (event) => {
 
     const tienePermisoCentro =
       (center === "diagonal" && puedeDiagonal) ||
-      (center === "salus" && puedeSalus);
+      (center === "Clinica_Salus" && puedeSalus);
 
     if (!tienePermisoCentro) {
       return {

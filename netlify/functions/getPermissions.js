@@ -1,23 +1,35 @@
 const fs = require("fs");
 const path = require("path");
 
+function parseCSV(text) {
+  const lines = text.trim().split(/\r?\n/);
+  const headers = lines[0].split(",").map(h => h.trim());
+
+  return lines.slice(1).map(line => {
+    const values = line.split(",").map(v => v.trim());
+    const row = {};
+    headers.forEach((header, i) => {
+      row[header] = values[i] ?? "";
+    });
+    return row;
+  });
+}
+
+function toBool(value) {
+  return String(value).toLowerCase().trim() === "true";
+}
+
 exports.handler = async (event) => {
   try {
-    // =============================
-    // 1️⃣ Validar método
-    // =============================
     if (event.httpMethod !== "POST") {
       return {
         statusCode: 405,
-        body: JSON.stringify({ error: "Method Not Allowed" })
+        body: JSON.stringify({ error: "Método no permitido" })
       };
     }
 
-    // =============================
-    // 2️⃣ Obtener email del body
-    // =============================
     const body = JSON.parse(event.body || "{}");
-    const email = (body.email || "").toLowerCase().trim();
+    const email = String(body.email || "").toLowerCase().trim();
 
     if (!email) {
       return {
@@ -26,76 +38,30 @@ exports.handler = async (event) => {
       };
     }
 
-    // =============================
-    // 3️⃣ Leer CSV correctamente
-    // =============================
-    const filePath = path.join(__dirname, "Permisos_pagina.csv");
+    const csvPath = path.join(__dirname, "Permisos_pagina.csv");
+    const csvText = fs.readFileSync(csvPath, "utf8");
+    const rows = parseCSV(csvText);
 
-    if (!fs.existsSync(filePath)) {
-      return {
-        statusCode: 500,
-        body: JSON.stringify({
-          error: "Archivo CSV no encontrado",
-          filePath,
-          filesDisponibles: fs.readdirSync(__dirname)
-        })
-      };
-    }
+    const userRow = rows.find(r => String(r.email || "").toLowerCase().trim() === email);
 
-    const csvData = fs.readFileSync(filePath, "utf8");
-
-    // =============================
-    // 4️⃣ Parsear CSV
-    // Formato esperado:
-    // email,Clinica_Diagonal,Clinica_Salus
-    // usuario@email.com,true,false
-    // =============================
-
-    const lines = csvData
-      .split("\n")
-      .map(line => line.trim())
-      .filter(line => line.length > 0);
-
-    const headers = lines[0].split(",").map(h => h.trim());
-
-    const records = lines.slice(1).map(line => {
-      const values = line.split(",").map(v => v.trim());
-      let obj = {};
-      headers.forEach((header, index) => {
-        obj[header] = values[index];
-      });
-      return obj;
-    });
-
-    // =============================
-    // 5️⃣ Buscar usuario
-    // =============================
-
-    const user = records.find(r =>
-      r.email && r.email.toLowerCase() === email
-    );
-
-    if (!user) {
+    if (!userRow) {
       return {
         statusCode: 403,
-        body: JSON.stringify({
-          error: "Usuario no autorizado"
-        })
+        body: JSON.stringify({ error: "Usuario sin permisos registrados" })
       };
     }
 
-    // =============================
-    // 6️⃣ Construir respuesta
-    // =============================
-
     const permissions = {
-      Clinica_Diagonal: user.Clinica_Diagonal === "true",
-      Clinica_Salus: user.Clinica_Salus === "true"
+      Clinica_Diagonal: toBool(userRow.Clinica_Diagonal),
+      Clinica_Salus: toBool(userRow.Clinica_Salus),
+      Puede_Documentos: toBool(userRow.Puede_Documentos)
     };
 
     return {
       statusCode: 200,
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({
         email,
         permissions
@@ -106,9 +72,8 @@ exports.handler = async (event) => {
     return {
       statusCode: 500,
       body: JSON.stringify({
-        error: "Error interno del servidor",
-        message: error.message,
-        stack: error.stack
+        error: "Error leyendo permisos",
+        detail: error.message
       })
     };
   }

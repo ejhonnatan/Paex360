@@ -7,19 +7,13 @@
   <link rel="icon" href="paex360-logo.png" type="image/png">
 
   <style>
-    /* =========================
-       0) SIN FONDO (TRANSPARENTE)
-       ========================= */
     body{
       margin:0;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: transparent;     /* ✅ sin fondo */
+      background: #f3f2f0;
       color:#111827;
     }
 
-    /* =========================
-       1) Topbar (se mantiene)
-       ========================= */
     .topbar{
       display:flex;
       align-items:center;
@@ -29,7 +23,7 @@
       border-bottom: 1px solid #e5e7eb;
       position: sticky;
       top:0;
-      z-index: 5;
+      z-index: 20;
     }
 
     .brand{
@@ -65,16 +59,88 @@
       font-weight:900;
       font-size:13px;
     }
+
     .btn:hover{
       background:#f9fafb;
     }
 
-    /* =========================
-       2) Contenido (TRANSPARENTE)
-       ========================= */
-    .wrap{
-      padding: 14px;
-      background: transparent;     /* ✅ sin fondo */
+    .layout{
+      display:flex;
+      min-height: calc(100vh - 58px);
+    }
+
+    .sidebar{
+      width: 280px;
+      min-width: 280px;
+      background:#ffffff;
+      border-right:1px solid #e5e7eb;
+      padding:16px;
+      overflow-y:auto;
+    }
+
+    .sidebar-title{
+      font-size:13px;
+      font-weight:900;
+      color:#6b7280;
+      text-transform:uppercase;
+      letter-spacing:.4px;
+      margin:0 0 12px 0;
+    }
+
+    .sidebar-section{
+      margin-bottom:20px;
+    }
+
+    .sidebar-card{
+      border:1px solid #e5e7eb;
+      border-radius:12px;
+      padding:12px;
+      background:#fafafa;
+    }
+
+    .sidebar-text{
+      font-size:13px;
+      font-weight:700;
+      color:#374151;
+      line-height:1.4;
+    }
+
+    .doc-list{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      margin-top:10px;
+    }
+
+    .doc-link{
+      display:block;
+      text-decoration:none;
+      color:#111827;
+      border:1px solid #e5e7eb;
+      background:#fff;
+      border-radius:12px;
+      padding:12px;
+      font-size:13px;
+      font-weight:800;
+      transition:.15s ease;
+    }
+
+    .doc-link:hover{
+      background:#f9fafb;
+      border-color:#9ca3af;
+    }
+
+    .doc-empty{
+      font-size:13px;
+      font-weight:700;
+      color:#6b7280;
+      padding:10px 0;
+    }
+
+    .main{
+      flex:1;
+      padding:14px;
+      background: transparent;
     }
 
     .msg{
@@ -82,7 +148,7 @@
       background: rgba(220,38,38,.08);
       border: 1px solid rgba(220,38,38,.25);
       border-radius: 12px;
-      margin: 14px 0;
+      margin: 0 0 14px 0;
       display:none;
       font-weight:900;
       color:#991b1b;
@@ -93,22 +159,36 @@
       background: #f9fafb;
       border: 1px solid #e5e7eb;
       border-radius: 12px;
-      margin: 14px 0;
+      margin: 0 0 14px 0;
       display:none;
       font-weight:900;
       color:#374151;
     }
 
-    /* =========================
-       3) Contenedor Power BI (TRANSPARENTE)
-       ========================= */
     #reportContainer{
       width: 100%;
-      height: calc(100vh - 90px);
+      height: calc(100vh - 110px);
       border-radius: 12px;
       overflow: hidden;
-      background: transparent;     /* ✅ sin fondo */
-      border: none;                /* ✅ sin borde */
+      background: transparent;
+      border: none;
+    }
+
+    @media(max-width: 980px){
+      .layout{
+        flex-direction:column;
+      }
+
+      .sidebar{
+        width:100%;
+        min-width:100%;
+        border-right:none;
+        border-bottom:1px solid #e5e7eb;
+      }
+
+      #reportContainer{
+        height: calc(100vh - 320px);
+      }
     }
   </style>
 </head>
@@ -125,21 +205,31 @@
     </div>
   </div>
 
-  <div class="wrap">
-    <div class="msg" id="msg"></div>
-    <div class="loader" id="loader">Cargando dashboard...</div>
-    <div id="reportContainer"></div>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <h3 class="sidebar-title">Centro actual</h3>
+        <div class="sidebar-card">
+          <div class="sidebar-text" id="sidebarCenterName">Cargando...</div>
+        </div>
+      </div>
+
+      <div class="sidebar-section" id="documentsSection" style="display:none;">
+        <h3 class="sidebar-title">Documentos PDF</h3>
+        <div class="doc-list" id="documentsList"></div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="msg" id="msg"></div>
+      <div class="loader" id="loader">Cargando dashboard...</div>
+      <div id="reportContainer"></div>
+    </main>
   </div>
 
-  <!-- =========================
-       Power BI Client (Embed)
-       ========================= -->
   <script src="https://cdn.jsdelivr.net/npm/powerbi-client@2.23.1/dist/powerbi.min.js"></script>
 
   <script type="module">
-    // =========================
-    // 1) Constantes del embedding
-    // =========================
     const WORKSPACE_ID = "7230301b-540b-4f1a-b94d-c3ff22d4564d";
 
     const CENTERS = {
@@ -147,13 +237,13 @@
       diagonal: { label: "Clínica Diagonal", reportId: "c82cbcf1-7b93-458a-8f14-3b7a86800a23" }
     };
 
-    // =========================
-    // 2) Utilidades UI
-    // =========================
     const msg = document.getElementById("msg");
     const loader = document.getElementById("loader");
     const centerTitle = document.getElementById("centerTitle");
     const reportContainer = document.getElementById("reportContainer");
+    const sidebarCenterName = document.getElementById("sidebarCenterName");
+    const documentsSection = document.getElementById("documentsSection");
+    const documentsList = document.getElementById("documentsList");
 
     function showError(text){
       msg.style.display = "block";
@@ -174,9 +264,28 @@
       return (url.searchParams.get(name) || "").trim();
     }
 
-    // =========================
-    // 3) Leer center desde URL
-    // =========================
+    function renderDocuments(documents){
+      documentsList.innerHTML = "";
+
+      if (!documents || documents.length === 0) {
+        documentsList.innerHTML = `<div class="doc-empty">No hay documentos disponibles para este centro.</div>`;
+        documentsSection.style.display = "block";
+        return;
+      }
+
+      documents.forEach(doc => {
+        const a = document.createElement("a");
+        a.className = "doc-link";
+        a.href = doc.ruta;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.textContent = doc.nombre;
+        documentsList.appendChild(a);
+      });
+
+      documentsSection.style.display = "block";
+    }
+
     const centerKey = getQueryParam("center").toLowerCase();
     const centerCfg = CENTERS[centerKey];
 
@@ -187,10 +296,8 @@
     }
 
     centerTitle.textContent = centerCfg.label;
+    sidebarCenterName.textContent = centerCfg.label;
 
-    // =========================
-    // 4) Firebase config desde getConfig
-    // =========================
     let firebaseConfig = null;
     try {
       const r = await fetch("/.netlify/functions/getConfig", { cache: "no-store" });
@@ -202,9 +309,6 @@
       throw e;
     }
 
-    // =========================
-    // 5) Firebase Auth: proteger la página
-    // =========================
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
@@ -217,10 +321,7 @@
       window.location.href = "index.html";
     };
 
-    // =========================
-    // 5.1) Cierre automático por inactividad (30 min)
-    // =========================
-    const INACTIVITY_LIMIT_MS = 30 * 60 * 1000; // 30 minutos
+    const INACTIVITY_LIMIT_MS = 30 * 60 * 1000;
     let inactivityTimer = null;
 
     function clearInactivityTimer(){
@@ -252,9 +353,6 @@
 
     attachActivityListeners();
 
-    // =========================
-    // 6) Llamar getPowerBI.js (POST)
-    // =========================
     async function pedirEmbedData(workspaceId, reportId){
       const resp = await fetch("/.netlify/functions/getPowerBI", {
         method: "POST",
@@ -269,13 +367,47 @@
         throw new Error((data?.error || "Error getPowerBI") + extra);
       }
 
-      return data; // { embedToken, embedUrl, reportId }
+      return data;
     }
 
-    // =========================
-    // 7) Embebido con powerbi-client
-    //    (FONDO: Default para respetar el fondo del reporte)
-    // =========================
+    async function pedirPermisos(email){
+      const resp = await fetch("/.netlify/functions/getPermissions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email })
+      });
+
+      const data = await resp.json().catch(() => ({}));
+
+      if (!resp.ok) {
+        throw new Error(data?.error || "No se pudieron consultar permisos");
+      }
+
+      return data;
+    }
+
+    async function pedirDocumentos(email, center){
+      const resp = await fetch("/.netlify/functions/getDocuments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, center })
+      });
+
+      const data = await resp.json().catch(() => ({}));
+
+      if (!resp.ok) {
+        throw new Error(data?.error || "No se pudieron consultar documentos");
+      }
+
+      return data.documents || [];
+    }
+
+    function validarAccesoCentro(permissions, center){
+      if (center === "diagonal") return permissions.Clinica_Diagonal === true;
+      if (center === "salus") return permissions.Clinica_Salus === true;
+      return false;
+    }
+
     function embedReport(embedUrl, embedToken){
       powerbi.reset(reportContainer);
 
@@ -291,28 +423,52 @@
             filters: { visible: false },
             pageNavigation: { visible: true }
           },
-          background: models.BackgroundType.Default  /* ✅ respeta fondo del reporte */
+          background: models.BackgroundType.Default
         }
       };
 
       powerbi.embed(reportContainer, config);
     }
 
-    // =========================
-    // 8) Flujo principal
-    // =========================
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        clearInactivityTimer(); // ✅ no contar si no hay sesión
+        clearInactivityTimer();
         window.location.href = "index.html";
         return;
       }
 
-      // ✅ arranca/reinicia el timer al detectar sesión
       resetInactivityTimer();
 
       try {
         setLoading(true);
+
+        const email = (user.email || "").toLowerCase().trim();
+
+        const permisosData = await pedirPermisos(email);
+        const permissions = permisosData.permissions || {};
+
+        const autorizado = validarAccesoCentro(permissions, centerKey);
+
+        if (!autorizado) {
+          await signOut(auth);
+          showError("No tienes permisos para ingresar a este centro.");
+          setTimeout(() => {
+            window.location.href = "index.html";
+          }, 1500);
+          return;
+        }
+
+        if (permissions.Puede_Documentos === true) {
+          try {
+            const docs = await pedirDocumentos(email, centerKey);
+            renderDocuments(docs);
+          } catch (docErr) {
+            console.error(docErr);
+            renderDocuments([]);
+          }
+        } else {
+          documentsSection.style.display = "none";
+        }
 
         const data = await pedirEmbedData(WORKSPACE_ID, centerCfg.reportId);
 
@@ -331,7 +487,6 @@
         showError("No se pudo cargar el dashboard: " + e.message);
       }
     });
-
   </script>
 </body>
 </html>

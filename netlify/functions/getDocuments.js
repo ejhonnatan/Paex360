@@ -45,7 +45,9 @@ exports.handler = async (event) => {
     const permisosRows = parseCSV(fs.readFileSync(permisosPath, "utf8"));
     const documentosRows = parseCSV(fs.readFileSync(documentosPath, "utf8"));
 
-    const userRow = permisosRows.find(r => String(r.email || "").toLowerCase().trim() === email);
+    const userRow = permisosRows.find(
+      r => String(r.email || "").toLowerCase().trim() === email
+    );
 
     if (!userRow) {
       return {
@@ -59,8 +61,8 @@ exports.handler = async (event) => {
     const puedeSalus = toBool(userRow.Clinica_Salus);
 
     const tienePermisoCentro =
-      (center === "Clinica_Diagonal" && puedeDiagonal) ||
-      (center === "Clinica_Salus" && puedeSalus);
+      (center === "diagonal" && puedeDiagonal) ||
+      (center === "salus" && puedeSalus);
 
     if (!tienePermisoCentro) {
       return {
@@ -82,7 +84,11 @@ exports.handler = async (event) => {
     }
 
     const documents = documentosRows
-      .filter(r => toBool(r.activo) && String(r.centro || "").toLowerCase().trim() === center)
+      .filter(r => {
+        const activo = toBool(r.activo);
+        const docCenter = String(r.centro || "").toLowerCase().trim();
+        return activo && docCenter === center;
+      })
       .map(r => ({
         id: r.id,
         nombre: r.nombre,

@@ -1,4 +1,8 @@
 id,nombre,centro,ruta,activo
-1,Manual Calidad SALUS,salus,/PDF/01.%20Salus/Manual_Calidad_SALUS.pdf,true
-2,Procedimiento Encuestas SALUS,salus,/PDF/01.%20Salus/Procedimiento_Encuestas_SALUS.pdf,true
-3,Informe Interno SALUS,salus,/PDF/01.%20Salus/Informe_Interno_SALUS.pdf,true
+1,SALUCAEXPE1001 (1).pdf,salus,/PDF/01.%20Salus/SALUCAEXPE1001 (1).pdf,true
+2,SALUCAEXPE1001 (2).pdf,salus,/PDF/01.%20Salus/SALUCAEXPE1001 (2).pdf,true
+3,SALUCAEXPE1001 (3).pdf,salus,/PDF/01.%20Salus/SALUCAEXPE1001 (3).pdf,true
+4,SALUCAEXPE1001 (4).pdf,salus,/PDF/01.%20Salus/SALUCAEXPE1001 (4).pdf,true
+5,SALUCAEXPE1001.pdf,salus,/PDF/01.%20Salus/SALUCAEXPE1001.pdf,true
+6,SALUGGESTE0402.pdf,salus,/PDF/01.%20Salus/SALUGGESTE0402.pdf,true
+7,SALUGGPOLE0701.pdf,salus,/PDF/01.%20Salus/SALUGGPOLE0701.pdf,true

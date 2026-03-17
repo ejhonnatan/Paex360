@@ -1,0 +1,4 @@
+id,nombre,centro,ruta,activo
+1,Manual Calidad SALUS,salus,/PDF/01.%20Salus/Manual_Calidad_SALUS.pdf,true
+2,Procedimiento Encuestas SALUS,salus,/PDF/01.%20Salus/Procedimiento_Encuestas_SALUS.pdf,true
+3,Informe Interno SALUS,salus,/PDF/01.%20Salus/Informe_Interno_SALUS.pdf,true

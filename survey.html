@@ -163,10 +163,6 @@
       margin-top:22px;
     }
 
-    .meta{
-      display:none;
-    }
-
     .question-box{
       padding:8px 10px 0;
       margin-bottom:12px;
@@ -332,6 +328,8 @@
       border-top:2px solid var(--blue-line);
       display:flex;
       justify-content:center;
+      gap:10px;
+      flex-wrap:wrap;
     }
 
     .loader{
@@ -347,6 +345,14 @@
     .required-asterisk{
       color:#000;
       margin-left:2px;
+    }
+
+    .save-state{
+      text-align:center;
+      font-size:12px;
+      color:#444;
+      margin-top:8px;
+      min-height:18px;
     }
 
     .meta-hidden{
@@ -436,7 +442,7 @@
 
         <div class="upload-box">
           <input type="file" id="fileInput" multiple accept=".pdf,.doc,.docx,.png,.jpg,.jpeg">
-          <div class="file-note">Aquí podrás adjuntar archivos adicionales. Los archivos visibles arriba son archivos de referencia del criterio.</div>
+          <div class="file-note">Los archivos visibles arriba son archivos de referencia del criterio. La subida real de adjuntos la conectamos en la siguiente fase.</div>
         </div>
       </div>
 
@@ -472,8 +478,10 @@
         </div>
       </div>
 
+      <div class="save-state" id="saveState"></div>
+
       <div class="bottom-actions">
-        <button class="btn btn-primary" id="saveBtn">Guardar para más tarde</button>
+        <button class="btn btn-primary" id="saveBtn">Guardar ahora</button>
       </div>
     </div>
   </div>
@@ -490,6 +498,7 @@
     const surveyCard = document.getElementById("surveyCard");
     const errorMsg = document.getElementById("errorMsg");
     const successMsg = document.getElementById("successMsg");
+    const saveState = document.getElementById("saveState");
 
     const metaCenter = document.getElementById("metaCenter");
     const metaUser = document.getElementById("metaUser");
@@ -527,6 +536,9 @@
     let currentUser = null;
     let surveyData = null;
     let currentQuestionIndex = 0;
+    let autosaveTimer = null;
+    let isSaving = false;
+    let pendingSave = false;
 
     const answers = {};
 
@@ -557,6 +569,10 @@
     function clearMessages(){
       errorMsg.style.display = "none";
       successMsg.style.display = "none";
+    }
+
+    function setSaveState(text){
+      saveState.textContent = text || "";
     }
 
     function normalizePermissions(permissions){
@@ -639,6 +655,22 @@
       return answers[questionId];
     }
 
+    function mergeSavedAnswers(savedAnswers = []){
+      savedAnswers.forEach(row => {
+        const questionId = Number(row.question_id);
+        answers[questionId] = {
+          selfScore: row.self_score ?? null,
+          evidenceText: row.evidence_text ?? "",
+          improvementActions: row.improvement_actions ?? "",
+          tutorComments: row.tutor_comments ?? "",
+          certifierScore: row.certifier_score ?? null,
+          certifierObservations: row.certifier_observations ?? "",
+          files: [],
+          referenceFiles: surveyData.questions.find(q => q.id === questionId)?.referenceFiles || []
+        };
+      });
+    }
+
     function readFormIntoState(){
       const currentQuestion = getCurrentQuestion();
       if(!currentQuestion) return;
@@ -698,7 +730,7 @@
       nextBtn.title = currentQuestionIndex === surveyData.totalQuestions - 1 ? "Finalizar" : "Siguiente";
     }
 
-    function validateCurrentQuestion(){
+    function validateCurrentQuestion({ silent = false } = {}){
       const question = getCurrentQuestion();
       if(!question) return false;
 
@@ -706,7 +738,9 @@
       const answer = ensureAnswer(question);
 
       if(question.required && (answer.selfScore === null || Number.isNaN(answer.selfScore))){
-        showError("Debes seleccionar una puntuación de autoevaluación antes de continuar.");
+        if(!silent){
+          showError("Debes seleccionar una puntuación de autoevaluación antes de continuar.");
+        }
         return false;
       }
 
@@ -754,12 +788,128 @@
       surveyTitle.textContent = surveyData.title || "Encuesta";
     }
 
+    async function loadSavedResponse(){
+      const result = await fetchJSON("/.netlify/functions/getSurveyResponse", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          surveyCode: surveyData.surveyCode,
+          center,
+          email: currentUser.email
+        })
+      });
+
+      if(result.exists){
+        mergeSavedAnswers(result.answers || []);
+
+        const savedQuestionNumber = Number(result.header?.current_question_number || 1);
+        currentQuestionIndex = Math.max(0, Math.min(savedQuestionNumber - 1, surveyData.totalQuestions - 1));
+
+        setSaveState(`Último guardado: ${new Date(result.header?.updated_at).toLocaleString("es-ES")}`);
+      } else {
+        setSaveState("Sin guardados previos");
+      }
+    }
+
+    async function saveCurrentQuestion({ silent = false, completeAfterSave = false } = {}){
+      const question = getCurrentQuestion();
+      if(!question) return false;
+
+      if(!validateCurrentQuestion({ silent })){
+        return false;
+      }
+
+      readFormIntoState();
+      const answer = ensureAnswer(question);
+
+      if(isSaving){
+        pendingSave = true;
+        return true;
+      }
+
+      isSaving = true;
+      setSaveState("Guardando...");
+
+      try {
+        const response = await fetchJSON("/.netlify/functions/upsertSurveyResponse", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            surveyCode: surveyData.surveyCode,
+            center,
+            email: currentUser.email,
+            respondentName: currentUser.displayName || "",
+            totalQuestions: surveyData.totalQuestions,
+            currentQuestionNumber: currentQuestionIndex + 1,
+            question: {
+              id: question.id,
+              number: question.number
+            },
+            answer: {
+              selfScore: answer.selfScore,
+              evidenceText: answer.evidenceText,
+              improvementActions: answer.improvementActions,
+              tutorComments: answer.tutorComments,
+              certifierScore: answer.certifierScore,
+              certifierObservations: answer.certifierObservations
+            }
+          })
+        });
+
+        if(response?.header?.updated_at){
+          setSaveState(`Guardado: ${new Date(response.header.updated_at).toLocaleString("es-ES")}`);
+        } else {
+          setSaveState("Guardado correctamente");
+        }
+
+        if(completeAfterSave){
+          await fetchJSON("/.netlify/functions/completeSurveyResponse", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              surveyCode: surveyData.surveyCode,
+              center,
+              email: currentUser.email
+            })
+          });
+
+          showSuccess("Encuesta finalizada correctamente.");
+          setSaveState("Encuesta finalizada");
+        }
+
+        return true;
+      } catch (error) {
+        if(!silent){
+          showError(error.message || "No fue posible guardar la respuesta.");
+        }
+        setSaveState("Error al guardar");
+        return false;
+      } finally {
+        isSaving = false;
+
+        if(pendingSave){
+          pendingSave = false;
+          saveCurrentQuestion({ silent: true });
+        }
+      }
+    }
+
+    function scheduleAutosave(){
+      clearTimeout(autosaveTimer);
+      setSaveState("Cambios pendientes...");
+
+      autosaveTimer = setTimeout(() => {
+        saveCurrentQuestion({ silent: true });
+      }, 900);
+    }
+
     backBtn.addEventListener("click", () => {
       window.location.href = "/";
     });
 
-    prevBtn.addEventListener("click", () => {
-      readFormIntoState();
+    prevBtn.addEventListener("click", async () => {
+      clearTimeout(autosaveTimer);
+      await saveCurrentQuestion({ silent: true });
 
       if(currentQuestionIndex > 0){
         currentQuestionIndex--;
@@ -767,56 +917,54 @@
       }
     });
 
-    nextBtn.addEventListener("click", () => {
-      if(!validateCurrentQuestion()){
-        return;
-      }
+    nextBtn.addEventListener("click", async () => {
+      clearTimeout(autosaveTimer);
 
-      if(currentQuestionIndex < surveyData.totalQuestions - 1){
+      const isLast = currentQuestionIndex === surveyData.totalQuestions - 1;
+      const ok = await saveCurrentQuestion({ silent: false, completeAfterSave: isLast });
+
+      if(!ok) return;
+
+      if(!isLast){
         currentQuestionIndex++;
         renderQuestion();
-        return;
       }
-
-      console.log("Encuesta lista para enviar:", {
-        center,
-        user: currentUser?.email || "",
-        answers
-      });
-
-      showSuccess("Encuesta validada correctamente. La siguiente fase será guardarla en base de datos.");
     });
 
-    saveBtn.addEventListener("click", () => {
-      readFormIntoState();
-
-      console.log("Guardado parcial local:", {
-        center,
-        user: currentUser?.email || "",
-        answers
-      });
-
-      localStorage.setItem(
-        `paex360_survey_draft_${center}_${currentUser?.email || "anon"}`,
-        JSON.stringify({
-          center,
-          user: currentUser?.email || "",
-          answers,
-          currentQuestionIndex,
-          savedAt: new Date().toISOString()
-        })
-      );
-
-      showSuccess("Borrador guardado localmente en este navegador.");
+    saveBtn.addEventListener("click", async () => {
+      clearTimeout(autosaveTimer);
+      const ok = await saveCurrentQuestion({ silent: false });
+      if(ok){
+        showSuccess("Respuesta guardada correctamente.");
+      }
     });
+
+    selfScoreGroup.addEventListener("change", () => {
+      scheduleAutosave();
+    });
+
+    certifierScoreGroup.addEventListener("change", () => {
+      scheduleAutosave();
+    });
+
+    evidenceText.addEventListener("input", scheduleAutosave);
+    improvementActions.addEventListener("input", scheduleAutosave);
+    tutorComments.addEventListener("input", scheduleAutosave);
+    certifierObservations.addEventListener("input", scheduleAutosave);
 
     logoutBtn.addEventListener("click", async () => {
       try{
+        clearTimeout(autosaveTimer);
+        await saveCurrentQuestion({ silent: true });
         await signOut(auth);
         window.location.href = "/";
       }catch(error){
         showError("No fue posible cerrar sesión.");
       }
+    });
+
+    window.addEventListener("beforeunload", () => {
+      clearTimeout(autosaveTimer);
     });
 
     async function init(){
@@ -845,20 +993,8 @@
             showLoader("Cargando encuesta...");
             await loadSurvey();
 
-            const draftKey = `paex360_survey_draft_${center}_${user.email || "anon"}`;
-            const draftRaw = localStorage.getItem(draftKey);
-
-            if(draftRaw){
-              try{
-                const draft = JSON.parse(draftRaw);
-                if(draft?.answers){
-                  Object.assign(answers, draft.answers);
-                }
-                if(typeof draft?.currentQuestionIndex === "number"){
-                  currentQuestionIndex = draft.currentQuestionIndex;
-                }
-              }catch(_){}
-            }
+            showLoader("Cargando respuestas guardadas...");
+            await loadSavedResponse();
 
             hideLoader();
             surveyCard.style.display = "block";

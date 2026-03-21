@@ -3,15 +3,30 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Paex360 - Dashboard</title>
+  <title>Paex360 - Centro</title>
   <link rel="icon" href="paex360-logo.png" type="image/png">
 
   <style>
+    :root{
+      --bg:#f3f2f0;
+      --card:#ffffff;
+      --text:#111827;
+      --muted:#6b7280;
+      --danger:#dc2626;
+      --primary:#111827;
+      --border:#e5e7eb;
+      --shadow:0 10px 30px rgba(0,0,0,.10);
+      --radius:14px;
+    }
+
+    *{ box-sizing:border-box; }
+
     body{
       margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: #f3f2f0;
-      color:#111827;
+      font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      min-height:100vh;
     }
 
     .topbar{
@@ -20,7 +35,7 @@
       justify-content:space-between;
       padding:12px 16px;
       background:#ffffff;
-      border-bottom:1px solid #e5e7eb;
+      border-bottom:1px solid var(--border);
       position:sticky;
       top:0;
       z-index:20;
@@ -31,16 +46,15 @@
       align-items:center;
       gap:10px;
       font-weight:900;
-      letter-spacing:.2px;
-      color:#111827;
+      color:var(--text);
     }
 
     .brand img{
       width:28px;
       height:28px;
       border-radius:8px;
+      border:1px solid var(--border);
       background:#fff;
-      border:1px solid #e5e7eb;
     }
 
     .actions{
@@ -51,7 +65,7 @@
 
     .btn{
       cursor:pointer;
-      border:1px solid #e5e7eb;
+      border:1px solid var(--border);
       background:#ffffff;
       color:#111827;
       padding:10px 12px;
@@ -64,18 +78,53 @@
       background:#f9fafb;
     }
 
+    .page{
+      max-width:1200px;
+      margin:20px auto;
+      padding:0 16px 20px;
+    }
+
+    .msg{
+      display:none;
+      padding:14px;
+      background:rgba(220,38,38,.08);
+      border:1px solid rgba(220,38,38,.25);
+      border-radius:12px;
+      margin:0 0 14px 0;
+      font-weight:900;
+      color:#991b1b;
+    }
+
+    .loader{
+      display:none;
+      padding:12px 14px;
+      background:#f9fafb;
+      border:1px solid var(--border);
+      border-radius:12px;
+      margin:0 0 14px 0;
+      font-weight:900;
+      color:#374151;
+    }
+
     .layout{
-      display:flex;
-      min-height:calc(100vh - 58px);
+      display:grid;
+      grid-template-columns:320px 1fr;
+      gap:16px;
+    }
+
+    .sidebar,
+    .main-card{
+      background:var(--card);
+      border-radius:16px;
+      box-shadow:var(--shadow);
     }
 
     .sidebar{
-      width:280px;
-      min-width:280px;
-      background:#ffffff;
-      border-right:1px solid #e5e7eb;
       padding:16px;
-      overflow-y:auto;
+    }
+
+    .sidebar-section{
+      margin-bottom:20px;
     }
 
     .sidebar-title{
@@ -87,12 +136,8 @@
       margin:0 0 12px 0;
     }
 
-    .sidebar-section{
-      margin-bottom:20px;
-    }
-
     .sidebar-card{
-      border:1px solid #e5e7eb;
+      border:1px solid var(--border);
       border-radius:12px;
       padding:12px;
       background:#fafafa;
@@ -100,7 +145,7 @@
 
     .sidebar-text{
       font-size:13px;
-      font-weight:700;
+      font-weight:800;
       color:#374151;
       line-height:1.4;
     }
@@ -116,7 +161,7 @@
       display:block;
       text-decoration:none;
       color:#111827;
-      border:1px solid #e5e7eb;
+      border:1px solid var(--border);
       background:#fff;
       border-radius:12px;
       padding:12px;
@@ -139,57 +184,92 @@
       line-height:1.5;
     }
 
-    .main{
-      flex:1;
-      padding:14px;
-      background:transparent;
+    .main-card{
+      padding:22px;
+      min-height:640px;
     }
 
-    .msg{
-      padding:14px;
-      background:rgba(220,38,38,.08);
-      border:1px solid rgba(220,38,38,.25);
-      border-radius:12px;
-      margin:0 0 14px 0;
-      display:none;
+    .hero-title{
+      margin:0 0 6px 0;
+      font-size:28px;
       font-weight:900;
-      color:#991b1b;
+      line-height:1.2;
     }
 
-    .loader{
-      padding:12px 14px;
-      background:#f9fafb;
-      border:1px solid #e5e7eb;
-      border-radius:12px;
-      margin:0 0 14px 0;
-      display:none;
+    .hero-subtitle{
+      margin:0 0 22px 0;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.5;
+      font-weight:600;
+      max-width:760px;
+    }
+
+    .menu-grid{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(180px, 1fr));
+      gap:16px;
+      margin-top:8px;
+    }
+
+    .menu-card{
+      border:1px solid var(--border);
+      border-radius:16px;
+      background:#fff;
+      padding:18px;
+      cursor:pointer;
+      transition:.15s ease;
+      text-align:left;
+      min-height:160px;
+    }
+
+    .menu-card:hover{
+      transform:translateY(-2px);
+      box-shadow:0 10px 22px rgba(0,0,0,.06);
+      border-color:#9ca3af;
+    }
+
+    .menu-icon{
+      font-size:28px;
+      margin-bottom:14px;
+      display:block;
+    }
+
+    .menu-title{
+      font-size:18px;
       font-weight:900;
-      color:#374151;
+      margin:0 0 8px 0;
+      color:#111827;
     }
 
-    #reportContainer{
-      width:100%;
-      height:calc(100vh - 110px);
-      border-radius:12px;
-      overflow:hidden;
-      background:transparent;
-      border:none;
+    .menu-text{
+      font-size:13px;
+      line-height:1.5;
+      color:#6b7280;
+      font-weight:600;
+      margin:0;
+    }
+
+    .user-line{
+      margin-top:24px;
+      padding-top:16px;
+      border-top:1px solid var(--border);
+      color:#6b7280;
+      font-size:13px;
+      font-weight:700;
     }
 
     @media(max-width: 980px){
       .layout{
-        flex-direction:column;
+        grid-template-columns:1fr;
       }
 
-      .sidebar{
-        width:100%;
-        min-width:100%;
-        border-right:none;
-        border-bottom:1px solid #e5e7eb;
+      .menu-grid{
+        grid-template-columns:1fr;
       }
 
-      #reportContainer{
-        height:calc(100vh - 320px);
+      .hero-title{
+        font-size:24px;
       }
     }
   </style>
@@ -199,7 +279,7 @@
   <div class="topbar">
     <div class="brand">
       <img src="paex360-logo.png" alt="Paex360">
-      <span id="centerTitle">Dashboard</span>
+      <span id="centerTitle">Centro</span>
     </div>
 
     <div class="actions">
@@ -208,56 +288,82 @@
     </div>
   </div>
 
-  <div class="layout">
-    <aside class="sidebar">
-      <div class="sidebar-section">
-        <h3 class="sidebar-title">Centro actual</h3>
-        <div class="sidebar-card">
-          <div class="sidebar-text" id="sidebarCenterName">Cargando...</div>
+  <div class="page">
+    <div class="msg" id="msg"></div>
+    <div class="loader" id="loader">Cargando centro...</div>
+
+    <div class="layout" id="content" style="display:none;">
+      <aside class="sidebar">
+        <div class="sidebar-section">
+          <h3 class="sidebar-title">Centro actual</h3>
+          <div class="sidebar-card">
+            <div class="sidebar-text" id="sidebarCenterName">Cargando...</div>
+          </div>
         </div>
-      </div>
 
-      <div class="sidebar-section" id="documentsSection" style="display:none;">
-        <h3 class="sidebar-title">Documentos PDF</h3>
-        <div class="doc-list" id="documentsList"></div>
-      </div>
-    </aside>
+        <div class="sidebar-section" id="documentsSection" style="display:none;">
+          <h3 class="sidebar-title">Documentos PDF</h3>
+          <div class="doc-list" id="documentsList"></div>
+        </div>
+      </aside>
 
-    <main class="main">
-      <div class="msg" id="msg"></div>
-      <div class="loader" id="loader">Cargando dashboard...</div>
-      <div id="reportContainer"></div>
-    </main>
+      <main class="main-card">
+        <h1 class="hero-title" id="heroTitle">Centro</h1>
+        <p class="hero-subtitle">
+          Selecciona el módulo al que deseas ingresar. Desde aquí puedes entrar al dashboard, responder la encuesta o abrir los documentos PDF del centro.
+        </p>
+
+        <div class="menu-grid">
+          <button class="menu-card" id="dashboardCard">
+            <span class="menu-icon">📊</span>
+            <h2 class="menu-title">Dashboard</h2>
+            <p class="menu-text">Visualiza el reporte Power BI del centro seleccionado.</p>
+          </button>
+
+          <button class="menu-card" id="surveyCard">
+            <span class="menu-icon">📝</span>
+            <h2 class="menu-title">Encuesta</h2>
+            <p class="menu-text">Accede al formulario de autoevaluación y seguimiento.</p>
+          </button>
+
+          <button class="menu-card" id="pdfCard">
+            <span class="menu-icon">📄</span>
+            <h2 class="menu-title">Documentos PDF</h2>
+            <p class="menu-text">Consulta la documentación disponible del centro.</p>
+          </button>
+        </div>
+
+        <div class="user-line" id="userLine"></div>
+      </main>
+    </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/powerbi-client@2.23.1/dist/powerbi.min.js"></script>
-
   <script type="module">
-    const WORKSPACE_ID = "7230301b-540b-4f1a-b94d-c3ff22d4564d";
-
     const CENTERS = {
-      salus: {
-        label: "Clínica SALUS",
-        reportId: "be0ed5d8-4753-4dd0-b031-ed0b7ab57d96"
-      },
-      diagonal: {
-        label: "Clínica Diagonal",
-        reportId: "c82cbcf1-7b93-458a-8f14-3b7a86800a23"
-      }
+      salus: { label: "Clínica SALUS" },
+      diagonal: { label: "Clínica Diagonal" }
     };
 
     const msg = document.getElementById("msg");
     const loader = document.getElementById("loader");
+    const content = document.getElementById("content");
     const centerTitle = document.getElementById("centerTitle");
-    const reportContainer = document.getElementById("reportContainer");
     const sidebarCenterName = document.getElementById("sidebarCenterName");
+    const heroTitle = document.getElementById("heroTitle");
+    const userLine = document.getElementById("userLine");
+
     const documentsSection = document.getElementById("documentsSection");
     const documentsList = document.getElementById("documentsList");
+
+    const dashboardCard = document.getElementById("dashboardCard");
+    const surveyCard = document.getElementById("surveyCard");
+    const pdfCard = document.getElementById("pdfCard");
 
     function showError(text){
       msg.style.display = "block";
       msg.textContent = text;
       loader.style.display = "none";
+      content.style.display = "none";
     }
 
     function hideError(){
@@ -265,8 +371,9 @@
       msg.textContent = "";
     }
 
-    function setLoading(on){
+    function setLoading(on, text = "Cargando centro..."){
       loader.style.display = on ? "block" : "none";
+      loader.textContent = text;
       if (on) hideError();
     }
 
@@ -300,98 +407,6 @@
     function renderDocumentsError(errorMessage){
       documentsSection.style.display = "block";
       documentsList.innerHTML = `<div class="doc-empty">Error cargando documentos: ${errorMessage}</div>`;
-    }
-
-    const centerKey = getQueryParam("center").toLowerCase();
-    const centerCfg = CENTERS[centerKey];
-
-    if (!centerCfg) {
-      showError("Centro inválido. Vuelve y selecciona un centro.");
-      centerTitle.textContent = "Dashboard";
-      throw new Error("Invalid center");
-    }
-
-    centerTitle.textContent = centerCfg.label;
-    sidebarCenterName.textContent = centerCfg.label;
-
-    let firebaseConfig = null;
-
-    try {
-      const r = await fetch("/.netlify/functions/getConfig", { cache: "no-store" });
-      const cfg = await r.json().catch(() => ({}));
-
-      if (!r.ok) {
-        throw new Error(cfg?.error || "getConfig no respondió OK");
-      }
-
-      firebaseConfig = cfg.firebaseConfig || cfg;
-    } catch (e) {
-      showError("No se pudo cargar la configuración de Firebase.");
-      throw e;
-    }
-
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-
-    document.getElementById("backBtn").onclick = () => {
-      window.location.href = `center.html?center=${centerKey}`;
-    };
-
-    document.getElementById("logoutBtn").onclick = async () => {
-      await signOut(auth);
-      window.location.href = "index.html";
-    };
-
-    const INACTIVITY_LIMIT_MS = 30 * 60 * 1000;
-    let inactivityTimer = null;
-
-    function clearInactivityTimer(){
-      if (inactivityTimer) {
-        clearTimeout(inactivityTimer);
-        inactivityTimer = null;
-      }
-    }
-
-    async function forceLogoutByInactivity(){
-      try {
-        await signOut(auth);
-      } catch (e) {
-        console.warn("Logout por inactividad falló:", e);
-      } finally {
-        window.location.href = "index.html";
-      }
-    }
-
-    function resetInactivityTimer(){
-      clearInactivityTimer();
-      inactivityTimer = setTimeout(forceLogoutByInactivity, INACTIVITY_LIMIT_MS);
-    }
-
-    function attachActivityListeners(){
-      const events = ["mousemove","mousedown","keydown","scroll","touchstart","click"];
-      events.forEach(evt => window.addEventListener(evt, resetInactivityTimer, { passive: true }));
-    }
-
-    attachActivityListeners();
-
-    async function pedirEmbedData(workspaceId, reportId){
-      const resp = await fetch("/.netlify/functions/getPowerBI", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ workspaceId, reportId })
-      });
-
-      const data = await resp.json().catch(() => ({}));
-
-      if (!resp.ok) {
-        const extra = data?.raw ? ` | raw: ${data.raw}` : "";
-        throw new Error((data?.error || "Error getPowerBI") + extra);
-      }
-
-      return data;
     }
 
     async function pedirPermisos(email){
@@ -432,27 +447,80 @@
       return false;
     }
 
-    function embedReport(embedUrl, embedToken){
-      powerbi.reset(reportContainer);
+    const centerKey = getQueryParam("center").toLowerCase();
+    const centerCfg = CENTERS[centerKey];
 
-      const models = window["powerbi-client"].models;
-
-      const config = {
-        type: "report",
-        tokenType: models.TokenType.Embed,
-        accessToken: embedToken,
-        embedUrl: embedUrl,
-        settings: {
-          panes: {
-            filters: { visible: false },
-            pageNavigation: { visible: true }
-          },
-          background: models.BackgroundType.Default
-        }
-      };
-
-      powerbi.embed(reportContainer, config);
+    if (!centerCfg) {
+      showError("Centro inválido. Vuelve y selecciona un centro.");
+      throw new Error("Invalid center");
     }
+
+    centerTitle.textContent = centerCfg.label;
+    sidebarCenterName.textContent = centerCfg.label;
+    heroTitle.textContent = centerCfg.label;
+
+    let firebaseConfig = null;
+
+    try {
+      const r = await fetch("/.netlify/functions/getConfig", { cache: "no-store" });
+      const cfg = await r.json().catch(() => ({}));
+
+      if (!r.ok) {
+        throw new Error(cfg?.error || "getConfig no respondió OK");
+      }
+
+      firebaseConfig = cfg.firebaseConfig || cfg;
+    } catch (e) {
+      showError("No se pudo cargar la configuración de Firebase.");
+      throw e;
+    }
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    document.getElementById("backBtn").onclick = () => {
+      window.location.href = "index.html";
+    };
+
+    document.getElementById("logoutBtn").onclick = async () => {
+      await signOut(auth);
+      window.location.href = "index.html";
+    };
+
+    const INACTIVITY_LIMIT_MS = 30 * 60 * 1000;
+    let inactivityTimer = null;
+
+    function clearInactivityTimer(){
+      if (inactivityTimer) {
+        clearTimeout(inactivityTimer);
+        inactivityTimer = null;
+      }
+    }
+
+    async function forceLogoutByInactivity(){
+      try {
+        await signOut(auth);
+      } catch (e) {
+        console.warn("Logout por inactividad falló:", e);
+      } finally {
+        window.location.href = "index.html";
+      }
+    }
+
+    function resetInactivityTimer(){
+      clearInactivityTimer();
+      inactivityTimer = setTimeout(forceLogoutByInactivity, INACTIVITY_LIMIT_MS);
+    }
+
+    function attachActivityListeners(){
+      const events = ["mousemove","mousedown","keydown","scroll","touchstart","click"];
+      events.forEach(evt => window.addEventListener(evt, resetInactivityTimer, { passive: true }));
+    }
+
+    attachActivityListeners();
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
@@ -464,9 +532,10 @@
       resetInactivityTimer();
 
       try {
-        setLoading(true);
+        setLoading(true, "Validando acceso al centro...");
 
         const email = (user.email || "").toLowerCase().trim();
+        userLine.textContent = `Usuario: ${email}`;
 
         const permisosData = await pedirPermisos(email);
         const permissions = permisosData.permissions || {};
@@ -482,8 +551,26 @@
           return;
         }
 
+        dashboardCard.onclick = () => {
+          window.location.href = `dashboard.html?center=${centerKey}`;
+        };
+
+        surveyCard.onclick = () => {
+          window.location.href = `survey.html?center=${centerKey}`;
+        };
+
+        pdfCard.onclick = () => {
+          const firstDoc = documentsList.querySelector("a.doc-link");
+          if (firstDoc) {
+            firstDoc.click();
+            return;
+          }
+          alert("No hay documentos PDF disponibles para este centro.");
+        };
+
         if (permissions.Puede_Documentos === true) {
           try {
+            setLoading(true, "Cargando documentos...");
             const docs = await pedirDocumentos(email, centerKey);
             renderDocuments(docs);
           } catch (docErr) {
@@ -494,21 +581,12 @@
           documentsSection.style.display = "none";
         }
 
-        const data = await pedirEmbedData(WORKSPACE_ID, centerCfg.reportId);
-
-        const embedToken = data.embedToken;
-        const embedUrl = data.embedUrl;
-
-        if (!embedToken || !embedUrl) {
-          throw new Error("Respuesta incompleta: falta embedToken o embedUrl");
-        }
-
-        embedReport(embedUrl, embedToken);
         setLoading(false);
+        content.style.display = "grid";
 
       } catch (e) {
         console.error(e);
-        showError("No se pudo cargar el dashboard: " + e.message);
+        showError("No se pudo cargar el centro: " + e.message);
       }
     });
   </script>

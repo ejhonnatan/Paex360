@@ -34,9 +34,6 @@
 
     .wrap{ width: min(1100px, 100%); }
 
-    /* =========================
-       Topbar
-       ========================= */
     .topbar{
       display:flex;
       align-items:center;
@@ -89,9 +86,6 @@
       border-color: var(--primary);
     }
 
-    /* =========================
-       Card / Layout
-       ========================= */
     .card{
       background: var(--card);
       border-radius: var(--radius);
@@ -128,9 +122,6 @@
       font-weight: 600;
     }
 
-    /* =========================
-       Form
-       ========================= */
     .field{
       display:flex;
       flex-direction:column;
@@ -182,9 +173,6 @@
       font-weight: 800;
     }
 
-    /* =========================
-       Centros
-       ========================= */
     .centros{
       display:flex;
       gap: 12px;
@@ -211,21 +199,17 @@
       display:none;
     }
 
-    /* =========================
-       ✅ Panel imagen derecha (centrado real)
-       ========================= */
     .panel.panel-hero{
-      padding: 0;                 /* ✅ pisa el padding de .panel */
+      padding: 0;
       overflow: hidden;
       display: flex;
-      align-items: center;        /* ✅ centro vertical */
-      justify-content: center;    /* ✅ centro horizontal */
+      align-items: center;
+      justify-content: center;
     }
 
-    /* ✅ Imagen centrada y sin deformar */
     .panel.panel-hero .hero-img{
       display: block;
-      margin: auto;              /* ✅ centro adicional */
+      margin: auto;
       max-width: 80%;
       max-height: 80%;
       width: auto;
@@ -234,16 +218,13 @@
       border-radius: 14px;
     }
 
-    /* =========================
-       ✅ Logo Opinat pequeño en footer
-       ========================= */
     .opinat-inline{
       display:inline-flex;
       align-items:center;
       gap:6px;
     }
     .opinat-logo{
-      height: 14px;               /* pequeño */
+      height: 14px;
       width: auto;
       vertical-align: middle;
       display:inline-block;
@@ -253,10 +234,6 @@
 
 <body>
   <div class="wrap">
-
-    <!-- =========================
-         TOPBAR (Marca + Usuario)
-         ========================= -->
     <div class="topbar">
       <div class="brand">
         <img src="paex360-logo.png" alt="Paex360">
@@ -271,10 +248,6 @@
 
     <div class="card">
       <div class="grid">
-
-        <!-- =========================
-             PANEL LOGIN
-             ========================= -->
         <div class="panel" id="loginPanel">
           <h2 class="title">Acceso</h2>
           <p class="subtitle">Inicia sesión para ver los centros habilitados.</p>
@@ -304,16 +277,10 @@
           </div>
         </div>
 
-        <!-- =========================
-             ✅ PANEL IMAGEN DERECHA
-             ========================= -->
         <div class="panel panel-hero" id="heroPanel">
           <img class="hero-img" src="PAEX360 CAST.jpg" alt="Paex360 Cast">
         </div>
 
-        <!-- =========================
-             PANEL SELECCIÓN CENTRO
-             ========================= -->
         <div class="panel" id="centrosPanel" style="display:none;">
           <h2 class="title">Selecciona un centro</h2>
           <p class="subtitle">Se mostrarán únicamente los centros autorizados para tu usuario.</p>
@@ -325,20 +292,14 @@
             Si no aparece ningún botón, solicita a paula.fernandez@atheneasolutions.com el acceso.
           </div>
         </div>
-
       </div>
     </div>
-
   </div>
 
   <script type="module">
-
-    // =========================
-    // 0) Referencias UI
-    // =========================
     const loginPanel = document.getElementById("loginPanel");
     const centrosPanel = document.getElementById("centrosPanel");
-    const heroPanel = document.getElementById("heroPanel"); // ✅ NUEVO
+    const heroPanel = document.getElementById("heroPanel");
 
     const loginBtn = document.getElementById("loginBtn");
     const logoutBtn = document.getElementById("logoutBtn");
@@ -351,13 +312,10 @@
     const centrosContainer = document.getElementById("centros-container");
     const mensajePermisos = document.getElementById("mensaje-permisos");
 
-    // =========================
-    // 0.1) Helpers UI
-    // =========================
     function showLogin() {
       loginPanel.style.display = "block";
       centrosPanel.style.display = "none";
-      heroPanel.style.display = "block"; // ✅ mostrar imagen en login
+      heroPanel.style.display = "block";
       logoutBtn.style.display = "none";
       userEmailEl.textContent = "";
       centrosContainer.innerHTML = "";
@@ -368,7 +326,7 @@
     function showCentros(email) {
       loginPanel.style.display = "none";
       centrosPanel.style.display = "block";
-      heroPanel.style.display = "none"; // ✅ ocultar imagen en centros
+      heroPanel.style.display = "none";
       logoutBtn.style.display = "inline-block";
       userEmailEl.textContent = email;
     }
@@ -393,9 +351,6 @@
       mensajePermisos.textContent = "";
     }
 
-    // =========================
-    // 1) Firebase config desde Netlify Function (robusto)
-    // =========================
     let firebaseConfig = null;
 
     try {
@@ -405,18 +360,13 @@
       if (!r.ok) throw new Error(cfg?.error || "getConfig no respondió OK");
 
       firebaseConfig = cfg.firebaseConfig || cfg;
-
       console.log("✅ Firebase config cargado OK");
-
     } catch (e) {
       alert("No se pudo cargar la configuración de Firebase (getConfig).");
       console.error("❌ Error cargando Firebase config:", e);
       throw e;
     }
 
-    // =========================
-    // 2) Firebase SDK (CDN)
-    // =========================
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import {
       getAuth,
@@ -428,10 +378,7 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
-    // =========================
-    // 2.1) Cierre automático por inactividad (30 min)
-    // =========================
-    const INACTIVITY_LIMIT_MS = 30 * 60 * 1000; // 30 minutos
+    const INACTIVITY_LIMIT_MS = 30 * 60 * 1000;
     let inactivityTimer = null;
 
     function clearInactivityTimer(){
@@ -463,12 +410,8 @@
 
     attachActivityListeners();
 
-    // =========================
-    // 3) Llamar permisos (getPermissions) + render botones
-    // =========================
     async function cargarPermisosYRender(email) {
       const cleanEmail = (email || "").toLowerCase().trim();
-      console.log("🔎 Email logueado:", cleanEmail);
 
       if (!cleanEmail) {
         showPermMessage("No se pudo leer el email del usuario logueado.");
@@ -484,13 +427,11 @@
         });
 
         data = await resp.json().catch(() => ({}));
-        console.log("✅ Respuesta getPermissions:", data);
 
         if (!resp.ok) {
           showPermMessage(data?.error || "No autorizado.");
           return;
         }
-
       } catch (e) {
         console.error("❌ Error llamando getPermissions:", e);
         showPermMessage("No se pudo consultar permisos (error de red).");
@@ -501,8 +442,6 @@
       const puedeDiagonal = perms.Clinica_Diagonal === true;
       const puedeSalus = perms.Clinica_Salus === true;
 
-      console.log("🎯 Permisos parseados:", { puedeDiagonal, puedeSalus });
-
       if (!puedeDiagonal && !puedeSalus) {
         showPermMessage("No tienes permisos para visualizar ningún tablero.");
         return;
@@ -512,9 +451,6 @@
       renderBotonesCentros({ puedeDiagonal, puedeSalus });
     }
 
-    // =========================
-    // 4) Render botones centros (redirige a dashboard.html)
-    // =========================
     function renderBotonesCentros({ puedeDiagonal, puedeSalus }) {
       centrosContainer.innerHTML = "";
 
@@ -522,7 +458,7 @@
         const btn = document.createElement("button");
         btn.className = "centro-btn";
         btn.textContent = "Clínica Diagonal";
-        btn.onclick = () => window.location.href = "dashboard.html?center=diagonal";
+        btn.onclick = () => window.location.href = "center.html?center=diagonal";
         centrosContainer.appendChild(btn);
       }
 
@@ -530,14 +466,11 @@
         const btn = document.createElement("button");
         btn.className = "centro-btn";
         btn.textContent = "Clínica SALUS";
-        btn.onclick = () => window.location.href = "dashboard.html?center=salus";
+        btn.onclick = () => window.location.href = "center.html?center=salus";
         centrosContainer.appendChild(btn);
       }
     }
 
-    // =========================
-    // 5) Login handler
-    // =========================
     loginBtn.addEventListener("click", async () => {
       setLoginError("");
 
@@ -561,17 +494,11 @@
       }
     });
 
-    // =========================
-    // 6) Logout handler
-    // =========================
     logoutBtn.addEventListener("click", async () => {
       await signOut(auth);
       showLogin();
     });
 
-    // =========================
-    // 7) Auth state (sesión)
-    // =========================
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         clearInactivityTimer();
@@ -580,11 +507,9 @@
       }
 
       resetInactivityTimer();
-
       showCentros(user.email);
       await cargarPermisosYRender(user.email);
     });
-
   </script>
 </body>
 </html>

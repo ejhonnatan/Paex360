@@ -2,6 +2,7 @@
   "name": "paex360-netlify-functions",
   "version": "1.0.0",
   "dependencies": {
+    "@libsql/client": "^0.15.7",
     "soap": "^0.45.0"
   }
 }

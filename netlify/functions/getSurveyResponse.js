@@ -54,7 +54,8 @@ exports.handler = async (event) => {
         body: JSON.stringify({
           exists: false,
           header: null,
-          answers: []
+          answers: [],
+          uploadedDocuments: []
         })
       };
     }
@@ -81,6 +82,25 @@ exports.handler = async (event) => {
       args: [header.id]
     });
 
+    const uploadedResult = await db.execute({
+      sql: `
+        SELECT
+          id,
+          question_id,
+          question_number,
+          reference_file_name,
+          original_file_name,
+          mime_type,
+          byte_size,
+          created_at,
+          updated_at
+        FROM survey_uploaded_documents
+        WHERE response_header_id = ?
+        ORDER BY question_number
+      `,
+      args: [header.id]
+    });
+
     return {
       statusCode: 200,
       headers: {
@@ -90,16 +110,30 @@ exports.handler = async (event) => {
       body: JSON.stringify({
         exists: true,
         header,
-        answers: answersResult.rows
+        answers: answersResult.rows,
+        uploadedDocuments: (uploadedResult.rows || []).map(row => ({
+          id: Number(row.id),
+          questionId: Number(row.question_id || 0),
+          questionNumber: Number(row.question_number || 0),
+          referenceFileName: row.reference_file_name || null,
+          originalFileName: row.original_file_name || "",
+          mimeType: row.mime_type || "application/pdf",
+          byteSize: Number(row.byte_size || 0),
+          createdAt: row.created_at || null,
+          updatedAt: row.updated_at || null,
+          ruta: `/.netlify/functions/getStoredDocument?documentId=${row.id}`
+        }))
       })
     };
   } catch (error) {
+    console.error("getSurveyResponse error:", error);
+
     return {
       statusCode: 500,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         error: "Error obteniendo respuestas de la encuesta",
-        detail: error.message
+        detail: error.message || String(error)
       })
     };
   }

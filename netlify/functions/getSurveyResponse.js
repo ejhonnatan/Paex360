@@ -1,4 +1,4 @@
-const { db, ensureSchema } = require("./_db");
+const { getDb } = require("./db");
 
 exports.handler = async (event) => {
   try {
@@ -10,8 +10,6 @@ exports.handler = async (event) => {
       };
     }
 
-    await ensureSchema();
-
     const body = JSON.parse(event.body || "{}");
     const surveyCode = String(body.surveyCode || "").trim();
     const center = String(body.center || "").trim().toLowerCase();
@@ -21,11 +19,11 @@ exports.handler = async (event) => {
       return {
         statusCode: 400,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          error: "surveyCode, center y email son obligatorios"
-        })
+        body: JSON.stringify({ error: "surveyCode, center y email son obligatorios" })
       };
     }
+
+    const db = getDb();
 
     const headerResult = await db.execute({
       sql: `
@@ -43,9 +41,7 @@ exports.handler = async (event) => {
           updated_at,
           submitted_at
         FROM survey_response_headers
-        WHERE survey_code = ?
-          AND center_code = ?
-          AND respondent_email = ?
+        WHERE survey_code = ? AND center_code = ? AND respondent_email = ?
         LIMIT 1
       `,
       args: [surveyCode, center, email]
@@ -54,7 +50,7 @@ exports.handler = async (event) => {
     if (!headerResult.rows.length) {
       return {
         statusCode: 200,
-        headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           exists: false,
           header: null,
@@ -80,7 +76,7 @@ exports.handler = async (event) => {
           updated_at
         FROM survey_response_answers
         WHERE response_header_id = ?
-        ORDER BY question_number ASC
+        ORDER BY question_number
       `,
       args: [header.id]
     });
@@ -102,7 +98,7 @@ exports.handler = async (event) => {
       statusCode: 500,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        error: "Error obteniendo respuesta de encuesta",
+        error: "Error obteniendo respuestas de la encuesta",
         detail: error.message
       })
     };

@@ -1,0 +1,233 @@
+const { getDb } = require("./db");
+
+exports.handler = async (event) => {
+  try {
+    if (event.httpMethod !== "POST") {
+      return {
+        statusCode: 405,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ error: "Método no permitido" })
+      };
+    }
+
+    const body = JSON.parse(event.body || "{}");
+
+    const surveyCode = String(body.surveyCode || "").trim();
+    const center = String(body.center || "").trim().toLowerCase();
+    const email = String(body.email || "").trim().toLowerCase();
+    const respondentName = String(body.respondentName || "").trim();
+    const totalQuestions = Number(body.totalQuestions || 0);
+
+    const question = body.question || {};
+    const questionId = Number(question.id || 0);
+    const questionNumber = Number(question.number || 0);
+    const referenceFileName = String(body.referenceFileName || "").trim();
+
+    const fileName = String(body.fileName || "").trim();
+    const mimeType = String(body.mimeType || "").trim().toLowerCase();
+    let base64Content = String(body.base64Content || "").trim();
+
+    if (!surveyCode || !center || !email || !questionId || !questionNumber || !fileName || !mimeType || !base64Content) {
+      return {
+        statusCode: 400,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ error: "Faltan datos obligatorios para subir el documento" })
+      };
+    }
+
+    if (mimeType !== "application/pdf") {
+      return {
+        statusCode: 400,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ error: "Solo se permiten archivos PDF para este flujo" })
+      };
+    }
+
+    base64Content = base64Content.replace(/^data:application\/pdf;base64,/, "");
+
+    let byteSize = 0;
+    try {
+      byteSize = Buffer.from(base64Content, "base64").length;
+    } catch (_) {
+      return {
+        statusCode: 400,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ error: "El contenido Base64 del archivo no es válido" })
+      };
+    }
+
+    const db = getDb();
+
+    await db.execute({
+      sql: `
+        INSERT INTO survey_response_headers (
+          survey_code,
+          center_code,
+          respondent_email,
+          respondent_name,
+          status,
+          current_question_number,
+          answered_questions_count,
+          total_questions,
+          created_at,
+          updated_at
+        )
+        VALUES (?, ?, ?, ?, 'draft', ?, 0, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        ON CONFLICT(survey_code, center_code, respondent_email)
+        DO UPDATE SET
+          respondent_name = excluded.respondent_name,
+          current_question_number = excluded.current_question_number,
+          total_questions = excluded.total_questions,
+          status = 'draft',
+          updated_at = CURRENT_TIMESTAMP
+      `,
+      args: [
+        surveyCode,
+        center,
+        email,
+        respondentName || null,
+        questionNumber,
+        totalQuestions || 7
+      ]
+    });
+
+    const headerResult = await db.execute({
+      sql: `
+        SELECT id
+        FROM survey_response_headers
+        WHERE survey_code = ? AND center_code = ? AND respondent_email = ?
+        LIMIT 1
+      `,
+      args: [surveyCode, center, email]
+    });
+
+    const headerId = headerResult.rows[0]?.id;
+
+    if (!headerId) {
+      throw new Error("No fue posible obtener el encabezado de la encuesta");
+    }
+
+    const existingResult = await db.execute({
+      sql: `
+        SELECT id
+        FROM survey_uploaded_documents
+        WHERE response_header_id = ? AND question_id = ?
+        LIMIT 1
+      `,
+      args: [headerId, questionId]
+    });
+
+    const existingId = existingResult.rows[0]?.id;
+
+    if (existingId) {
+      await db.execute({
+        sql: `
+          UPDATE survey_uploaded_documents
+          SET
+            question_number = ?,
+            reference_file_name = ?,
+            original_file_name = ?,
+            mime_type = ?,
+            base64_content = ?,
+            byte_size = ?,
+            updated_at = CURRENT_TIMESTAMP
+          WHERE id = ?
+        `,
+        args: [
+          questionNumber,
+          referenceFileName || null,
+          fileName,
+          mimeType,
+          base64Content,
+          byteSize,
+          existingId
+        ]
+      });
+    } else {
+      await db.execute({
+        sql: `
+          INSERT INTO survey_uploaded_documents (
+            response_header_id,
+            question_id,
+            question_number,
+            reference_file_name,
+            original_file_name,
+            mime_type,
+            base64_content,
+            byte_size,
+            created_at,
+            updated_at
+          )
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        `,
+        args: [
+          headerId,
+          questionId,
+          questionNumber,
+          referenceFileName || null,
+          fileName,
+          mimeType,
+          base64Content,
+          byteSize
+        ]
+      });
+    }
+
+    const savedResult = await db.execute({
+      sql: `
+        SELECT
+          id,
+          response_header_id,
+          question_id,
+          question_number,
+          reference_file_name,
+          original_file_name,
+          mime_type,
+          byte_size,
+          created_at,
+          updated_at
+        FROM survey_uploaded_documents
+        WHERE response_header_id = ? AND question_id = ?
+        LIMIT 1
+      `,
+      args: [headerId, questionId]
+    });
+
+    const row = savedResult.rows[0];
+
+    return {
+      statusCode: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store"
+      },
+      body: JSON.stringify({
+        ok: true,
+        document: {
+          id: Number(row.id),
+          responseHeaderId: Number(row.response_header_id),
+          questionId: Number(row.question_id),
+          questionNumber: Number(row.question_number),
+          referenceFileName: row.reference_file_name || null,
+          originalFileName: row.original_file_name,
+          mimeType: row.mime_type,
+          byteSize: Number(row.byte_size || 0),
+          createdAt: row.created_at || null,
+          updatedAt: row.updated_at || null,
+          ruta: `/.netlify/functions/getStoredDocument?documentId=${row.id}`
+        }
+      })
+    };
+  } catch (error) {
+    console.error("uploadSurveyDocument error:", error);
+
+    return {
+      statusCode: 500,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        error: "Error subiendo documento de encuesta",
+        detail: error.message || String(error)
+      })
+    };
+  }
+};

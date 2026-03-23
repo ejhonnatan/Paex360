@@ -163,6 +163,37 @@
       margin-top:22px;
     }
 
+    .survey-selector-wrap{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      gap:10px;
+      margin:8px 0 16px 0;
+      flex-wrap:wrap;
+    }
+
+    .survey-selector-label{
+      font-size:12px;
+      font-weight:bold;
+      color:#000;
+    }
+
+    .survey-selector{
+      min-width:320px;
+      max-width:100%;
+      padding:7px 10px;
+      border:1px solid #999;
+      background:#fff;
+      color:#000;
+      font-size:12px;
+      border-radius:2px;
+      outline:none;
+    }
+
+    .survey-selector:focus{
+      border-color:#000;
+    }
+
     .question-box{
       padding:8px 10px 0;
       margin-bottom:12px;
@@ -377,6 +408,10 @@
       .footer-nav{
         grid-template-columns: 50px 1fr 50px;
       }
+
+      .survey-selector{
+        min-width:100%;
+      }
     }
   </style>
 </head>
@@ -411,6 +446,18 @@
         <div class="required-note">
           * - Esta pregunta es de respuesta obligatoria.
         </div>
+      </div>
+
+      <div class="survey-selector-wrap">
+        <label class="survey-selector-label" for="surveySelector">Encuesta:</label>
+        <select id="surveySelector" class="survey-selector">
+          <option value="paex360-ambito1">Ámbito 1 Estrategia</option>
+          <option value="paex360-ambito2">Ámbito 2 Liderazgo i Cultura</option>
+          <option value="paex360-ambito3">Ámbito 3 Estructura Participativa</option>
+          <option value="paex360-ambito4">Ámbito 4. PROCESOS</option>
+          <option value="paex360-ambito5">Ámbito 5 Procesos Clave</option>
+          <option value="paex360-ambito6">Ámbito 6 Evaluación de resultados</option>
+        </select>
       </div>
 
       <div class="meta-hidden">
@@ -509,6 +556,7 @@
     const questionTitle = document.getElementById("questionTitle");
     const questionCategory = document.getElementById("questionCategory");
     const referenceFilesBox = document.getElementById("referenceFilesBox");
+    const surveySelector = document.getElementById("surveySelector");
 
     const selfScoreGroup = document.getElementById("selfScoreGroup");
     const certifierScoreGroup = document.getElementById("certifierScoreGroup");
@@ -536,10 +584,12 @@
     let auth;
     let currentUser = null;
     let surveyData = null;
+    let currentSurveyCode = "paex360-ambito1";
     let currentQuestionIndex = 0;
     let autosaveTimer = null;
     let isSaving = false;
     let pendingSave = false;
+    let isSwitchingSurvey = false;
 
     const answers = {};
 
@@ -670,6 +720,12 @@
       }
 
       return answers[questionId];
+    }
+
+    function clearAnswersState(){
+      Object.keys(answers).forEach(key => {
+        delete answers[key];
+      });
     }
 
     function mergeSavedAnswers(savedAnswers = []){
@@ -885,13 +941,14 @@
     }
 
     async function loadSurvey(){
-      surveyData = await fetchJSON("/.netlify/functions/getSurvey");
+      surveyData = await fetchJSON(`/.netlify/functions/getSurvey?surveyCode=${encodeURIComponent(currentSurveyCode)}`);
 
       if(!surveyData?.questions?.length){
         throw new Error("La encuesta no tiene preguntas configuradas.");
       }
 
       surveyTitle.textContent = surveyData.title || "Encuesta";
+      surveySelector.value = surveyData.surveyCode || currentSurveyCode;
     }
 
     async function loadSavedResponse(){
@@ -912,8 +969,13 @@
         const savedQuestionNumber = Number(result.header?.current_question_number || 1);
         currentQuestionIndex = Math.max(0, Math.min(savedQuestionNumber - 1, surveyData.totalQuestions - 1));
 
-        setSaveState(`Último guardado: ${new Date(result.header?.updated_at).toLocaleString("es-ES")}`);
+        if(result.header?.updated_at){
+          setSaveState(`Último guardado: ${new Date(result.header.updated_at).toLocaleString("es-ES")}`);
+        } else {
+          setSaveState("Guardado recuperado");
+        }
       } else {
+        currentQuestionIndex = 0;
         setSaveState("Sin guardados previos");
       }
     }
@@ -994,9 +1056,11 @@
       } finally {
         isSaving = false;
 
-        if(pendingSave){
+        if(pendingSave && !isSwitchingSurvey){
           pendingSave = false;
           saveCurrentQuestion({ silent: true });
+        } else {
+          pendingSave = false;
         }
       }
     }
@@ -1008,6 +1072,45 @@
       autosaveTimer = setTimeout(() => {
         saveCurrentQuestion({ silent: true });
       }, 900);
+    }
+
+    async function switchSurvey(newSurveyCode){
+      if (!newSurveyCode || newSurveyCode === currentSurveyCode) {
+        surveySelector.value = currentSurveyCode;
+        return;
+      }
+
+      try{
+        isSwitchingSurvey = true;
+        clearTimeout(autosaveTimer);
+
+        await saveCurrentQuestion({ silent: true });
+
+        currentSurveyCode = newSurveyCode;
+        currentQuestionIndex = 0;
+        clearAnswersState();
+        clearMessages();
+        setSaveState("");
+
+        showLoader("Cargando encuesta...");
+        surveyCard.style.display = "none";
+
+        await loadSurvey();
+
+        showLoader("Cargando respuestas guardadas...");
+        await loadSavedResponse();
+
+        hideLoader();
+        surveyCard.style.display = "block";
+        renderQuestion();
+
+      }catch(error){
+        hideLoader();
+        surveySelector.value = surveyData?.surveyCode || currentSurveyCode;
+        showError(error.message || "Error cambiando de encuesta.");
+      }finally{
+        isSwitchingSurvey = false;
+      }
     }
 
     backBtn.addEventListener("click", () => {
@@ -1044,6 +1147,10 @@
       if(ok){
         showSuccess("Respuesta guardada correctamente.");
       }
+    });
+
+    surveySelector.addEventListener("change", async (event) => {
+      await switchSurvey(event.target.value);
     });
 
     selfScoreGroup.addEventListener("change", () => {

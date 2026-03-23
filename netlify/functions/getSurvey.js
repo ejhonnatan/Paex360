@@ -8,9 +8,20 @@ exports.handler = async (event) => {
       };
     }
 
-    const survey = {
-      surveyCode: "paex360-certificacion-v1",
-      title: "Encuesta de certificación Paex360",
+    const surveyCode = event.queryStringParameters.surveyCode;
+
+    if (!surveyCode) {
+      return {
+        statusCode: 400,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ error: "surveyCode requerido" })
+      };
+    }
+
+    // 🔴 ÁMBITO 1 (TU ENCUESTA REAL)
+    const ambito1 = {
+      surveyCode: "paex360-ambito1",
+      title: "Ámbito 1 Estrategia",
       version: "1.0.0",
       totalQuestions: 7,
       questions: [
@@ -22,10 +33,8 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 2,
           defaultEvidenceText:
-            "La missió, visió i valors institucionals incorporen l’atenció centrada en la persona i l’experiència del pacient, reflectida en principis com el respecte, l’empatia, l’acollida, el servei i la humilitat, tal com es recull a la Política d’Experiència del Pacient.",
-          referenceFiles: [
-            "SALUCAEXPE1001.pdf"
-          ]
+            "La missió, visió i valors institucionals incorporen l’atenció centrada en la persona i l’experiència del pacient...",
+          referenceFiles: ["Importar Documento"]
         },
         {
           id: 2,
@@ -35,78 +44,168 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 2,
           defaultEvidenceText:
-            "El Pla Estratègic del centre incorpora l’experiència del pacient com a eix estratègic, situant les persones al centre de l’atenció i recollint les seves necessitats i preferències des de la planificació dels serveis, així com promovent una cultura d’atenció orientada a garantir una òptima experiència del pacient.",
-          referenceFiles: [
-            "SALUGGESTE0402.pdf"
-          ]
+            "El Pla Estratègic del centre incorpora l’experiència del pacient com a eix estratègic...",
+          referenceFiles: ["Importar Documento"]
         },
         {
           id: 3,
           number: 3,
-          text: "La organización planifica e identifica la evaluación y mejora de la experiencia de los pacientes, aprobado por la Dirección y alineado con el resto de planes de la organización.",
+          text: "La organización planifica e identifica la evaluación y mejora de la experiencia de los pacientes...",
           category: "FUNDAMENTAL",
           required: true,
           defaultSelfScore: 4,
           defaultEvidenceText:
-            "L’organització disposa d’un model estructurat de planificació, avaluació i millora de l’experiència del pacient, recollit en la Política de participació ciutadana, que inclou mecanismes d’escolta activa, així com el seguiment mitjançant indicadors definits, orientats a la millora contínua dels processos i alineats amb el model assistencial del centre.",
-          referenceFiles: [
-            "SALUGGPOLE0701.pdf"
-          ]
+            "L’organització disposa d’un model estructurat...",
+          referenceFiles: ["Importar Documento"]
         },
         {
           id: 4,
           number: 4,
-          text: "Las acciones planificadas en relación a la mejora de la experiencia paciente tienen en cuenta los grupos de interés clave y la participación de pacientes y profesionales.",
+          text: "Las acciones planificadas en relación a la mejora de la experiencia paciente...",
           category: "FUNDAMENTAL",
           required: true,
           defaultSelfScore: 4,
           defaultEvidenceText:
-            "Les accions de millora de l’experiència del pacient es planifiquen incorporant els grups d’interès clau, incloent pacients, famílies i professionals (apartat 4.1.1), així com la seva participació activa mitjançant diferents metodologies d’escolta i treball (apartat 4.1.2), integrant-se els resultats en la presa de decisions i en la millora dels processos assistencials.",
-          referenceFiles: [
-            "SALUCAEXPE1001.pdf"
-          ]
+            "Les accions de millora de l’experiència del pacient...",
+          referenceFiles: ["Importar Documento"]
         },
         {
           id: 5,
           number: 5,
-          text: "Las acciones planificadas en relación con la experiencia paciente se ejecutan mediante un grupo multidisciplinar de profesionales y se rinden cuentas al equipo directivo.",
+          text: "Las acciones planificadas en relación con la experiencia paciente se ejecutan...",
           category: "FUNDAMENTAL",
           required: true,
           defaultSelfScore: 1,
           defaultEvidenceText:
-            "Les accions de millora de l’experiència del pacient es desenvolupen mitjançant el PAO EXP, que inclou accions concretes amb responsables i equips de referència, integrant la participació de professionals i pacients, amb seguiment mitjançant indicadors i presentació periòdica dels resultats als òrgans de Direcció.",
-          referenceFiles: [
-            "SALUCAEXPE1001.pdf"
-          ]
+            "Les accions de millora de l’experiència del pacient es desenvolupen...",
+          referenceFiles: ["Importar Documento"]
         },
         {
           id: 6,
           number: 6,
-          text: "Las políticas clave del centro contemplan aspectos relacionados con la experiencia paciente (código ético, plan de humanización, plan de acogida, plan de género...).",
+          text: "Las políticas clave del centro contemplan aspectos relacionados...",
           category: "FUNDAMENTAL",
           required: true,
           defaultSelfScore: 2,
           defaultEvidenceText:
-            "Les polítiques clau del centre incorporen aspectes relacionats amb l’experiència del pacient, tal com es recull en la Política d’Experiència del Pacient, que s’alinea amb el Codi Ètic, el Canal Ètic, el Pla d’Acollida i els protocols assistencials, garantint una atenció centrada en la persona i orientada a la humanització i la qualitat assistencial.",
-          referenceFiles: [
-            "SALUCAEXPE1001.pdf"
-          ]
+            "Les polítiques clau del centre incorporen aspectes...",
+          referenceFiles: ["Importar Documento"]
         },
         {
           id: 7,
           number: 7,
-          text: "Los proveedores y mercantiles están alineados con la política de humanización y experiencia de los pacientes.",
+          text: "Los proveedores y mercantiles están alineados con la política...",
           category: "FUNDAMENTAL",
           required: true,
           defaultSelfScore: 2,
           defaultEvidenceText:
-            "Els proveïdors i empreses mercantils estan alineats amb la política d’experiència del pacient, ja que han d’actuar d’acord amb el model d’atenció centrada en la persona i els valors institucionals, complir el Codi Ètic i subscriure un compromís formal en el procés de contractació, amb seguiment continu mitjançant el Canal Ètic, reclamacions i indicadors de qualitat.",
-          referenceFiles: [
-            "SALUCAEXPE1001.pdf"
-          ]
+            "Els proveïdors i empreses mercantils estan alineats...",
+          referenceFiles: ["Importar Documento"]
         }
       ]
     };
+
+    // 🔹 GENERADOR PARA LOS OTROS ÁMBITOS
+    function buildAmbito(code, title) {
+      return {
+        surveyCode: code,
+        title: title,
+        version: "1.0.0",
+        totalQuestions: 7,
+        questions: [
+          {
+            id: 1,
+            number: 1,
+            text: `${title} - Pregunta 1`,
+            category: "GENERAL",
+            required: true,
+            defaultSelfScore: 0,
+            defaultEvidenceText: "",
+            referenceFiles: []
+          },
+          {
+            id: 2,
+            number: 2,
+            text: `${title} - Pregunta 2`,
+            category: "GENERAL",
+            required: true,
+            defaultSelfScore: 0,
+            defaultEvidenceText: "",
+            referenceFiles: []
+          },
+          {
+            id: 3,
+            number: 3,
+            text: `${title} - Pregunta 3`,
+            category: "GENERAL",
+            required: true,
+            defaultSelfScore: 0,
+            defaultEvidenceText: "",
+            referenceFiles: []
+          },
+          {
+            id: 4,
+            number: 4,
+            text: `${title} - Pregunta 4`,
+            category: "GENERAL",
+            required: true,
+            defaultSelfScore: 0,
+            defaultEvidenceText: "",
+            referenceFiles: []
+          },
+          {
+            id: 5,
+            number: 5,
+            text: `${title} - Pregunta 5`,
+            category: "GENERAL",
+            required: true,
+            defaultSelfScore: 0,
+            defaultEvidenceText: "",
+            referenceFiles: []
+          },
+          {
+            id: 6,
+            number: 6,
+            text: `${title} - Pregunta 6`,
+            category: "GENERAL",
+            required: true,
+            defaultSelfScore: 0,
+            defaultEvidenceText: "",
+            referenceFiles: []
+          },
+          {
+            id: 7,
+            number: 7,
+            text: `${title} - Pregunta 7`,
+            category: "GENERAL",
+            required: true,
+            defaultSelfScore: 0,
+            defaultEvidenceText: "",
+            referenceFiles: []
+          }
+        ]
+      };
+    }
+
+    // 🔹 TODAS LAS ENCUESTAS
+    const surveys = {
+      "paex360-ambito1": ambito1,
+      "paex360-ambito2": buildAmbito("paex360-ambito2", "Ámbito 2 Liderazgo i Cultura"),
+      "paex360-ambito3": buildAmbito("paex360-ambito3", "Ámbito 3 Estructura Participativa"),
+      "paex360-ambito4": buildAmbito("paex360-ambito4", "Ámbito 4. PROCESOS"),
+      "paex360-ambito5": buildAmbito("paex360-ambito5", "Ámbito 5 Procesos Clave"),
+      "paex360-ambito6": buildAmbito("paex360-ambito6", "Ámbito 6 Evaluación de resultados")
+    };
+
+    const survey = surveys[surveyCode];
+
+    if (!survey) {
+      return {
+        statusCode: 404,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ error: "Encuesta no encontrada" })
+      };
+    }
 
     return {
       statusCode: 200,

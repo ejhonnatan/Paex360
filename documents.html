@@ -68,6 +68,10 @@
       border-radius:10px;
       font-weight:900;
       font-size:13px;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
     }
 
     .btn:hover{
@@ -326,6 +330,12 @@
       return false;
     }
 
+    function appendNoCache(url){
+      if (!url) return "";
+      const separator = url.includes("?") ? "&" : "?";
+      return `${url}${separator}t=${Date.now()}`;
+    }
+
     async function pedirPermisos(email){
       const resp = await fetch("/.netlify/functions/getPermissions", {
         method: "POST",
@@ -342,11 +352,11 @@
       return data;
     }
 
-    async function pedirDocumentos(email, center){
+    async function pedirDocumentos(center){
       const resp = await fetch("/.netlify/functions/getDocuments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, center })
+        body: JSON.stringify({ center })
       });
 
       const data = await resp.json().catch(() => ({}));
@@ -355,20 +365,23 @@
         throw new Error(data?.error || "No se pudieron consultar documentos");
       }
 
-      return data.documents || [];
+      return Array.isArray(data.documents) ? data.documents : [];
     }
 
     function selectDocument(doc){
-      selectedPath = doc.ruta;
-      viewerTitle.textContent = doc.nombre;
-      pdfFrame.src = doc.ruta;
+      selectedPath = doc.ruta || "";
+      viewerTitle.textContent = doc.nombre || "Documento PDF";
+
+      const safeUrl = appendNoCache(selectedPath);
+
+      pdfFrame.src = safeUrl;
       pdfFrame.style.display = "block";
       emptyViewer.style.display = "none";
-      openNewTabBtn.style.display = "inline-flex";
-      openNewTabBtn.href = doc.ruta;
+      openNewTabBtn.style.display = safeUrl ? "inline-flex" : "none";
+      openNewTabBtn.href = safeUrl;
 
       Array.from(documentsList.querySelectorAll(".doc-btn")).forEach(btn => {
-        btn.classList.toggle("active", btn.dataset.path === doc.ruta);
+        btn.classList.toggle("active", btn.dataset.path === selectedPath);
       });
     }
 
@@ -377,10 +390,19 @@
 
       if (!documents || documents.length === 0) {
         documentsList.innerHTML = `<div style="color:#6b7280;font-weight:700;font-size:13px;">No hay documentos disponibles para este centro.</div>`;
+        viewerTitle.textContent = "Sin documentos";
+        pdfFrame.style.display = "none";
+        pdfFrame.src = "";
+        emptyViewer.style.display = "flex";
+        openNewTabBtn.style.display = "none";
         return;
       }
 
       documents.forEach((doc, index) => {
+        if (!doc || !doc.nombre || !doc.ruta) {
+          return;
+        }
+
         const btn = document.createElement("button");
         btn.className = "doc-btn";
         btn.textContent = doc.nombre;
@@ -502,7 +524,7 @@
         }
 
         setLoading(true, "Cargando documentos...");
-        loadedDocuments = await pedirDocumentos(email, centerKey);
+        loadedDocuments = await pedirDocumentos(centerKey);
 
         renderDocuments(loadedDocuments);
 

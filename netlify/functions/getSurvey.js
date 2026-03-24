@@ -234,6 +234,82 @@ exports.handler = async (event) => {
       ]
     };
 
+    // 🔴 ÁMBITO 3
+    const ambito3 = {
+      surveyCode: "paex360-ambito3",
+      title: "Ámbito 3 Estructura Participativa",
+      version: "1.0.0",
+      totalQuestions: 7,
+      questions: [
+        {
+          id: 19,
+          number: 19,
+          text: "La organización cuenta con distintos canales oficiales que garantizan la recogida de la voz del paciente, accesible a los distintos segmentos de pacientes.",
+          category: "FUNDAMENTAL",
+          required: true,
+          defaultSelfScore: 4,
+          defaultEvidenceText:
+            "L’organització disposa de diversos canals estructurats per recollir la veu del pacient i de les seves famílies. Aquests inclouen enquestes d’experiència del pacient (OPINAT), enquestes telefòniques, canals digitals i presencials (web, xarxes socials, WhatsApp, formularis, bústies, reclamacions i suggeriments), així com metodologies qualitatives com entrevistes i grups focals. Els resultats es recullen periòdicament i es presenten a Direcció per al seu seguiment.",
+          referenceFiles: ["Importar Documento"]
+        },
+        {
+          id: 20,
+          number: 20,
+          text: "La organización dispone de mecanismos para implicar a pacientes y familias.",
+          category: "FUNDAMENTAL",
+          required: true,
+          defaultSelfScore: 4,
+          defaultEvidenceText:
+            "L’organització disposa de diversos mecanismes per implicar pacients i famílies, com enquestes, formularis, bústies de suggeriments, canals digitals i espais participatius com grups focals i grups de treball amb pacients per identificar oportunitats de millora en l’experiència assistencial. Aquests mecanismes estan recollits a la Política de participació ciutadana del centre.",
+          referenceFiles: ["Importar Documento"]
+        },
+        {
+          id: 21,
+          number: 21,
+          text: "En los proyectos o iniciativas que la organización lleva a cabo se tiene en cuenta la participación, co-creación e implicación de los pacientes.",
+          category: "FUNDAMENTAL",
+          required: true,
+          defaultSelfScore: 4,
+          defaultEvidenceText:
+            "L’organització disposa d’un document institucional per a la definició i gestió de projectes que incorpora l’anàlisi de la realitat i l’experiència del pacient en el disseny de les iniciatives. Aquest model preveu instruments com enquestes, entrevistes o grups de discussió per recollir la seva percepció i afavorir la participació dels pacients en la millora de l’atenció.",
+          referenceFiles: ["Importar Documento"]
+        },
+        {
+          id: 22,
+          number: 22,
+          text: "Siempre que se solicita participación a los pacientes y familias, se da una respuesta oficial o feedback, en un periodo máximo determinado.",
+          category: "GENERAL",
+          required: true,
+          defaultSelfScore: 4,
+          defaultEvidenceText:
+            "El centre garanteix un retorn o resposta oficial als pacients i famílies quan se sol·licita la seva participació. Aquest compromís de feedback en un termini màxim establert està recollit a la Política de participació ciutadana del centre. Ho trobem en el document SALU-GG-POL-E-07-01. Punt 4.6.",
+          referenceFiles: ["Importar Documento"]
+        },
+        {
+          id: 23,
+          number: 23,
+          text: "En los casos que se requiere tomar decisiones compartidas, se asegura la educación e información estructurada necesaria con el objetivo que los pacientes tomen sus decisiones fundamentadas en conocimiento.",
+          category: "GENERAL",
+          required: true,
+          defaultSelfScore: 4,
+          defaultEvidenceText:
+            "El centre disposa d’un protocol d’actuació sobre el Document de Voluntats Anticipades i el Consentiment Informat que garanteix que els pacients rebin informació clara i estructurada per participar en la presa de decisions sobre la seva atenció. Aquest procés inclou informació al pacient i la família, lliurament de documentació informativa i registre a la història clínica.",
+          referenceFiles: ["Importar Documento"]
+        },
+        {
+          id: 24,
+          number: 24,
+          text: "En aquellos casos que los pacientes requieren de mayor información, se ofrecen pautas, información i/o formación específica en relación a los circuitos, los servicios, la estructura de la organización y el sistema de salud.",
+          category: "GENERAL",
+          required: true,
+          defaultSelfScore: 4,
+          defaultEvidenceText:
+            "El centre facilita informació i suport als pacients perquè puguin comprendre els circuits assistencials i participar en les decisions sobre la seva salut. A més de la informació proporcionada pels professionals i l’acompanyament del SEAR, s’han implementat materials informatius i missatges institucionals als espais del centre que promouen el dret del pacient a estar informat i orientat dins l’organització.",
+          referenceFiles: ["Importar Documento"]
+        }
+      ]
+    };
+
     // 🔹 GENERADOR PARA LOS OTROS ÁMBITOS
     function buildAmbito(code, title) {
       return {
@@ -320,7 +396,7 @@ exports.handler = async (event) => {
     const surveys = {
       "paex360-ambito1": ambito1,
       "paex360-ambito2": ambito2,
-      "paex360-ambito3": buildAmbito("paex360-ambito3", "Ámbito 3 Estructura Participativa"),
+      "paex360-ambito3": ambito3,
       "paex360-ambito4": buildAmbito("paex360-ambito4", "Ámbito 4. PROCESOS"),
       "paex360-ambito5": buildAmbito("paex360-ambito5", "Ámbito 5 Procesos Clave"),
       "paex360-ambito6": buildAmbito("paex360-ambito6", "Ámbito 6 Evaluación de resultados")

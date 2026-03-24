@@ -33,8 +33,7 @@ exports.handler = async (event) => {
           category: "FUNDAMENTAL",
           required: true,
           defaultSelfScore: 2,
-          defaultEvidenceText:
-            "La missió, visió i valors institucionals incorporen l’atenció centrada en la persona i l’experiència del pacient...",
+          defaultEvidenceText: "",
           referenceFiles: ["Importar Documento"]
         },
         {
@@ -44,8 +43,7 @@ exports.handler = async (event) => {
           category: "FUNDAMENTAL",
           required: true,
           defaultSelfScore: 2,
-          defaultEvidenceText:
-            "El Pla Estratègic del centre incorpora l’experiència del pacient com a eix estratègic...",
+          defaultEvidenceText: "",
           referenceFiles: ["Importar Documento"]
         },
         {
@@ -55,8 +53,7 @@ exports.handler = async (event) => {
           category: "FUNDAMENTAL",
           required: true,
           defaultSelfScore: 4,
-          defaultEvidenceText:
-            "L’organització disposa d’un model estructurat...",
+          defaultEvidenceText: "",
           referenceFiles: ["Importar Documento"]
         },
         {
@@ -66,8 +63,7 @@ exports.handler = async (event) => {
           category: "FUNDAMENTAL",
           required: true,
           defaultSelfScore: 4,
-          defaultEvidenceText:
-            "Les accions de millora de l’experiència del pacient...",
+          defaultEvidenceText: "",
           referenceFiles: ["Importar Documento"]
         },
         {
@@ -77,8 +73,7 @@ exports.handler = async (event) => {
           category: "FUNDAMENTAL",
           required: true,
           defaultSelfScore: 1,
-          defaultEvidenceText:
-            "Les accions de millora de l’experiència del pacient es desenvolupen...",
+          defaultEvidenceText: "",
           referenceFiles: ["Importar Documento"]
         },
         {
@@ -88,8 +83,7 @@ exports.handler = async (event) => {
           category: "FUNDAMENTAL",
           required: true,
           defaultSelfScore: 2,
-          defaultEvidenceText:
-            "Les polítiques clau del centre incorporen aspectes...",
+          defaultEvidenceText: "",
           referenceFiles: ["Importar Documento"]
         },
         {
@@ -99,8 +93,7 @@ exports.handler = async (event) => {
           category: "FUNDAMENTAL",
           required: true,
           defaultSelfScore: 2,
-          defaultEvidenceText:
-            "Els proveïdors i empreses mercantils estan alineats...",
+          defaultEvidenceText: "",
           referenceFiles: ["Importar Documento"]
         }
       ]
@@ -130,8 +123,7 @@ exports.handler = async (event) => {
           category: "FUNDAMENTAL",
           required: true,
           defaultSelfScore: 2,
-          defaultEvidenceText:
-            "Els resultats de les enquestes d’experiència del pacient (Opinat) es presenten periòdicament al Comitè Directiu i a la Junta de l’Institut per al seu seguiment i valoració per part de la Direcció. Aquest procés permet analitzar la percepció dels pacients i identificar oportunitats de millora en l’atenció. Les actes de les sessions i els informes de resultats es documenten com a evidència del seguiment per part de la Direcció.",
+          defaultEvidenceText: "",
           referenceFiles: ["Importar Documento"]
         },
         {
@@ -141,8 +133,7 @@ exports.handler = async (event) => {
           category: "GENERAL",
           required: true,
           defaultSelfScore: 2,
-          defaultEvidenceText:
-            "El centre disposa d’una bústia de correu electrònic habilitada per a la recepció de suggeriments, propostes de millora i iniciatives dels professionals relacionades amb la qualitat assistencial. Aquest canal també està destinat a recollir propostes vinculades a la millora de l’experiència del pacient per part del personal del centre.",
+          defaultEvidenceText: "",
           referenceFiles: ["Importar Documento"]
         },
         {
@@ -152,8 +143,7 @@ exports.handler = async (event) => {
           category: "GENERAL",
           required: true,
           defaultSelfScore: 3,
-          defaultEvidenceText:
-            "El centre ha creat el ‘Premi a la Millor Iniciativa d’Experiència del Pacient’, un concurs intern per impulsar i reconèixer propostes dels professionals orientades a millorar l’experiència dels pacients i les seves famílies. Les iniciatives es presenten mitjançant una breu proposta i es valoren segons criteris d’impacte en l’experiència del pacient, innovació i viabilitat.",
+          defaultEvidenceText: "",
           referenceFiles: ["Importar Documento"]
         },
         {
@@ -163,8 +153,7 @@ exports.handler = async (event) => {
           category: "GENERAL",
           required: true,
           defaultSelfScore: 2,
-          defaultEvidenceText:
-            "El centre incorpora la dimensió d’Experiència del Pacient dins del Pla de Formació, amb accions formatives orientades a la humanització de l’atenció, la comunicació amb el pacient, el suport emocional i les decisions compartides, amb l’objectiu de reforçar les competències dels professionals en una atenció centrada en la persona.",
+          defaultEvidenceText: "",
           referenceFiles: ["Importar Documento"]
         },
         {
@@ -174,8 +163,7 @@ exports.handler = async (event) => {
           category: "GENERAL",
           required: true,
           defaultSelfScore: 3,
-          defaultEvidenceText:
-            "El Pla d’Acollida dels nous professionals inclou la presentació del model d’Experiència del Pacient del centre i del Manual de Bones Pràctiques, on es recullen les principals dimensions de l’experiència del pacient (gestió del temps, accessibilitat, informació, tracte, coordinació, entorn físic, control del dolor i valors del pacient). Aquest contingut forma part de la integració inicial dels professionals.",
+          defaultEvidenceText: "",
           referenceFiles: ["Importar Documento"]
         },
         {
@@ -185,8 +173,7 @@ exports.handler = async (event) => {
           category: "GENERAL",
           required: true,
           defaultSelfScore: 2,
-          defaultEvidenceText:
-            "El centre promou formació específica i periòdica en Experiència del Pacient dins del Pla de Formació institucional, amb continguts orientats a la humanització de l’atenció, la comunicació amb el pacient i les decisions compartides. A més, en el document d’acollida dels nous professionals s’inclouen píndoles formatives sobre experiència del pacient i bones pràctiques assistencials.",
+          defaultEvidenceText: "",
           referenceFiles: ["Importar Documento"]
         },
         {
@@ -206,8 +193,7 @@ exports.handler = async (event) => {
           category: "GENERAL",
           required: true,
           defaultSelfScore: 1,
-          defaultEvidenceText:
-            "El centre promou la participació dels professionals en formació, projectes de millora i activitats externes relacionades amb la qualitat assistencial i l’Experiència del Pacient. El Pla de Formació estableix criteris per facilitar l’assistència a cursos, jornades o congressos, incloent compensació d’hores de formació o suport econòmic segons les necessitats.",
+          defaultEvidenceText: "",
           referenceFiles: ["Importar Documento"]
         },
         {
@@ -217,8 +203,7 @@ exports.handler = async (event) => {
           category: "GENERAL",
           required: true,
           defaultSelfScore: 2,
-          defaultEvidenceText:
-            "Els professionals del centre són orientats i formats en els principis d’atenció centrada en la persona a través de les accions formatives incloses al Pla de Formació i recollides a la Política d’Experiència del Pacient. Aquestes formacions inclouen continguts relacionats amb la humanització de l’atenció, la comunicació amb el pacient, el suport emocional i les decisions compartides.",
+          defaultEvidenceText: "",
           referenceFiles: ["Importar Documento"]
         },
         {
@@ -228,8 +213,7 @@ exports.handler = async (event) => {
           category: "GENERAL",
           required: true,
           defaultSelfScore: 4,
-          defaultEvidenceText:
-            "L’organització avalua el sentiment de pertinença, compromís i alineació amb els valors mitjançant l’enquesta de clima i compromís professional adreçada a tot el personal del centre. L’enquesta inclou preguntes específiques relacionades amb l’orgull de pertinença, el compromís amb la missió i els valors, la satisfacció i la vinculació amb l’organització.",
+          defaultEvidenceText: "",
           referenceFiles: ["Importar Documento"]
         }
       ]
@@ -249,8 +233,7 @@ exports.handler = async (event) => {
           category: "FUNDAMENTAL",
           required: true,
           defaultSelfScore: 4,
-          defaultEvidenceText:
-            "L’organització disposa de diversos canals estructurats per recollir la veu del pacient i de les seves famílies. Aquests inclouen enquestes d’experiència del pacient (OPINAT), enquestes telefòniques, canals digitals i presencials (web, xarxes socials, WhatsApp, formularis, bústies, reclamacions i suggeriments), així com metodologies qualitatives com entrevistes i grups focals. Els resultats es recullen periòdicament i es presenten a Direcció per al seu seguiment.",
+          defaultEvidenceText: "",
           referenceFiles: ["Importar Documento"]
         },
         {
@@ -260,8 +243,7 @@ exports.handler = async (event) => {
           category: "FUNDAMENTAL",
           required: true,
           defaultSelfScore: 4,
-          defaultEvidenceText:
-            "L’organització disposa de diversos mecanismes per implicar pacients i famílies, com enquestes, formularis, bústies de suggeriments, canals digitals i espais participatius com grups focals i grups de treball amb pacients per identificar oportunitats de millora en l’experiència assistencial. Aquests mecanismes estan recollits a la Política de participació ciutadana del centre.",
+          defaultEvidenceText: "",
           referenceFiles: ["Importar Documento"]
         },
         {
@@ -271,8 +253,7 @@ exports.handler = async (event) => {
           category: "FUNDAMENTAL",
           required: true,
           defaultSelfScore: 4,
-          defaultEvidenceText:
-            "L’organització disposa d’un document institucional per a la definició i gestió de projectes que incorpora l’anàlisi de la realitat i l’experiència del pacient en el disseny de les iniciatives. Aquest model preveu instruments com enquestes, entrevistes o grups de discussió per recollir la seva percepció i afavorir la participació dels pacients en la millora de l’atenció.",
+          defaultEvidenceText: "",
           referenceFiles: ["Importar Documento"]
         },
         {
@@ -282,8 +263,7 @@ exports.handler = async (event) => {
           category: "GENERAL",
           required: true,
           defaultSelfScore: 4,
-          defaultEvidenceText:
-            "El centre garanteix un retorn o resposta oficial als pacients i famílies quan se sol·licita la seva participació. Aquest compromís de feedback en un termini màxim establert està recollit a la Política de participació ciutadana del centre. Ho trobem en el document SALU-GG-POL-E-07-01. Punt 4.6.",
+          defaultEvidenceText: "",
           referenceFiles: ["Importar Documento"]
         },
         {
@@ -293,8 +273,7 @@ exports.handler = async (event) => {
           category: "GENERAL",
           required: true,
           defaultSelfScore: 4,
-          defaultEvidenceText:
-            "El centre disposa d’un protocol d’actuació sobre el Document de Voluntats Anticipades i el Consentiment Informat que garanteix que els pacients rebin informació clara i estructurada per participar en la presa de decisions sobre la seva atenció. Aquest procés inclou informació al pacient i la família, lliurament de documentació informativa i registre a la història clínica.",
+          defaultEvidenceText: "",
           referenceFiles: ["Importar Documento"]
         },
         {
@@ -304,8 +283,7 @@ exports.handler = async (event) => {
           category: "GENERAL",
           required: true,
           defaultSelfScore: 4,
-          defaultEvidenceText:
-            "El centre facilita informació i suport als pacients perquè puguin comprendre els circuits assistencials i participar en les decisions sobre la seva salut. A més de la informació proporcionada pels professionals i l’acompanyament del SEAR, s’han implementat materials informatius i missatges institucionals als espais del centre que promouen el dret del pacient a estar informat i orientat dins l’organització.",
+          defaultEvidenceText: "",
           referenceFiles: ["Importar Documento"]
         }
       ]
@@ -325,8 +303,7 @@ exports.handler = async (event) => {
           category: "FUNDAMENTAL",
           required: true,
           defaultSelfScore: 3,
-          defaultEvidenceText:
-            "El centre ha iniciat el treball de mapatge de l’experiència del pacient mitjançant l’elaboració d’un Patient Journey Map del pacient traumatològic de mútua atès al servei d’urgències, amb l’objectiu d’identificar els principals punts de contacte i possibles àrees de millora des de la perspectiva del pacient i dels processos.",
+          defaultEvidenceText: "",
           referenceFiles: ["Importar Documento"]
         },
         {
@@ -336,8 +313,7 @@ exports.handler = async (event) => {
           category: "FUNDAMENTAL",
           required: true,
           defaultSelfScore: 3,
-          defaultEvidenceText:
-            "En el procés analitzat s’han definit diferents perfils de pacient amb l’objectiu d’identificar les seves necessitats específiques. Concretament, en el treball realitzat sobre el circuit d’urgències s’ha elaborat un perfil principal i un perfil secundari de pacient traumatològic, fet que ha permès analitzar les seves necessitats, expectatives i possibles punts de millora al llarg del recorregut assistencial.",
+          defaultEvidenceText: "",
           referenceFiles: ["Importar Documento"]
         },
         {
@@ -377,8 +353,7 @@ exports.handler = async (event) => {
           category: "GENERAL",
           required: true,
           defaultSelfScore: 4,
-          defaultEvidenceText:
-            "Al nostre centre es prioritza la gestió del temps mitjançant ingressos directes a planta quan és possible, derivacions directes a especialistes des d’urgències i coordinació de proves i visites per reduir esperes i millorar la continuïtat assistencial.",
+          defaultEvidenceText: "",
           referenceFiles: ["Importar Documento"]
         },
         {
@@ -388,8 +363,7 @@ exports.handler = async (event) => {
           category: "GENERAL",
           required: true,
           defaultSelfScore: 4,
-          defaultEvidenceText:
-            "Al nostre centre es garanteix l’accessibilitat als professionals mitjançant la inclusió de telèfons i canals de contacte als informes d’alta i la disponibilitat de diferents canals de comunicació recollits a la política de participació ciutadana.",
+          defaultEvidenceText: "",
           referenceFiles: ["Importar Documento"]
         },
         {
@@ -399,8 +373,7 @@ exports.handler = async (event) => {
           category: "GENERAL",
           required: true,
           defaultSelfScore: 4,
-          defaultEvidenceText:
-            "Al nostre centre es valora l’adequació del servei mitjançant l’enquesta de satisfacció (NPS), que incorpora ítems sobre temps d’espera, compliment d’horaris, qualitat de la informació i tracte rebut.",
+          defaultEvidenceText: "",
           referenceFiles: ["Importar Documento"]
         },
         {
@@ -410,8 +383,7 @@ exports.handler = async (event) => {
           category: "GENERAL",
           required: true,
           defaultSelfScore: 4,
-          defaultEvidenceText:
-            "Al nostre centre es garanteix el suport emocional i el tracte mitjançant l’avaluació periòdica de la satisfacció del pacient (NPS), incloent aspectes com el tracte rebut, l’acompanyament i la relació amb els professionals.",
+          defaultEvidenceText: "",
           referenceFiles: ["Importar Documento"]
         },
         {
@@ -421,8 +393,7 @@ exports.handler = async (event) => {
           category: "GENERAL",
           required: true,
           defaultSelfScore: 4,
-          defaultEvidenceText:
-            "Al nostre centre es garanteix la informació al pacient mitjançant l’entrega de fulls i recomanacions a urgències, informació sobre procediments i proves complementàries, i canals addicionals quan cal per facilitar comprensió i continuïtat.",
+          defaultEvidenceText: "",
           referenceFiles: ["Importar Documento"]
         },
         {
@@ -432,8 +403,7 @@ exports.handler = async (event) => {
           category: "GENERAL",
           required: true,
           defaultSelfScore: 4,
-          defaultEvidenceText:
-            "Al nostre centre es garanteix la coordinació i integració de la informació mitjançant registre a la història clínica compartida i ús d’eines de coordinació per assegurar la continuïtat assistencial quan el pacient és derivat a altres dispositius.",
+          defaultEvidenceText: "",
           referenceFiles: ["Importar Documento"]
         },
         {
@@ -443,8 +413,7 @@ exports.handler = async (event) => {
           category: "GENERAL",
           required: true,
           defaultSelfScore: 4,
-          defaultEvidenceText:
-            "Al nostre centre es garanteix l’adequació de la prescripció i l’adherència als tractaments mitjançant l’aplicació del protocol de conciliació de la medicació, especialment en transicions assistencials.",
+          defaultEvidenceText: "",
           referenceFiles: ["Importar Documento"]
         },
         {
@@ -454,8 +423,7 @@ exports.handler = async (event) => {
           category: "GENERAL",
           required: true,
           defaultSelfScore: 4,
-          defaultEvidenceText:
-            "Al nostre centre es treballen aspectes de l’entorn físic a través de l’enquesta de satisfacció (Opinat), amb preguntes específiques sobre neteja, estat d’instal·lacions, confort, soroll i privacitat del pacient.",
+          defaultEvidenceText: "",
           referenceFiles: ["Importar Documento"]
         },
         {
@@ -465,8 +433,7 @@ exports.handler = async (event) => {
           category: "GENERAL",
           required: true,
           defaultSelfScore: 4,
-          defaultEvidenceText:
-            "Al nostre centre es té en compte la percepció del dolor mitjançant l’avaluació a través de l’enquesta de satisfacció (Opinat), que inclou preguntes específiques sobre la preocupació pel dolor i les molèsties del pacient.",
+          defaultEvidenceText: "",
           referenceFiles: ["Importar Documento"]
         },
         {
@@ -476,8 +443,7 @@ exports.handler = async (event) => {
           category: "GENERAL",
           required: true,
           defaultSelfScore: 4,
-          defaultEvidenceText:
-            "Al nostre centre es respecten els valors dels pacients mitjançant l’existència d’una figura específica d’acompanyament espiritual i religiós (SAER), espais per a la pràctica religiosa i protocols d’atenció respectuosa amb la dignitat i la privacitat.",
+          defaultEvidenceText: "",
           referenceFiles: ["Importar Documento"]
         }
       ]
@@ -497,8 +463,7 @@ exports.handler = async (event) => {
           category: "GENERAL",
           required: true,
           defaultSelfScore: 4,
-          defaultEvidenceText:
-            "El centre realitza el seguiment dels punts de contacte del recorregut del pacient mitjançant resultats de satisfacció de l’eina OPINAT, desglossats per processos assistencials (urgències, hospitalització, consultes externes, etc.), així com indicadors com NPS i anàlisi de motius per identificar àrees de millora.",
+          defaultEvidenceText: "",
           referenceFiles: ["Importar Documento"]
         },
         {
@@ -508,8 +473,7 @@ exports.handler = async (event) => {
           category: "GENERAL",
           required: true,
           defaultSelfScore: 4,
-          defaultEvidenceText:
-            "El centre disposa d’indicadors associats a dimensions clau de l’experiència del pacient (temps d’espera, satisfacció, informació, dolor, entre d’altres), obtinguts principalment a través de l’eina OPINAT i càlcul del NPS, que permeten monitoritzar-ne el compliment de forma periòdica.",
+          defaultEvidenceText: "",
           referenceFiles: ["Importar Documento"]
         },
         {
@@ -519,8 +483,7 @@ exports.handler = async (event) => {
           category: "FUNDAMENTAL",
           required: true,
           defaultSelfScore: 4,
-          defaultEvidenceText:
-            "El centre recull de forma periòdica i estructurada dades sobre l’experiència del pacient mitjançant diferents eines de mesura dels PREMs, com l’enquesta de satisfacció OPINAT i enquesta PLANSA, que inclouen ítems relacionats amb diverses dimensions de l’experiència del pacient.",
+          defaultEvidenceText: "",
           referenceFiles: ["Importar Documento"]
         },
         {
@@ -612,7 +575,7 @@ exports.handler = async (event) => {
             required: true,
             defaultSelfScore: 0,
             defaultEvidenceText: "",
-            referenceFiles: []
+          referenceFiles: ["Importar Documento"]
           },
           {
             id: 2,
@@ -622,7 +585,7 @@ exports.handler = async (event) => {
             required: true,
             defaultSelfScore: 0,
             defaultEvidenceText: "",
-            referenceFiles: []
+          referenceFiles: ["Importar Documento"]
           },
           {
             id: 3,
@@ -632,7 +595,7 @@ exports.handler = async (event) => {
             required: true,
             defaultSelfScore: 0,
             defaultEvidenceText: "",
-            referenceFiles: []
+          referenceFiles: ["Importar Documento"]
           },
           {
             id: 4,
@@ -642,7 +605,7 @@ exports.handler = async (event) => {
             required: true,
             defaultSelfScore: 0,
             defaultEvidenceText: "",
-            referenceFiles: []
+          referenceFiles: ["Importar Documento"]
           },
           {
             id: 5,
@@ -652,7 +615,7 @@ exports.handler = async (event) => {
             required: true,
             defaultSelfScore: 0,
             defaultEvidenceText: "",
-            referenceFiles: []
+          referenceFiles: ["Importar Documento"]
           },
           {
             id: 6,
@@ -662,7 +625,7 @@ exports.handler = async (event) => {
             required: true,
             defaultSelfScore: 0,
             defaultEvidenceText: "",
-            referenceFiles: []
+          referenceFiles: ["Importar Documento"]
           },
           {
             id: 7,
@@ -672,7 +635,7 @@ exports.handler = async (event) => {
             required: true,
             defaultSelfScore: 0,
             defaultEvidenceText: "",
-            referenceFiles: []
+          referenceFiles: ["Importar Documento"]
           }
         ]
       };

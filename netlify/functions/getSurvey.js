@@ -685,6 +685,9 @@ exports.handler = async (event) => {
       "paex360-ambito4": ambito4,
       "paex360-ambito5": ambito5,
       "paex360-ambito6": ambito6
+      "paex360-ambito4": buildAmbito("paex360-ambito4", "Ámbito 4. PROCESOS"),
+      "paex360-ambito5": buildAmbito("paex360-ambito5", "Ámbito 5 Procesos Clave"),
+      "paex360-ambito6": buildAmbito("paex360-ambito6", "Ámbito 6 Evaluación de resultados")
     };
 
     const survey = surveys[surveyCode];

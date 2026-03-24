@@ -8,7 +8,7 @@ exports.handler = async (event) => {
       };
     }
 
-    const surveyCode = event.queryStringParameters.surveyCode;
+    const surveyCode = event.queryStringParameters?.surveyCode;
 
     if (!surveyCode) {
       return {

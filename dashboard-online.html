@@ -33,6 +33,8 @@
     .gauge-track,.gauge-value{fill:none;stroke-width:18;stroke-linecap:round}
     .gauge-track{stroke:var(--ring)}
     .gauge-value{stroke:#fff;stroke-dasharray:var(--pct,0) 100;transition:stroke-dasharray .35s ease}
+    .gauge-needle{stroke:#ffffff;stroke-width:4;stroke-linecap:round;opacity:.95}
+    .gauge-pivot{fill:#ffffff}
     .semi-center{position:absolute;left:50%;transform:translateX(-50%);bottom:8px;font-size:16px;font-weight:800;white-space:nowrap}
     .stats-row{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:8px;font-weight:800;font-size:14px}
     .stats-row div{text-align:center}
@@ -160,6 +162,10 @@
 
     function buildAmbitoCard(title, certifierAvg, fundamentalAvg, nonFundamentalAvg){
       const pct = Number.isFinite(certifierAvg) ? toPct(certifierAvg) : 0;
+      const theta = Math.PI * (1 - (pct / 100));
+      const needleLength = 58;
+      const needleX = 100 + (needleLength * Math.cos(theta));
+      const needleY = 86 - (needleLength * Math.sin(theta));
       return `
       <article class="ambito-card">
         <h3 class="ambito-title">${title}</h3>
@@ -167,6 +173,8 @@
           <svg viewBox="0 0 200 100" aria-hidden="true">
             <path class="gauge-track" d="M 14 86 A 86 86 0 0 1 186 86" pathLength="100"></path>
             <path class="gauge-value" d="M 14 86 A 86 86 0 0 1 186 86" pathLength="100"></path>
+            <line class="gauge-needle" x1="100" y1="86" x2="${needleX.toFixed(2)}" y2="${needleY.toFixed(2)}"></line>
+            <circle class="gauge-pivot" cx="100" cy="86" r="5"></circle>
           </svg>
           <div class="semi-center">${formatScoreLabel(Number.isFinite(certifierAvg) ? certifierAvg : NaN)}</div>
         </div>

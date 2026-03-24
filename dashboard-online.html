@@ -28,14 +28,14 @@
     .ambito-card,.global-card{background:var(--purple);border:2px solid var(--border);border-radius:28px;padding:10px 10px 14px;color:#fff;min-height:192px}
     .global-card{grid-row:span 2;display:flex;flex-direction:column;justify-content:space-evenly;align-items:center}
     .ambito-title{text-align:center;font-size:34px;font-weight:900;margin:0 0 8px}
-    .gauge{position:relative;width:78%;max-width:180px;margin:4px auto 0;height:64px}
+    .gauge{position:relative;width:78%;max-width:180px;margin:4px auto 0;height:72px}
     .gauge svg{width:100%;height:100%;display:block}
     .gauge-track,.gauge-value{fill:none;stroke-width:12;stroke-linecap:round}
     .gauge-track{stroke:var(--ring)}
     .gauge-value{stroke:#fff;stroke-dasharray:var(--pct,0) 100;transition:stroke-dasharray .35s ease}
     .gauge-needle{stroke:#ffffff;stroke-width:3;stroke-linecap:round;opacity:.95}
     .gauge-pivot{fill:#ffffff}
-    .semi-center{position:absolute;left:50%;transform:translateX(-50%);bottom:7px;font-size:14px;font-weight:800;white-space:nowrap}
+    .semi-center{position:absolute;left:50%;transform:translateX(-50%);bottom:10px;font-size:14px;font-weight:800;white-space:nowrap}
     .stats-row{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:8px;font-weight:800;font-size:14px}
     .stats-row div{text-align:center}
     .stats-row div+div{border-left:2px solid rgba(255,255,255,.7)}
@@ -164,17 +164,19 @@
       const pct = Number.isFinite(certifierAvg) ? toPct(certifierAvg) : 0;
       const theta = Math.PI * (1 - (pct / 100));
       const needleLength = 46;
-      const needleX = 100 + (needleLength * Math.cos(theta));
-      const needleY = 86 - (needleLength * Math.sin(theta));
+      const centerX = 110;
+      const centerY = 100;
+      const needleX = centerX + (needleLength * Math.cos(theta));
+      const needleY = centerY - (needleLength * Math.sin(theta));
       return `
       <article class="ambito-card">
         <h3 class="ambito-title">${title}</h3>
         <div class="gauge" style="--pct:${pct}">
-          <svg viewBox="0 0 200 100" aria-hidden="true">
-            <path class="gauge-track" d="M 14 86 A 86 86 0 0 1 186 86" pathLength="100"></path>
-            <path class="gauge-value" d="M 14 86 A 86 86 0 0 1 186 86" pathLength="100"></path>
-            <line class="gauge-needle" x1="100" y1="86" x2="${needleX.toFixed(2)}" y2="${needleY.toFixed(2)}"></line>
-            <circle class="gauge-pivot" cx="100" cy="86" r="5"></circle>
+          <svg viewBox="0 0 220 120" aria-hidden="true">
+            <path class="gauge-track" d="M 20 100 A 90 90 0 0 1 200 100" pathLength="100"></path>
+            <path class="gauge-value" d="M 20 100 A 90 90 0 0 1 200 100" pathLength="100"></path>
+            <line class="gauge-needle" x1="110" y1="100" x2="${needleX.toFixed(2)}" y2="${needleY.toFixed(2)}"></line>
+            <circle class="gauge-pivot" cx="110" cy="100" r="4"></circle>
           </svg>
           <div class="semi-center">${formatScoreLabel(Number.isFinite(certifierAvg) ? certifierAvg : NaN)}</div>
         </div>

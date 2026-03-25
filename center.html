@@ -243,7 +243,7 @@
 
       <h1 class="hero-title" id="heroTitle">Centro</h1>
       <p class="hero-subtitle">
-        Selecciona el módulo al que deseas ingresar. Desde aquí puedes entrar al dashboard, responder la encuesta o abrir los documentos PDF del centro.
+        Selecciona el módulo al que deseas ingresar. Desde aquí puedes entrar al dashboard Power BI, al Dashboard Online, responder la encuesta o abrir los documentos PDF del centro.
       </p>
 
       <div class="menu-grid">
@@ -251,6 +251,12 @@
           <span class="menu-icon">📊</span>
           <h2 class="menu-title">Dashboard</h2>
           <p class="menu-text">Visualiza el reporte Power BI del centro seleccionado.</p>
+        </button>
+
+        <button class="menu-card" id="onlineDashboardCard">
+          <span class="menu-icon">🖥️</span>
+          <h2 class="menu-title">Dashboard Online</h2>
+          <p class="menu-text">Abre el dashboard HTML conectado a la base de datos en tiempo real.</p>
         </button>
 
         <button class="menu-card" id="surveyCard">
@@ -285,6 +291,7 @@
     const userLine = document.getElementById("userLine");
 
     const dashboardCard = document.getElementById("dashboardCard");
+    const onlineDashboardCard = document.getElementById("onlineDashboardCard");
     const surveyCard = document.getElementById("surveyCard");
     const pdfCard = document.getElementById("pdfCard");
 
@@ -439,6 +446,10 @@
 
         dashboardCard.onclick = () => {
           window.location.href = `dashboard.html?center=${centerKey}`;
+        };
+
+        onlineDashboardCard.onclick = () => {
+          window.location.href = `dashboard-online.html?center=${centerKey}`;
         };
 
         surveyCard.onclick = () => {

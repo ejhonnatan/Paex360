@@ -32,7 +32,7 @@ exports.handler = async (event) => {
           text: "La misión, visión y valores de la organización tienen en cuenta la experiencia de los pacientes.",
           category: "FUNDAMENTAL",
           required: true,
-          defaultSelfScore: 2,
+          defaultSelfScore: 0,
           defaultEvidenceText: "",
           referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
@@ -42,7 +42,7 @@ exports.handler = async (event) => {
           text: "El Plan Estratégico del centro incluye como eje estratégico la mejora de la experiencia de los pacientes.",
           category: "FUNDAMENTAL",
           required: true,
-          defaultSelfScore: 2,
+          defaultSelfScore: 0,
           defaultEvidenceText: "",
           referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
@@ -52,7 +52,7 @@ exports.handler = async (event) => {
           text: "La organización planifica e identifica la evaluación y mejora de la experiencia de los pacientes, aprobado por la Dirección y alineado con el resto de planes de la organización.",
           category: "FUNDAMENTAL",
           required: true,
-          defaultSelfScore: 4,
+          defaultSelfScore: 0,
           defaultEvidenceText: "",
           referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
@@ -62,7 +62,7 @@ exports.handler = async (event) => {
           text: "Las acciones planificadas en relación a la mejora de la experiencia paciente tienen en cuenta los grupos de interés clave y la participación de pacientes y profesionales.",
           category: "NO FUNDAMENTAL",
           required: true,
-          defaultSelfScore: 4,
+          defaultSelfScore: 0,
           defaultEvidenceText: "",
           referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
@@ -72,7 +72,7 @@ exports.handler = async (event) => {
           text: "Las acciones planificadas en relación con la experiencia paciente se ejecutan mediante un grupo multidisciplinar de profesionales y se rinden cuentas al equipo directivo.",
           category: "NO FUNDAMENTAL",
           required: true,
-          defaultSelfScore: 1,
+          defaultSelfScore: 0,
           defaultEvidenceText: "",
           referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
@@ -82,7 +82,7 @@ exports.handler = async (event) => {
           text: "Las políticas clave del centro contemplan aspectos relacionados con la experiencia paciente (código ético, plan de humanización, plan de acogida, plan de género…).",
           category: "NO FUNDAMENTAL",
           required: true,
-          defaultSelfScore: 2,
+          defaultSelfScore: 0,
           defaultEvidenceText: "",
           referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
@@ -92,7 +92,7 @@ exports.handler = async (event) => {
           text: "Los proveedores y mercantiles están alineados con la política de humanización y experiencia de los pacientes.",
           category: "NO FUNDAMENTAL",
           required: true,
-          defaultSelfScore: 2,
+          defaultSelfScore: 0,
           defaultEvidenceText: "",
           referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         }
@@ -122,7 +122,7 @@ exports.handler = async (event) => {
           text: "La Dirección participa regular, directa o indirectamente, con grupos de pacientes y se presentan resultados periódicamente a la Dirección sobre la experiencia de los pacientes.",
           category: "FUNDAMENTAL",
           required: true,
-          defaultSelfScore: 2,
+          defaultSelfScore: 0,
           defaultEvidenceText: "",
           referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
@@ -132,7 +132,7 @@ exports.handler = async (event) => {
           text: "La organización facilita canales al personal de primera línea donde reportar mejoras y realizar propuestas para mejora de la experiencia de los pacientes. Da feedback en un periodo de tiempo determinado.",
           category: "NO FUNDAMENTAL",
           required: true,
-          defaultSelfScore: 2,
+          defaultSelfScore: 0,
           defaultEvidenceText: "",
           referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
@@ -142,7 +142,7 @@ exports.handler = async (event) => {
           text: "La organización impulsa y premia propuestas orientadas a mejorar la experiencia de los pacientes. Se reconocen las iniciativas y buenas prácticas. Se impulsan y premian propuestas relacionadas con la evaluación y mejora de la experiencia de los pacientes.",
           category: "NO FUNDAMENTAL",
           required: true,
-          defaultSelfScore: 3,
+          defaultSelfScore: 0,
           defaultEvidenceText: "",
           referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
@@ -152,7 +152,7 @@ exports.handler = async (event) => {
           text: "La gestión de personas está alineada con la evaluación y mejora de la experiencia de los pacientes.",
           category: "NO FUNDAMENTAL",
           required: true,
-          defaultSelfScore: 2,
+          defaultSelfScore: 0,
           defaultEvidenceText: "",
           referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
@@ -162,7 +162,7 @@ exports.handler = async (event) => {
           text: "En el plan de acogida se contempla una formación específica en valores y aspectos clave de la experiencia del paciente.",
           category: "NO FUNDAMENTAL",
           required: true,
-          defaultSelfScore: 3,
+          defaultSelfScore: 0,
           defaultEvidenceText: "",
           referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
@@ -172,7 +172,7 @@ exports.handler = async (event) => {
           text: "Se da formación específica, de forma regular, relacionada con los valores y la cultura enfocada en la experiencia de los pacientes.",
           category: "NO FUNDAMENTAL",
           required: true,
-          defaultSelfScore: 2,
+          defaultSelfScore: 0,
           defaultEvidenceText: "",
           referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
@@ -192,7 +192,7 @@ exports.handler = async (event) => {
           text: "Se valora la participación en proyectos de mejora de la experiencia de los pacientes, formaciones específicas, participación en jornadas y congresos (visibilidad externa).",
           category: "NO FUNDAMENTAL",
           required: true,
-          defaultSelfScore: 1,
+          defaultSelfScore: 0,
           defaultEvidenceText: "",
           referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
@@ -202,7 +202,7 @@ exports.handler = async (event) => {
           text: "Los profesionales están orientados y formados para ofrecer una atención humana, involucrando a los pacientes en la toma de decisiones, proporcionando soporte emocional, siendo sensibles y respetando valores y creencias.",
           category: "NO FUNDAMENTAL",
           required: true,
-          defaultSelfScore: 2,
+          defaultSelfScore: 0,
           defaultEvidenceText: "",
           referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
@@ -212,7 +212,7 @@ exports.handler = async (event) => {
           text: "La organización evalúa y tiene en cuenta el sentimiento de pertenencia de los profesionales, el orgullo y alineación con los valores, y la culture orientada en la excelencia sobre la experiencia del paciente.",
           category: "NO FUNDAMENTAL",
           required: true,
-          defaultSelfScore: 4,
+          defaultSelfScore: 0,
           defaultEvidenceText: "",
           referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         }
@@ -232,7 +232,7 @@ exports.handler = async (event) => {
           text: "La organización cuenta con distintos canales oficiales que garantizan la recogida de la voz del paciente, accesible a los distintos segmentos de pacientes.",
           category: "NOFUNDAMENTAL",
           required: true,
-          defaultSelfScore: 4,
+          defaultSelfScore: 0,
           defaultEvidenceText: "",
           referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
@@ -242,7 +242,7 @@ exports.handler = async (event) => {
           text: "La organización dispone de mecanismos para implicar a pacientes y familias.",
           category: "NO FUNDAMENTAL",
           required: true,
-          defaultSelfScore: 4,
+          defaultSelfScore: 0,
           defaultEvidenceText: "",
           referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
@@ -252,7 +252,7 @@ exports.handler = async (event) => {
           text: "En los proyectos o iniciativas que la organización lleva a cabo se tiene en cuenta la participación, co-creación e implicación de los pacientes.",
           category: "NO FUNDAMENTAL",
           required: true,
-          defaultSelfScore: 4,
+          defaultSelfScore: 0,
           defaultEvidenceText: "",
           referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
@@ -262,7 +262,7 @@ exports.handler = async (event) => {
           text: "Siempre que se solicita participación a los pacientes y familias, se da una respuesta oficial o feedback, en un periodo máximo determinado.",
           category: "NO FUNDAMENTAL",
           required: true,
-          defaultSelfScore: 4,
+          defaultSelfScore: 0,
           defaultEvidenceText: "",
           referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
@@ -272,7 +272,7 @@ exports.handler = async (event) => {
           text: "En los casos que se requiere tomar decisiones compartidas, se asegura la educación e información estructurada necesaria con el objetivo que los pacientes tomen sus decisiones fundamentadas en conocimiento.",
           category: "NO FUNDAMENTAL",
           required: true,
-          defaultSelfScore: 4,
+          defaultSelfScore: 0,
           defaultEvidenceText: "",
           referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
@@ -282,7 +282,7 @@ exports.handler = async (event) => {
           text: "En aquellos casos que los pacientes requieren de mayor información, se ofrecen pautas, información i/o formación específica en relación a los circuitos, los servicios, la estructura de la organización y el sistema de salud.",
           category: "NO FUNDAMENTAL",
           required: true,
-          defaultSelfScore: 4,
+          defaultSelfScore: 0,
           defaultEvidenceText: "",
           referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         }
@@ -302,7 +302,7 @@ exports.handler = async (event) => {
           text: "Se realiza el patient journey map de los principales procesos de la organización, identificando los principales pain points desde la perspectiva del paciente y desde la perspectiva de los procesos.",
           category: "NO FUNDAMENTAL",
           required: true,
-          defaultSelfScore: 3,
+          defaultSelfScore: 0,
           defaultEvidenceText: "",
           referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
@@ -312,7 +312,7 @@ exports.handler = async (event) => {
           text: "Los principales procesos de la organización tienen segmentados los perfiles de paciente prevalente, identificando las principales necesidades por perfil.",
           category: "NO FUNDAMENTAL",
           required: true,
-          defaultSelfScore: 3,
+          defaultSelfScore: 0,
           defaultEvidenceText: "",
           referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
@@ -352,7 +352,7 @@ exports.handler = async (event) => {
           text: "Se prioriza la gestión del tiempo(se garantizan aspectos como: la coordinación de pruebas y visitas, la adecuación de canales de atención, el cumplimiento de citas y horarios...).",
           category: "NO FUNDAMENTAL",
           required: true,
-          defaultSelfScore: 4,
+          defaultSelfScore: 0,
           defaultEvidenceText: "",
           referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
@@ -362,7 +362,7 @@ exports.handler = async (event) => {
           text: "Se garantiza la accesibilidad a los profesionales. Los pacientes conocen los canales, disponibilidades, y saben cómo contactar con los servicios que le atienden.",
           category: "NO FUNDAMENTAL",
           required: true,
-          defaultSelfScore: 4,
+          defaultSelfScore: 0,
           defaultEvidenceText: "",
           referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
@@ -372,7 +372,7 @@ exports.handler = async (event) => {
           text: "Se tiene en cuenta la adecuación del servicio (duración de la visita, si ha habido interrupciones, si el paciente ha entendido el diagnóstico/tratamiento, si ha podido tomar decisiones, si se ha sentido escuchado, si ha podido resolver todas sus dudas...).",
           category: "NO FUNDAMENTAL",
           required: true,
-          defaultSelfScore: 4,
+          defaultSelfScore: 0,
           defaultEvidenceText: "",
           referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
@@ -382,7 +382,7 @@ exports.handler = async (event) => {
           text: "Se garantiza el apoyo emocional y trato (se priorizan aspectos relacionados con la puntualidad, la proximidad, la amabilidad, la confianza y la implicación de la familia y el entorno).",
           category: "NO FUNDAMENTAL",
           required: true,
-          defaultSelfScore: 4,
+          defaultSelfScore: 0,
           defaultEvidenceText: "",
           referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
@@ -392,7 +392,7 @@ exports.handler = async (event) => {
           text: "La atención garantiza la información al paciente, y que esta sea comprensible y útil. Se pone especial énfasis en caso de cambios y transiciones. Si procede, se proporciona al paciente información por otros canales y se facilitan fuentes de información.",
           category: "NO FUNDAMENTAL",
           required: true,
-          defaultSelfScore: 4,
+          defaultSelfScore: 0,
           defaultEvidenceText: "",
           referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
@@ -402,7 +402,7 @@ exports.handler = async (event) => {
           text: "Siempre que los pacientes deben atenderse en otros dispositivos asistenciales se garantiza la coordinación e integración de la información.",
           category: "NO FUNDAMENTAL",
           required: true,
-          defaultSelfScore: 4,
+          defaultSelfScore: 0,
           defaultEvidenceText: "",
           referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
@@ -412,7 +412,7 @@ exports.handler = async (event) => {
           text: "Se garantiza la adecuación de la prescripción y se tiene en cuenta el valor de la adherencia.",
           category: "NO FUNDAMENTAL",
           required: true,
-          defaultSelfScore: 4,
+          defaultSelfScore: 0,
           defaultEvidenceText: "",
           referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
@@ -422,7 +422,7 @@ exports.handler = async (event) => {
           text: "Se trabajan aspectos relacionados con el entorno físico, la luz, el ruido, la limpieza, la comodidad, el confort y la intimidad.",
           category: "NO FUNDAMENTAL",
           required: true,
-          defaultSelfScore: 4,
+          defaultSelfScore: 0,
           defaultEvidenceText: "",
           referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
@@ -432,7 +432,7 @@ exports.handler = async (event) => {
           text: "Se tienen en cuenta aspectos relacionados con la propia percepción del dolor y se hace todo lo posible por medirlo y calmarlo.",
           category: "NO FUNDAMENTAL",
           required: true,
-          defaultSelfScore: 4,
+          defaultSelfScore: 0,
           defaultEvidenceText: "",
           referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
@@ -442,7 +442,7 @@ exports.handler = async (event) => {
           text: "Se respetan los valores de los pacientes, tratando de valorar aspectos relacionados con el estilo de vida, la dignidad, creencias religiosas y espirituales, y la privacidad y el respeto.",
           category: "NO FUNDAMENTAL",
           required: true,
-          defaultSelfScore: 4,
+          defaultSelfScore: 0,
           defaultEvidenceText: "",
           referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         }
@@ -462,7 +462,7 @@ exports.handler = async (event) => {
           text: "El cuadro de mandos realiza el seguimiento de los puntos de contacto clave del recorrido del paciente en los procesos principales de la organización.",
           category: "NO FUNDAMENTAL",
           required: true,
-          defaultSelfScore: 4,
+          defaultSelfScore: 0,
           defaultEvidenceText: "",
           referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
@@ -472,7 +472,7 @@ exports.handler = async (event) => {
           text: "El cuadro de mandos recoge los indicadores operativos que permiten monitorizar el cumplimiento de las dimensiones clave.",
           category: "NO FUNDAMENTAL",
           required: true,
-          defaultSelfScore: 4,
+          defaultSelfScore: 0,
           defaultEvidenceText: "",
           referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
@@ -482,7 +482,7 @@ exports.handler = async (event) => {
           text: "La organización implementa y recoge datos, de forma periódica y estructurada, relacionados con los patient reported experience measures (PREMs).",
           category: "FUNDAMENTAL",
           required: true,
-          defaultSelfScore: 4,
+          defaultSelfScore: 0,
           defaultEvidenceText: "",
           referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },

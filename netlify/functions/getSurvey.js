@@ -34,7 +34,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 2,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 2,
@@ -44,7 +44,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 2,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 3,
@@ -54,7 +54,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 4,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 4,
@@ -64,7 +64,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 4,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 5,
@@ -74,7 +74,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 1,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 6,
@@ -84,7 +84,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 2,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 7,
@@ -94,7 +94,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 2,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         }
       ]
     };
@@ -114,7 +114,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 0,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 9,
@@ -124,7 +124,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 2,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 10,
@@ -134,7 +134,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 2,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 11,
@@ -144,7 +144,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 3,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 12,
@@ -154,7 +154,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 2,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 13,
@@ -164,7 +164,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 3,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 14,
@@ -174,7 +174,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 2,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 15,
@@ -184,7 +184,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 1,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 16,
@@ -194,7 +194,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 1,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 17,
@@ -204,7 +204,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 2,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 18,
@@ -214,7 +214,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 4,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         }
       ]
     };
@@ -234,7 +234,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 4,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 20,
@@ -244,7 +244,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 4,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 21,
@@ -254,7 +254,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 4,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 22,
@@ -264,7 +264,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 4,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 23,
@@ -274,7 +274,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 4,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 24,
@@ -284,7 +284,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 4,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         }
       ]
     };
@@ -304,7 +304,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 3,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 26,
@@ -314,7 +314,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 3,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 27,
@@ -324,7 +324,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 0,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 28,
@@ -334,7 +334,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 0,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         }
       ]
     };
@@ -354,7 +354,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 4,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 30,
@@ -364,7 +364,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 4,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 31,
@@ -374,7 +374,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 4,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 32,
@@ -384,7 +384,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 4,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 33,
@@ -394,7 +394,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 4,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 34,
@@ -404,7 +404,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 4,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 35,
@@ -414,7 +414,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 4,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 36,
@@ -424,7 +424,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 4,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 37,
@@ -434,7 +434,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 4,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 38,
@@ -444,7 +444,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 4,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         }
       ]
     };
@@ -464,7 +464,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 4,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 40,
@@ -474,7 +474,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 4,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 41,
@@ -484,7 +484,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 4,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 42,
@@ -494,7 +494,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 0,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 43,
@@ -504,7 +504,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 0,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 44,
@@ -514,7 +514,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 0,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 45,
@@ -524,7 +524,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 0,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 46,
@@ -534,7 +534,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 0,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 47,
@@ -544,7 +544,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 0,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         },
         {
           id: 48,
@@ -554,7 +554,7 @@ exports.handler = async (event) => {
           required: true,
           defaultSelfScore: 0,
           defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
         }
       ]
     };
@@ -575,7 +575,7 @@ exports.handler = async (event) => {
             required: true,
             defaultSelfScore: 0,
             defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
           },
           {
             id: 2,
@@ -585,7 +585,7 @@ exports.handler = async (event) => {
             required: true,
             defaultSelfScore: 0,
             defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
           },
           {
             id: 3,
@@ -595,7 +595,7 @@ exports.handler = async (event) => {
             required: true,
             defaultSelfScore: 0,
             defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
           },
           {
             id: 4,
@@ -605,7 +605,7 @@ exports.handler = async (event) => {
             required: true,
             defaultSelfScore: 0,
             defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
           },
           {
             id: 5,
@@ -615,7 +615,7 @@ exports.handler = async (event) => {
             required: true,
             defaultSelfScore: 0,
             defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
           },
           {
             id: 6,
@@ -625,7 +625,7 @@ exports.handler = async (event) => {
             required: true,
             defaultSelfScore: 0,
             defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
           },
           {
             id: 7,
@@ -635,7 +635,7 @@ exports.handler = async (event) => {
             required: true,
             defaultSelfScore: 0,
             defaultEvidenceText: "",
-          referenceFiles: ["Importar Documento"]
+          referenceFiles: ["Importar Documento 1", "Importar Documento 2"]
           }
         ]
       };

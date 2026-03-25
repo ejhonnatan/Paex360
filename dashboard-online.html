@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Paex360 - Dashboard Online</title>
+  <link rel="icon" href="paex360-logo.png" type="image/png">
+  <style>
+    :root{--bg:#ececec;--purple:#a177b3;--purple-dark:#563c97;--ink:#213b7c;--border:#25385b;--ring:#e6e6e6;}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:#111827}
+    .topbar{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#fff;border-bottom:1px solid #ddd;position:sticky;top:0;z-index:20}
+    .brand{display:flex;gap:10px;align-items:center;font-weight:900;color:#111827}
+    .brand img{width:28px;height:28px;border:1px solid #ddd;border-radius:8px}
+    .actions{display:flex;gap:8px}
+    .btn{cursor:pointer;border:1px solid #ddd;background:#fff;padding:8px 12px;border-radius:10px;font-weight:800}
+    .page{max-width:1120px;margin:14px auto;padding:0 12px 24px}
+    .msg,.loader{display:none;padding:12px 14px;border-radius:10px;font-weight:800;margin-bottom:10px}
+    .msg{background:#fee2e2;border:1px solid #fecaca;color:#991b1b}
+    .loader{background:#fff;border:1px solid #ddd;color:#374151}
+
+    .header-panel{display:flex;justify-content:center;align-items:center;background:#efefef;padding:14px 20px;border-radius:16px;margin-bottom:16px}
+    .title-box{width:min(100%,460px);text-align:center;border:2px solid #6f57b4;border-radius:18px;background:#f5f5f5;padding:14px}
+    .title-box h1{margin:0;color:#523d93;font-size:50px;line-height:1.1;letter-spacing:2px;font-weight:900}
+    .title-box p{margin:8px 0 0 0;font-style:italic;color:#4b5563}
+
+    .dashboard-grid{display:grid;grid-template-columns:minmax(240px,320px);gap:14px;align-items:stretch;justify-content:center}
+    .ambito-card,.global-card{background:var(--purple);border:2px solid var(--border);border-radius:28px;padding:10px 10px 14px;color:#fff;min-height:192px}
+    .global-card{grid-row:span 2;display:flex;flex-direction:column;justify-content:space-evenly;align-items:center}
+    .ambito-title{text-align:center;font-size:34px;font-weight:900;margin:0 0 8px}
+    .gauge{position:relative;width:78%;max-width:180px;margin:4px auto 0;height:72px}
+    .gauge svg{width:100%;height:100%;display:block}
+    .gauge-track,.gauge-value{fill:none;stroke-width:12;stroke-linecap:round}
+    .gauge-track{stroke:var(--ring)}
+    .gauge-value{stroke:#fff;stroke-dasharray:var(--pct,0) 100;transition:stroke-dasharray .35s ease}
+    .gauge-needle{stroke:#ffffff;stroke-width:3;stroke-linecap:round;opacity:.95}
+    .gauge-pivot{fill:#ffffff}
+    .semi-center{position:absolute;left:50%;transform:translateX(-50%);bottom:10px;font-size:14px;font-weight:800;white-space:nowrap}
+    .stats-row{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:8px;font-weight:800;font-size:14px}
+    .stats-row div{text-align:center}
+    .stats-row div+div{border-left:2px solid rgba(255,255,255,.7)}
+    .stats-row .value{font-size:30px;line-height:1.1;margin-top:2px}
+
+    .circle-wrap{text-align:center}
+    .circle{--size:160px;--thickness:12px;position:relative;width:var(--size);height:var(--size);margin:0 auto;border-radius:50%;background:conic-gradient(#283b87 calc(var(--pct)*1%),var(--ring) 0)}
+    .circle::before{content:"";position:absolute;inset:var(--thickness);background:var(--purple);border-radius:50%}
+    .circle .txt{position:absolute;inset:0;display:grid;place-content:center;color:#243d84;z-index:1}
+    .circle .txt b{font-size:52px;line-height:1}
+    .circle .txt span{font-size:25px}
+    .circle-label{margin-top:4px;font-size:28px;color:#243d84}
+
+    .footer-note{margin-top:10px;text-align:right;color:#5a6b8c;font-size:12px;font-weight:700}
+    @media (max-width:900px){.title-box h1{font-size:38px}.ambito-title{font-size:28px}}
+    @media (max-width:640px){.dashboard-grid{grid-template-columns:1fr}.circle{--size:130px}.circle .txt b{font-size:44px}}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand"><img src="paex360-logo.png" alt="Paex360"><span id="centerTitle">Dashboard Online</span></div>
+    <div class="actions"><button class="btn" id="backBtn">Volver</button><button class="btn" id="logoutBtn">Cerrar sesión</button></div>
+  </div>
+
+  <main class="page">
+    <div class="msg" id="msg"></div>
+    <div class="loader" id="loader">Cargando dashboard online...</div>
+
+    <section id="content" style="display:none">
+      <div class="header-panel">
+        <div class="title-box">
+          <h1 id="heroTitle">CLÍNICA SALUS</h1>
+          <p>Centro Evaluado</p>
+        </div>
+      </div>
+
+      <div class="dashboard-grid" id="dashboardGrid"></div>
+      <div class="footer-note" id="updatedAt"></div>
+    </section>
+  </main>
+
+  <script type="module">
+    const CENTERS = { salus: { label: "Clínica SALUS" }, diagonal: { label: "Clínica Diagonal" } };
+    const AMBITO_ONE = { key: "paex360-ambito1", title: "Ámbito 1" };
+
+    const msg = document.getElementById("msg");
+    const loader = document.getElementById("loader");
+    const content = document.getElementById("content");
+    const dashboardGrid = document.getElementById("dashboardGrid");
+
+    const showError = (t) => { msg.style.display = "block"; msg.textContent = t; loader.style.display = "none"; content.style.display = "none"; };
+    const setLoading = (on, text = "Cargando dashboard online...") => { loader.style.display = on ? "block" : "none"; loader.textContent = text; if(on){msg.style.display="none";} };
+    const getQueryParam = (name) => (new URL(window.location.href).searchParams.get(name) || "").trim();
+    const toPct = (score) => Math.max(0, Math.min(100, (Number(score) || 0) * 25));
+    const formatPct = (v) => `${Math.round(Number(v) || 0)}%`;
+
+    const centerKey = getQueryParam("center").toLowerCase();
+    const centerCfg = CENTERS[centerKey];
+
+    if (!centerCfg) {
+      showError("Centro inválido. Vuelve y selecciona un centro.");
+      throw new Error("Invalid center");
+    }
+
+    document.getElementById("centerTitle").textContent = `${centerCfg.label} · Dashboard Online`;
+    document.getElementById("heroTitle").textContent = centerCfg.label.toUpperCase();
+
+    let firebaseConfig;
+    try {
+      const r = await fetch("/.netlify/functions/getConfig", { cache: "no-store" });
+      const cfg = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(cfg?.error || "getConfig no respondió OK");
+      firebaseConfig = cfg.firebaseConfig || cfg;
+    } catch (e) {
+      showError("No se pudo cargar la configuración de Firebase.");
+      throw e;
+    }
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    const auth = getAuth(initializeApp(firebaseConfig));
+
+    document.getElementById("backBtn").onclick = () => { window.location.href = `center.html?center=${centerKey}`; };
+    document.getElementById("logoutBtn").onclick = async () => { await signOut(auth); window.location.href = "index.html"; };
+
+    const INACTIVITY_LIMIT_MS = 30 * 60 * 1000;
+    let inactivityTimer = null;
+    const clearInactivityTimer = () => { if (inactivityTimer) { clearTimeout(inactivityTimer); inactivityTimer = null; } };
+    async function forceLogoutByInactivity(){ try { await signOut(auth); } finally { window.location.href = "index.html"; } }
+    const resetInactivityTimer = () => { clearInactivityTimer(); inactivityTimer = setTimeout(forceLogoutByInactivity, INACTIVITY_LIMIT_MS); };
+    ["mousemove","mousedown","keydown","scroll","touchstart","click"].forEach(evt => window.addEventListener(evt, resetInactivityTimer, { passive: true }));
+
+    async function pedirPermisos(email){
+      const resp = await fetch("/.netlify/functions/getPermissions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email })
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) throw new Error(data?.error || "No se pudieron consultar permisos");
+      return data.permissions || {};
+    }
+
+    function validarAccesoCentro(permissions){
+      if (centerKey === "diagonal") return permissions.Clinica_Diagonal === true;
+      if (centerKey === "salus") return permissions.Clinica_Salus === true;
+      return false;
+    }
+
+    function buildAmbitoCard(title, completionPct, fundamentalPoints, nonFundamentalPoints){
+      const pct = Math.max(0, Math.min(100, Number(completionPct) || 0));
+      const theta = Math.PI * (1 - (pct / 100));
+      const needleLength = 46;
+      const centerX = 110;
+      const centerY = 100;
+      const needleX = centerX + (needleLength * Math.cos(theta));
+      const needleY = centerY - (needleLength * Math.sin(theta));
+      return `
+      <article class="ambito-card">
+        <h3 class="ambito-title">${title}</h3>
+        <div class="gauge" style="--pct:${pct}">
+          <svg viewBox="0 0 220 120" aria-hidden="true">
+            <path class="gauge-track" d="M 20 100 A 90 90 0 0 1 200 100" pathLength="100"></path>
+            <path class="gauge-value" d="M 20 100 A 90 90 0 0 1 200 100" pathLength="100"></path>
+            <line class="gauge-needle" x1="110" y1="100" x2="${needleX.toFixed(2)}" y2="${needleY.toFixed(2)}"></line>
+            <circle class="gauge-pivot" cx="110" cy="100" r="4"></circle>
+          </svg>
+          <div class="semi-center">${Math.round(pct)}%</div>
+        </div>
+        <div class="stats-row">
+          <div>
+            <div style="opacity:.9;font-size:13px">Fundamentales</div>
+            <div class="value">${fundamentalPoints} pts</div>
+          </div>
+          <div>
+            <div style="opacity:.9;font-size:13px">No Fundamentales</div>
+            <div class="value">${nonFundamentalPoints} pts</div>
+          </div>
+        </div>
+      </article>`;
+    }
+
+    async function loadSurveyDefinition(surveyCode){
+      const r = await fetch(`/.netlify/functions/getSurvey?surveyCode=${encodeURIComponent(surveyCode)}`);
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data?.error || `No se pudo cargar ${surveyCode}`);
+      return data.questions || [];
+    }
+
+    async function loadMatrix(){
+      const r = await fetch(`/.netlify/functions/getSurveyDashboardMatrix?center=${encodeURIComponent(centerKey)}`);
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data?.error || "No se pudo cargar la matriz del dashboard");
+      return data;
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        clearInactivityTimer();
+        window.location.href = "index.html";
+        return;
+      }
+
+      resetInactivityTimer();
+
+      try {
+        setLoading(true, "Validando permisos y cargando datos...");
+
+        const email = (user.email || "").toLowerCase().trim();
+        const permissions = await pedirPermisos(email);
+
+        if (!validarAccesoCentro(permissions)) {
+          await signOut(auth);
+          showError("No tienes permisos para ingresar a este centro.");
+          return;
+        }
+
+        const [matrixData, ambitoOneQuestions] = await Promise.all([
+          loadMatrix(),
+          loadSurveyDefinition(AMBITO_ONE.key)
+        ]);
+
+        const rows = matrixData.rows || [];
+        const latestByQuestion = new Map();
+
+        rows.forEach((row) => {
+          if (!Number.isFinite(row.questionNumber)) return;
+          if (!Number.isFinite(row.selfScore)) return;
+
+          const current = latestByQuestion.get(row.questionNumber);
+          const rowTs = Date.parse(row.answerUpdatedAt || row.headerUpdatedAt || 0) || 0;
+          const currentTs = current ? (Date.parse(current.answerUpdatedAt || current.headerUpdatedAt || 0) || 0) : -1;
+
+          if (!current || rowTs >= currentTs) {
+            latestByQuestion.set(row.questionNumber, row);
+          }
+        });
+
+        const totalQuestions = ambitoOneQuestions.length;
+        let answeredQuestions = 0;
+        let fundamentalPoints = 0;
+        let nonFundamentalPoints = 0;
+
+        ambitoOneQuestions.forEach((question) => {
+          const row = latestByQuestion.get(Number(question.number));
+          if (!row || !Number.isFinite(row.selfScore)) return;
+
+          answeredQuestions += 1;
+          const score = Number(row.selfScore || 0);
+
+          if (String(question.category || "").toUpperCase() === "FUNDAMENTAL") {
+            fundamentalPoints += score;
+          } else {
+            nonFundamentalPoints += score;
+          }
+        });
+
+        const completionPct = totalQuestions > 0 ? (answeredQuestions * 100) / totalQuestions : 0;
+
+        dashboardGrid.innerHTML = buildAmbitoCard(
+          AMBITO_ONE.title,
+          completionPct,
+          fundamentalPoints,
+          nonFundamentalPoints
+        );
+
+        const updatedAt = matrixData.rows?.[0]?.headerUpdatedAt || matrixData.rows?.[0]?.answerUpdatedAt || null;
+        document.getElementById("updatedAt").textContent = updatedAt ? `Última actualización: ${new Date(updatedAt).toLocaleString("es-ES")}` : "Sin datos para mostrar todavía";
+
+        setLoading(false);
+        content.style.display = "block";
+      } catch (error) {
+        console.error(error);
+        showError(`No se pudo cargar el Dashboard Online: ${error.message}`);
+      }
+    });
+  </script>
+</body>
+</html>

@@ -626,13 +626,6 @@
       saveState.textContent = text || "";
     }
 
-    function normalizePermissions(permissions){
-      return {
-        salus: Boolean(permissions?.Clinica_Salus),
-        diagonal: Boolean(permissions?.Clinica_Diagonal)
-      };
-    }
-
     function createScoreOptions(container, name, selectedValue){
       container.innerHTML = "";
 
@@ -924,23 +917,17 @@
     }
 
     async function validateAccess(email){
-      const permissionsResponse = await fetchJSON("/.netlify/functions/getPermissions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email })
-      });
+      const cleanEmail = String(email || "").trim().toLowerCase();
 
-      const permissions = normalizePermissions(permissionsResponse.permissions);
+      if(!cleanEmail){
+        throw new Error("No se pudo validar el usuario autenticado.");
+      }
 
       if(!center || !CENTER_LABELS[center]){
         throw new Error("Centro no válido en la URL.");
       }
 
-      if(!permissions[center]){
-        throw new Error("No tienes permisos para acceder a la encuesta de este centro.");
-      }
-
-      return permissionsResponse;
+      return { ok: true };
     }
 
     async function loadSurvey(){

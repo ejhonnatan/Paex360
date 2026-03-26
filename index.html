@@ -173,6 +173,19 @@
       font-weight: 800;
     }
 
+
+    .auth-loader{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-height: 320px;
+      border:1px solid var(--border);
+      border-radius: 14px;
+      font-weight: 800;
+      color: var(--muted);
+      background:#fff;
+    }
+
     .centros{
       display:flex;
       gap: 12px;
@@ -248,7 +261,8 @@
 
     <div class="card">
       <div class="grid">
-        <div class="panel" id="loginPanel">
+        <div class="auth-loader" id="authLoader">Validando sesión...</div>
+        <div class="panel" id="loginPanel" style="display:none;">
           <h2 class="title">Acceso</h2>
           <p class="subtitle">Inicia sesión para ver los centros habilitados.</p>
 
@@ -277,7 +291,7 @@
           </div>
         </div>
 
-        <div class="panel panel-hero" id="heroPanel">
+        <div class="panel panel-hero" id="heroPanel" style="display:none;">
           <img class="hero-img" src="PAEX360 CAST.jpg" alt="Paex360 Cast">
         </div>
 
@@ -300,6 +314,7 @@
     const loginPanel = document.getElementById("loginPanel");
     const centrosPanel = document.getElementById("centrosPanel");
     const heroPanel = document.getElementById("heroPanel");
+    const authLoader = document.getElementById("authLoader");
 
     const loginBtn = document.getElementById("loginBtn");
     const logoutBtn = document.getElementById("logoutBtn");
@@ -312,7 +327,12 @@
     const centrosContainer = document.getElementById("centros-container");
     const mensajePermisos = document.getElementById("mensaje-permisos");
 
+    function setAuthLoader(on){
+      authLoader.style.display = on ? "flex" : "none";
+    }
+
     function showLogin() {
+      setAuthLoader(false);
       loginPanel.style.display = "block";
       centrosPanel.style.display = "none";
       heroPanel.style.display = "block";
@@ -324,6 +344,7 @@
     }
 
     function showCentros(email) {
+      setAuthLoader(false);
       loginPanel.style.display = "none";
       centrosPanel.style.display = "block";
       heroPanel.style.display = "none";
@@ -352,6 +373,7 @@
     }
 
     let firebaseConfig = null;
+    setAuthLoader(true);
 
     try {
       const r = await fetch("/.netlify/functions/getConfig", { cache: "no-store" });

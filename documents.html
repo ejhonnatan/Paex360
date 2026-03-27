@@ -147,6 +147,13 @@
       gap:10px;
     }
 
+    .doc-row{
+      display:grid;
+      grid-template-columns:1fr 34px;
+      gap:8px;
+      align-items:center;
+    }
+
     .doc-btn{
       width:100%;
       text-align:left;
@@ -170,6 +177,22 @@
     .doc-btn.active{
       border-color:#111827;
       background:#f3f4f6;
+    }
+
+    .doc-delete-btn{
+      border:1px solid #fecaca;
+      background:#fff1f2;
+      color:#b91c1c;
+      border-radius:10px;
+      width:34px;
+      height:32px;
+      cursor:pointer;
+      font-weight:900;
+      line-height:1;
+    }
+
+    .doc-delete-btn:hover{
+      background:#ffe4e6;
     }
 
     .viewer-card{
@@ -368,6 +391,22 @@
       return Array.isArray(data.documents) ? data.documents : [];
     }
 
+
+    async function eliminarDocumento(center, documentId, source){
+      const resp = await fetch("/.netlify/functions/deleteDocument", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ center, documentId, source })
+      });
+
+      const data = await resp.json().catch(() => ({}));
+
+      if (!resp.ok) {
+        throw new Error(data?.error || "No se pudo eliminar el documento");
+      }
+
+      return data;
+    }
     function selectDocument(doc){
       selectedPath = doc.ruta || "";
       viewerTitle.textContent = doc.nombre || "Documento PDF";
@@ -403,12 +442,44 @@
           return;
         }
 
+        const row = document.createElement("div");
+        row.className = "doc-row";
+
         const btn = document.createElement("button");
         btn.className = "doc-btn";
         btn.textContent = doc.nombre;
         btn.dataset.path = doc.ruta;
         btn.onclick = () => selectDocument(doc);
-        documentsList.appendChild(btn);
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "doc-delete-btn";
+        deleteBtn.title = "Eliminar documento";
+        deleteBtn.textContent = "✕";
+        deleteBtn.onclick = async (ev) => {
+          ev.stopPropagation();
+          const ok = confirm(`¿Seguro que deseas eliminar el documento "${doc.nombre}"?`);
+          if (!ok) return;
+
+          try {
+            setLoading(true, "Eliminando documento...");
+            await eliminarDocumento(centerKey, Number(doc.id || 0), String(doc.source || ""));
+
+            loadedDocuments = await pedirDocumentos(centerKey);
+            renderDocuments(loadedDocuments);
+            setLoading(false);
+            content.style.display = "grid";
+          } catch (error) {
+            console.error(error);
+            setLoading(false);
+            content.style.display = "grid";
+            msg.style.display = "block";
+            msg.textContent = error.message || "No se pudo eliminar el documento.";
+          }
+        };
+
+        row.appendChild(btn);
+        row.appendChild(deleteBtn);
+        documentsList.appendChild(row);
 
         if (index === 0) {
           setTimeout(() => selectDocument(doc), 0);

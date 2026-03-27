@@ -37,6 +37,36 @@ exports.handler = async (event) => {
 
     const db = getDb();
 
+    const activeEditorResult = await db.execute({
+      sql: `
+        SELECT respondent_email, respondent_name, updated_at
+        FROM survey_response_headers
+        WHERE survey_code = ?
+          AND center_code = ?
+          AND LOWER(status) = 'draft'
+          AND respondent_email <> ?
+        ORDER BY updated_at DESC
+        LIMIT 1
+      `,
+      args: [surveyCode, center, email]
+    });
+
+    if (activeEditorResult.rows.length) {
+      const activeEditor = activeEditorResult.rows[0];
+      return {
+        statusCode: 423,
+        headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+        body: JSON.stringify({
+          error: "La encuesta está en uso por otro usuario. Intenta nuevamente en unos minutos.",
+          activeEditor: {
+            email: activeEditor.respondent_email || null,
+            name: activeEditor.respondent_name || null,
+            updatedAt: activeEditor.updated_at || null
+          }
+        })
+      };
+    }
+
     await db.execute({
       sql: `
         INSERT INTO survey_response_headers (

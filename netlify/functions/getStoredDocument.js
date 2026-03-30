@@ -47,12 +47,16 @@ exports.handler = async (event) => {
       };
     }
 
+    const mimeType = row.mime_type || "application/octet-stream";
+    const isPreviewable = mimeType.startsWith("application/pdf") || mimeType.startsWith("image/");
+    const disposition = isPreviewable ? "inline" : "attachment";
+
     return {
       statusCode: 200,
       isBase64Encoded: true,
       headers: {
-        "Content-Type": row.mime_type || "application/pdf",
-        "Content-Disposition": `inline; filename="${row.original_file_name || "documento.pdf"}"`,
+        "Content-Type": mimeType,
+        "Content-Disposition": `${disposition}; filename="${row.original_file_name || "archivo"}"`,
         "Cache-Control": "no-store"
       },
       body: row.base64_content

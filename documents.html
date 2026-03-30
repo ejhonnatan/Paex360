@@ -407,17 +407,37 @@
 
       return data;
     }
+    function isPreviewableDoc(doc){
+      const mime = String(doc?.mimeType || "").toLowerCase();
+      const name = String(doc?.nombre || "").toLowerCase();
+
+      if (mime.startsWith("application/pdf") || mime.startsWith("image/")) return true;
+      if (name.endsWith(".pdf")) return true;
+      if (/\.(png|jpg|jpeg|gif|bmp|webp|svg)$/.test(name)) return true;
+      return false;
+    }
+
     function selectDocument(doc){
       selectedPath = doc.ruta || "";
-      viewerTitle.textContent = doc.nombre || "Documento PDF";
+      viewerTitle.textContent = doc.nombre || "Documento";
 
       const safeUrl = appendNoCache(selectedPath);
+      const previewable = isPreviewableDoc(doc);
 
-      pdfFrame.src = safeUrl;
-      pdfFrame.style.display = "block";
-      emptyViewer.style.display = "none";
+      if (previewable && safeUrl) {
+        pdfFrame.src = safeUrl;
+        pdfFrame.style.display = "block";
+        emptyViewer.style.display = "none";
+      } else {
+        pdfFrame.style.display = "none";
+        pdfFrame.src = "";
+        emptyViewer.style.display = "flex";
+        emptyViewer.textContent = "Este tipo de archivo no se puede visualizar aquí. Puedes abrirlo o descargarlo en una nueva pestaña.";
+      }
+
       openNewTabBtn.style.display = safeUrl ? "inline-flex" : "none";
       openNewTabBtn.href = safeUrl;
+      openNewTabBtn.textContent = previewable ? "Abrir en nueva pestaña" : "Abrir / Descargar";
 
       Array.from(documentsList.querySelectorAll(".doc-btn")).forEach(btn => {
         btn.classList.toggle("active", btn.dataset.path === selectedPath);
@@ -433,6 +453,7 @@
         pdfFrame.style.display = "none";
         pdfFrame.src = "";
         emptyViewer.style.display = "flex";
+        emptyViewer.textContent = "Selecciona un PDF del listado para visualizarlo aquí.";
         openNewTabBtn.style.display = "none";
         return;
       }

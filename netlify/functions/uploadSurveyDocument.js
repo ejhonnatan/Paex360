@@ -35,15 +35,7 @@ exports.handler = async (event) => {
       };
     }
 
-    if (mimeType !== "application/pdf") {
-      return {
-        statusCode: 400,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ error: "Solo se permiten archivos PDF para este flujo" })
-      };
-    }
-
-    base64Content = base64Content.replace(/^data:application\/pdf;base64,/, "");
+    base64Content = base64Content.replace(/^data:[^;]+;base64,/, "");
 
     let byteSize = 0;
     try {

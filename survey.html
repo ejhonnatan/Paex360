@@ -489,8 +489,8 @@
         <div class="reference-files-box" id="referenceFilesBox"></div>
 
         <div class="upload-box">
-          <input type="file" id="fileInput" accept=".pdf,application/pdf" multiple>
-          <div class="file-note">Los archivos visibles arriba son archivos de referencia del criterio. Si cargas uno o varios PDF aquí, se agregarán como documentos asociados a esta pregunta en tu encuesta.</div>
+          <input type="file" id="fileInput" multiple>
+          <div class="file-note">Los archivos visibles arriba son archivos de referencia del criterio. Si cargas uno o varios archivos aquí, se agregarán como documentos asociados a esta pregunta en tu encuesta.</div>
         </div>
       </div>
 
@@ -874,11 +874,6 @@
       if(!question) return false;
       if(!file) return false;
 
-      if (file.type !== "application/pdf") {
-        showError("Solo se permiten archivos PDF.");
-        return false;
-      }
-
       const base64Content = await fileToBase64(file);
 
       setSaveState("Subiendo documento...");
@@ -1171,7 +1166,7 @@
         fileInput.value = "";
       } catch (error) {
         console.error(error);
-        showError(error.message || "No fue posible cargar el documento PDF.");
+        showError(error.message || "No fue posible cargar el documento.");
         setSaveState("Error al subir documento");
       }
     });

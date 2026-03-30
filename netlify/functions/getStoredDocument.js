@@ -12,6 +12,7 @@ exports.handler = async (event) => {
 
     const params = event.queryStringParameters || {};
     const documentId = Number(params.documentId || 0);
+    const forceDownload = String(params.download || "").trim() === "1";
 
     if (!documentId) {
       return {
@@ -49,7 +50,7 @@ exports.handler = async (event) => {
 
     const mimeType = row.mime_type || "application/octet-stream";
     const isPreviewable = mimeType.startsWith("application/pdf") || mimeType.startsWith("image/");
-    const disposition = isPreviewable ? "inline" : "attachment";
+    const disposition = forceDownload ? "attachment" : (isPreviewable ? "inline" : "attachment");
 
     return {
       statusCode: 200,

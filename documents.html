@@ -292,6 +292,7 @@
 
           <div class="viewer-actions">
             <a class="btn" id="openNewTabBtn" href="#" target="_blank" rel="noopener noreferrer" style="display:none;">Abrir en nueva pestaña</a>
+            <a class="btn" id="downloadBtn" href="#" style="display:none;">Descargar</a>
           </div>
         </div>
 
@@ -320,6 +321,7 @@
     const pdfFrame = document.getElementById("pdfFrame");
     const emptyViewer = document.getElementById("emptyViewer");
     const openNewTabBtn = document.getElementById("openNewTabBtn");
+    const downloadBtn = document.getElementById("downloadBtn");
 
     let loadedDocuments = [];
     let selectedPath = "";
@@ -439,6 +441,11 @@
       openNewTabBtn.href = safeUrl;
       openNewTabBtn.textContent = previewable ? "Abrir en nueva pestaña" : "Abrir / Descargar";
 
+      const forceDownloadUrl = safeUrl ? `${safeUrl}${safeUrl.includes("?") ? "&" : "?"}download=1` : "#";
+      downloadBtn.style.display = safeUrl ? "inline-flex" : "none";
+      downloadBtn.href = forceDownloadUrl;
+      downloadBtn.setAttribute("download", doc.nombre || "archivo");
+
       Array.from(documentsList.querySelectorAll(".doc-btn")).forEach(btn => {
         btn.classList.toggle("active", btn.dataset.path === selectedPath);
       });
@@ -455,6 +462,7 @@
         emptyViewer.style.display = "flex";
         emptyViewer.textContent = "Selecciona un PDF del listado para visualizarlo aquí.";
         openNewTabBtn.style.display = "none";
+        downloadBtn.style.display = "none";
         return;
       }
 

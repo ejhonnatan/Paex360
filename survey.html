@@ -489,8 +489,8 @@
         <div class="reference-files-box" id="referenceFilesBox"></div>
 
         <div class="upload-box">
-          <input type="file" id="fileInput" accept=".pdf,application/pdf">
-          <div class="file-note">Los archivos visibles arriba son archivos de referencia del criterio. Si cargas un PDF aquí, reemplazará el documento asociado a esta pregunta para tu encuesta.</div>
+          <input type="file" id="fileInput" multiple>
+          <div class="file-note">Los archivos visibles arriba son archivos de referencia del criterio. Si cargas uno o varios archivos aquí, se agregarán como documentos asociados a esta pregunta en tu encuesta.</div>
         </div>
       </div>
 
@@ -590,6 +590,9 @@
     let isSaving = false;
     let pendingSave = false;
     let isSwitchingSurvey = false;
+    let lockRefreshTimer = null;
+    let lockedQuestionId = null;
+    let isQuestionLockedByOther = false;
 
     const answers = {};
 
@@ -626,13 +629,6 @@
       saveState.textContent = text || "";
     }
 
-    function normalizePermissions(permissions){
-      return {
-        salus: Boolean(permissions?.Clinica_Salus),
-        diagonal: Boolean(permissions?.Clinica_Diagonal)
-      };
-    }
-
     function createScoreOptions(container, name, selectedValue){
       container.innerHTML = "";
 
@@ -659,9 +655,9 @@
       referenceFilesBox.innerHTML = "";
 
       const referenceFiles = answer?.referenceFiles || [];
-      const uploadedDocument = answer?.uploadedDocument || null;
+      const uploadedDocuments = Array.isArray(answer?.uploadedDocuments) ? answer.uploadedDocuments : [];
 
-      if (uploadedDocument) {
+      uploadedDocuments.forEach((uploadedDocument) => {
         const uploadedRow = document.createElement("div");
         uploadedRow.className = "reference-file-item";
         uploadedRow.innerHTML = `
@@ -669,12 +665,12 @@
           <span><strong>Documento cargado por el cliente:</strong> ${uploadedDocument.originalFileName}</span>
         `;
         referenceFilesBox.appendChild(uploadedRow);
-      }
+      });
 
       if (!referenceFiles.length) {
         const empty = document.createElement("div");
         empty.className = "reference-file-item";
-        empty.textContent = "Sin archivos de referencia";
+        empty.textContent = uploadedDocuments.length ? "Sin archivos de referencia" : "Sin archivos";
         referenceFilesBox.appendChild(empty);
         return;
       }
@@ -688,9 +684,7 @@
         icon.textContent = "📄";
 
         const text = document.createElement("span");
-        text.textContent = uploadedDocument && uploadedDocument.referenceFileName === fileName
-          ? `${fileName} (reemplazado por documento cargado)`
-          : fileName;
+        text.textContent = fileName;
 
         row.appendChild(icon);
         row.appendChild(text);
@@ -715,7 +709,7 @@
           certifierObservations: "",
           files: [],
           referenceFiles: question.referenceFiles || [],
-          uploadedDocument: null
+          uploadedDocuments: []
         };
       }
 
@@ -744,7 +738,7 @@
           certifierObservations: row.certifier_observations ?? "",
           files: [],
           referenceFiles: question.referenceFiles || [],
-          uploadedDocument: null
+          uploadedDocuments: []
         };
       });
     }
@@ -757,7 +751,11 @@
         if (!question) return;
 
         const answer = ensureAnswer(question);
-        answer.uploadedDocument = {
+        if (!Array.isArray(answer.uploadedDocuments)) {
+          answer.uploadedDocuments = [];
+        }
+
+        answer.uploadedDocuments.push({
           id: doc.id,
           questionId: doc.questionId,
           questionNumber: doc.questionNumber,
@@ -768,7 +766,7 @@
           createdAt: doc.createdAt || null,
           updatedAt: doc.updatedAt || null,
           ruta: doc.ruta || ""
-        };
+        });
       });
     }
 
@@ -811,6 +809,70 @@
       fileInput.value = "";
     }
 
+
+    async function acquireQuestionLock(question){
+      if (!question || !currentUser?.email || !surveyData?.surveyCode) return;
+
+      const result = await fetchJSON("/.netlify/functions/acquireSurveyQuestionLock", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          surveyCode: surveyData.surveyCode,
+          center,
+          email: currentUser.email,
+          questionId: question.id,
+          questionNumber: question.number
+        })
+      });
+
+      const lockedByOther = result?.locked === true;
+      isQuestionLockedByOther = lockedByOther;
+      lockedQuestionId = question.id;
+
+      const controls = [evidenceText, improvementActions, tutorComments, certifierObservations, fileInput, saveBtn];
+      controls.forEach((el) => { el.disabled = lockedByOther; });
+      document.querySelectorAll('input[name="selfScore"], input[name="certifierScore"]').forEach((el) => {
+        el.disabled = lockedByOther;
+      });
+
+      if (lockedByOther) {
+        showError("Esta pregunta está siendo editada por otro usuario en este momento. Puedes avanzar a otra pregunta.");
+        setSaveState("Pregunta bloqueada temporalmente");
+      }
+    }
+
+    async function releaseQuestionLockById(questionId){
+      if (!questionId || !currentUser?.email || !surveyData?.surveyCode) return;
+      try {
+        await fetchJSON("/.netlify/functions/releaseSurveyQuestionLock", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            surveyCode: surveyData.surveyCode,
+            center,
+            email: currentUser.email,
+            questionId
+          })
+        });
+      } catch (_) {}
+    }
+
+    async function refreshQuestionLock(){
+      const question = getCurrentQuestion();
+      if (!question) return;
+
+      if (lockedQuestionId && lockedQuestionId !== question.id) {
+        await releaseQuestionLockById(lockedQuestionId);
+      }
+
+      await acquireQuestionLock(question);
+
+      clearInterval(lockRefreshTimer);
+      lockRefreshTimer = setInterval(() => {
+        acquireQuestionLock(question).catch(() => {});
+      }, 15000);
+    }
+
     function renderQuestion(){
       clearMessages();
 
@@ -829,6 +891,8 @@
       prevBtn.disabled = currentQuestionIndex === 0;
       nextBtn.textContent = currentQuestionIndex === surveyData.totalQuestions - 1 ? "✓" : "➡";
       nextBtn.title = currentQuestionIndex === surveyData.totalQuestions - 1 ? "Finalizar" : "Siguiente";
+
+      void refreshQuestionLock();
     }
 
     function validateCurrentQuestion({ silent = false } = {}){
@@ -878,9 +942,8 @@
       const question = getCurrentQuestion();
       if(!question) return false;
       if(!file) return false;
-
-      if (file.type !== "application/pdf") {
-        showError("Solo se permiten archivos PDF.");
+      if (isQuestionLockedByOther) {
+        showError("La pregunta está bloqueada por otro usuario.");
         return false;
       }
 
@@ -911,7 +974,8 @@
       });
 
       const answer = ensureAnswer(question);
-      answer.uploadedDocument = response.document || null;
+      if (!Array.isArray(answer.uploadedDocuments)) answer.uploadedDocuments = [];
+      if (response.document) answer.uploadedDocuments.push(response.document);
 
       renderReferenceFiles(answer);
       setSaveState(`Documento guardado: ${new Date().toLocaleString("es-ES")}`);
@@ -921,23 +985,17 @@
     }
 
     async function validateAccess(email){
-      const permissionsResponse = await fetchJSON("/.netlify/functions/getPermissions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email })
-      });
+      const cleanEmail = String(email || "").trim().toLowerCase();
 
-      const permissions = normalizePermissions(permissionsResponse.permissions);
+      if(!cleanEmail){
+        throw new Error("No se pudo validar el usuario autenticado.");
+      }
 
       if(!center || !CENTER_LABELS[center]){
         throw new Error("Centro no válido en la URL.");
       }
 
-      if(!permissions[center]){
-        throw new Error("No tienes permisos para acceder a la encuesta de este centro.");
-      }
-
-      return permissionsResponse;
+      return { ok: true };
     }
 
     async function loadSurvey(){
@@ -983,6 +1041,10 @@
     async function saveCurrentQuestion({ silent = false, completeAfterSave = false } = {}){
       const question = getCurrentQuestion();
       if(!question) return false;
+      if (isQuestionLockedByOther) {
+        if (!silent) showError("La pregunta está bloqueada por otro usuario.");
+        return false;
+      }
 
       if(!validateCurrentQuestion({ silent })){
         return false;
@@ -1066,6 +1128,7 @@
     }
 
     function scheduleAutosave(){
+      if (isQuestionLockedByOther) return;
       clearTimeout(autosaveTimer);
       setSaveState("Cambios pendientes...");
 
@@ -1085,6 +1148,7 @@
         clearTimeout(autosaveTimer);
 
         await saveCurrentQuestion({ silent: true });
+        await releaseQuestionLockById(lockedQuestionId);
 
         currentSurveyCode = newSurveyCode;
         currentQuestionIndex = 0;
@@ -1168,16 +1232,20 @@
 
     fileInput.addEventListener("change", async () => {
       try {
-        const file = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
-        if (!file) return;
+        const selectedFiles = Array.from(fileInput.files || []);
+        if (!selectedFiles.length) return;
 
         clearTimeout(autosaveTimer);
         await saveCurrentQuestion({ silent: true });
-        await uploadCurrentQuestionFile(file);
+
+        for (const file of selectedFiles) {
+          await uploadCurrentQuestionFile(file);
+        }
+
         fileInput.value = "";
       } catch (error) {
         console.error(error);
-        showError(error.message || "No fue posible cargar el documento PDF.");
+        showError(error.message || "No fue posible cargar el documento.");
         setSaveState("Error al subir documento");
       }
     });
@@ -1186,6 +1254,8 @@
       try{
         clearTimeout(autosaveTimer);
         await saveCurrentQuestion({ silent: true });
+        await releaseQuestionLockById(lockedQuestionId);
+        clearInterval(lockRefreshTimer);
         await signOut(auth);
         window.location.href = "index.html";
       }catch(error){
@@ -1195,6 +1265,15 @@
 
     window.addEventListener("beforeunload", () => {
       clearTimeout(autosaveTimer);
+      clearInterval(lockRefreshTimer);
+      if (lockedQuestionId && currentUser?.email && surveyData?.surveyCode) {
+        navigator.sendBeacon("/.netlify/functions/releaseSurveyQuestionLock", JSON.stringify({
+          surveyCode: surveyData.surveyCode,
+          center,
+          email: currentUser.email,
+          questionId: lockedQuestionId
+        }));
+      }
     });
 
     async function init(){

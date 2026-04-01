@@ -1,5 +1,7 @@
 const { getDb } = require("./db");
 
+const LOCK_WINDOW_MINUTES = 30;
+
 exports.handler = async (event) => {
   try {
     if (event.httpMethod !== "POST") {
@@ -58,10 +60,11 @@ exports.handler = async (event) => {
           AND center_code = ?
           AND LOWER(status) = 'draft'
           AND respondent_email <> ?
+          AND COALESCE(updated_at, created_at) >= datetime('now', '-' || ? || ' minutes')
         ORDER BY updated_at DESC
         LIMIT 1
       `,
-      args: [surveyCode, center, email]
+      args: [surveyCode, center, email, LOCK_WINDOW_MINUTES]
     });
 
     if (activeEditorResult.rows.length) {
@@ -70,7 +73,7 @@ exports.handler = async (event) => {
         statusCode: 423,
         headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
         body: JSON.stringify({
-          error: "La encuesta está en uso por otro usuario. Intenta nuevamente en unos minutos.",
+          error: "La encuesta está en uso por otro usuario en los últimos minutos. Intenta nuevamente pronto.",
           activeEditor: {
             email: activeEditor.respondent_email || null,
             name: activeEditor.respondent_name || null,

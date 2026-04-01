@@ -942,10 +942,13 @@
       const question = getCurrentQuestion();
       if(!question) return false;
       if(!file) return false;
+<<<<<<< codex/add-dashboard-online-menu-3m4v1y
       if (isQuestionLockedByOther) {
         showError("La pregunta está bloqueada por otro usuario.");
         return false;
       }
+=======
+>>>>>>> main
 
       const base64Content = await fileToBase64(file);
 

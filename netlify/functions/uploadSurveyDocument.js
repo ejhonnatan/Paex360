@@ -35,15 +35,7 @@ exports.handler = async (event) => {
       };
     }
 
-    if (mimeType !== "application/pdf") {
-      return {
-        statusCode: 400,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ error: "Solo se permiten archivos PDF para este flujo" })
-      };
-    }
-
-    base64Content = base64Content.replace(/^data:application\/pdf;base64,/, "");
+    base64Content = base64Content.replace(/^data:[^;]+;base64,/, "");
 
     let byteSize = 0;
     try {
@@ -107,71 +99,33 @@ exports.handler = async (event) => {
       throw new Error("No fue posible obtener el encabezado de la encuesta");
     }
 
-    const existingResult = await db.execute({
+    await db.execute({
       sql: `
-        SELECT id
-        FROM survey_uploaded_documents
-        WHERE response_header_id = ? AND question_id = ?
-        LIMIT 1
+        INSERT INTO survey_uploaded_documents (
+          response_header_id,
+          question_id,
+          question_number,
+          reference_file_name,
+          original_file_name,
+          mime_type,
+          base64_content,
+          byte_size,
+          created_at,
+          updated_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
       `,
-      args: [headerId, questionId]
+      args: [
+        headerId,
+        questionId,
+        questionNumber,
+        referenceFileName || null,
+        fileName,
+        mimeType,
+        base64Content,
+        byteSize
+      ]
     });
-
-    const existingId = existingResult.rows[0]?.id;
-
-    if (existingId) {
-      await db.execute({
-        sql: `
-          UPDATE survey_uploaded_documents
-          SET
-            question_number = ?,
-            reference_file_name = ?,
-            original_file_name = ?,
-            mime_type = ?,
-            base64_content = ?,
-            byte_size = ?,
-            updated_at = CURRENT_TIMESTAMP
-          WHERE id = ?
-        `,
-        args: [
-          questionNumber,
-          referenceFileName || null,
-          fileName,
-          mimeType,
-          base64Content,
-          byteSize,
-          existingId
-        ]
-      });
-    } else {
-      await db.execute({
-        sql: `
-          INSERT INTO survey_uploaded_documents (
-            response_header_id,
-            question_id,
-            question_number,
-            reference_file_name,
-            original_file_name,
-            mime_type,
-            base64_content,
-            byte_size,
-            created_at,
-            updated_at
-          )
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-        `,
-        args: [
-          headerId,
-          questionId,
-          questionNumber,
-          referenceFileName || null,
-          fileName,
-          mimeType,
-          base64Content,
-          byteSize
-        ]
-      });
-    }
 
     const savedResult = await db.execute({
       sql: `
@@ -188,6 +142,7 @@ exports.handler = async (event) => {
           updated_at
         FROM survey_uploaded_documents
         WHERE response_header_id = ? AND question_id = ?
+        ORDER BY id DESC
         LIMIT 1
       `,
       args: [headerId, questionId]

@@ -590,6 +590,9 @@
     let isSaving = false;
     let pendingSave = false;
     let isSwitchingSurvey = false;
+    let lockRefreshTimer = null;
+    let lockedQuestionId = null;
+    let isQuestionLockedByOther = false;
 
     const answers = {};
 
@@ -806,6 +809,70 @@
       fileInput.value = "";
     }
 
+
+    async function acquireQuestionLock(question){
+      if (!question || !currentUser?.email || !surveyData?.surveyCode) return;
+
+      const result = await fetchJSON("/.netlify/functions/acquireSurveyQuestionLock", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          surveyCode: surveyData.surveyCode,
+          center,
+          email: currentUser.email,
+          questionId: question.id,
+          questionNumber: question.number
+        })
+      });
+
+      const lockedByOther = result?.locked === true;
+      isQuestionLockedByOther = lockedByOther;
+      lockedQuestionId = question.id;
+
+      const controls = [evidenceText, improvementActions, tutorComments, certifierObservations, fileInput, saveBtn];
+      controls.forEach((el) => { el.disabled = lockedByOther; });
+      document.querySelectorAll('input[name="selfScore"], input[name="certifierScore"]').forEach((el) => {
+        el.disabled = lockedByOther;
+      });
+
+      if (lockedByOther) {
+        showError("Esta pregunta está siendo editada por otro usuario en este momento. Puedes avanzar a otra pregunta.");
+        setSaveState("Pregunta bloqueada temporalmente");
+      }
+    }
+
+    async function releaseQuestionLockById(questionId){
+      if (!questionId || !currentUser?.email || !surveyData?.surveyCode) return;
+      try {
+        await fetchJSON("/.netlify/functions/releaseSurveyQuestionLock", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            surveyCode: surveyData.surveyCode,
+            center,
+            email: currentUser.email,
+            questionId
+          })
+        });
+      } catch (_) {}
+    }
+
+    async function refreshQuestionLock(){
+      const question = getCurrentQuestion();
+      if (!question) return;
+
+      if (lockedQuestionId && lockedQuestionId !== question.id) {
+        await releaseQuestionLockById(lockedQuestionId);
+      }
+
+      await acquireQuestionLock(question);
+
+      clearInterval(lockRefreshTimer);
+      lockRefreshTimer = setInterval(() => {
+        acquireQuestionLock(question).catch(() => {});
+      }, 15000);
+    }
+
     function renderQuestion(){
       clearMessages();
 
@@ -824,6 +891,8 @@
       prevBtn.disabled = currentQuestionIndex === 0;
       nextBtn.textContent = currentQuestionIndex === surveyData.totalQuestions - 1 ? "✓" : "➡";
       nextBtn.title = currentQuestionIndex === surveyData.totalQuestions - 1 ? "Finalizar" : "Siguiente";
+
+      void refreshQuestionLock();
     }
 
     function validateCurrentQuestion({ silent = false } = {}){
@@ -873,6 +942,13 @@
       const question = getCurrentQuestion();
       if(!question) return false;
       if(!file) return false;
+<<<<<<< codex/add-dashboard-online-menu-3m4v1y
+      if (isQuestionLockedByOther) {
+        showError("La pregunta está bloqueada por otro usuario.");
+        return false;
+      }
+=======
+>>>>>>> main
 
       const base64Content = await fileToBase64(file);
 
@@ -968,6 +1044,10 @@
     async function saveCurrentQuestion({ silent = false, completeAfterSave = false } = {}){
       const question = getCurrentQuestion();
       if(!question) return false;
+      if (isQuestionLockedByOther) {
+        if (!silent) showError("La pregunta está bloqueada por otro usuario.");
+        return false;
+      }
 
       if(!validateCurrentQuestion({ silent })){
         return false;
@@ -1051,6 +1131,7 @@
     }
 
     function scheduleAutosave(){
+      if (isQuestionLockedByOther) return;
       clearTimeout(autosaveTimer);
       setSaveState("Cambios pendientes...");
 
@@ -1070,6 +1151,7 @@
         clearTimeout(autosaveTimer);
 
         await saveCurrentQuestion({ silent: true });
+        await releaseQuestionLockById(lockedQuestionId);
 
         currentSurveyCode = newSurveyCode;
         currentQuestionIndex = 0;
@@ -1175,6 +1257,8 @@
       try{
         clearTimeout(autosaveTimer);
         await saveCurrentQuestion({ silent: true });
+        await releaseQuestionLockById(lockedQuestionId);
+        clearInterval(lockRefreshTimer);
         await signOut(auth);
         window.location.href = "index.html";
       }catch(error){
@@ -1184,6 +1268,15 @@
 
     window.addEventListener("beforeunload", () => {
       clearTimeout(autosaveTimer);
+      clearInterval(lockRefreshTimer);
+      if (lockedQuestionId && currentUser?.email && surveyData?.surveyCode) {
+        navigator.sendBeacon("/.netlify/functions/releaseSurveyQuestionLock", JSON.stringify({
+          surveyCode: surveyData.surveyCode,
+          center,
+          email: currentUser.email,
+          questionId: lockedQuestionId
+        }));
+      }
     });
 
     async function init(){

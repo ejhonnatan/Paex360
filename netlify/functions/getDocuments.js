@@ -172,6 +172,9 @@ exports.handler = async (event) => {
           uploaded: true,
           referenceFileName: uploadedReplacement.referenceFileName,
           questionNumber: uploadedReplacement.questionNumber,
+          mimeType: uploadedReplacement.mimeType,
+          byteSize: uploadedReplacement.byteSize,
+          createdAt: uploadedReplacement.createdAt || null,
           updatedAt: uploadedReplacement.updatedAt
         };
       }
@@ -183,34 +186,26 @@ exports.handler = async (event) => {
     // 6) AGREGAR EXTRAS SIN REFERENCIA
     //    EJ: PRUEBA.pdf con reference_file_name = NULL
     // =========================================================
-    const extrasUniqueMap = new Map();
-
-    extraUploadedDocs.forEach((doc) => {
-      const key =
-        normalizeFileName(doc.referenceFileName) ||
-        normalizeFileName(doc.nombre) ||
-        String(doc.id);
-
-      if (!extrasUniqueMap.has(key)) {
-        extrasUniqueMap.set(key, {
-          id: doc.id,
-          nombre: doc.nombre,
-          centro: center,
-          ruta: doc.ruta,
-          activo: true,
-          sortOrder: 999999,
-          source: "survey_uploaded_documents",
-          uploaded: true,
-          referenceFileName: doc.referenceFileName,
-          questionNumber: doc.questionNumber,
-          updatedAt: doc.updatedAt
-        });
-      }
-    });
+    const extraUploadedDocsOut = extraUploadedDocs.map((doc) => ({
+      id: doc.id,
+      nombre: doc.nombre,
+      centro: center,
+      ruta: doc.ruta,
+      activo: true,
+      sortOrder: 999999,
+      source: "survey_uploaded_documents",
+      uploaded: true,
+      referenceFileName: doc.referenceFileName,
+      questionNumber: doc.questionNumber,
+      mimeType: doc.mimeType,
+      byteSize: doc.byteSize,
+      createdAt: doc.createdAt || null,
+      updatedAt: doc.updatedAt
+    }));
 
     const finalDocuments = [
       ...mergedDocs,
-      ...Array.from(extrasUniqueMap.values())
+      ...extraUploadedDocsOut
     ].sort((a, b) => {
       const sortA = Number(a.sortOrder || 999999);
       const sortB = Number(b.sortOrder || 999999);

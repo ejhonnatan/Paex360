@@ -927,7 +927,10 @@
       const data = await response.json().catch(() => ({}));
 
       if(!response.ok){
-        throw new Error(data.error || data.detail || `Error HTTP ${response.status}`);
+        const message = (data?.error && data?.detail)
+          ? `${data.error}: ${data.detail}`
+          : (data?.error || data?.detail || `Error HTTP ${response.status}`);
+        throw new Error(message);
       }
 
       return data;

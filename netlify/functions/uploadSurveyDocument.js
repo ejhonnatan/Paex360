@@ -26,14 +26,28 @@ exports.handler = async (event) => {
     const referenceFileName = String(body.referenceFileName || "").trim();
 
     const fileName = String(body.fileName || "").trim();
-    const mimeType = String(body.mimeType || "").trim().toLowerCase();
+    const mimeTypeRaw = String(body.mimeType || "").trim().toLowerCase();
+    const mimeType = mimeTypeRaw || "application/octet-stream";
     let base64Content = String(body.base64Content || "").trim();
 
-    if (!surveyCode || !center || !email || !questionId || !questionNumber || !fileName || !mimeType || !base64Content) {
+    const missingFields = [];
+    if (!surveyCode) missingFields.push("surveyCode");
+    if (!center) missingFields.push("center");
+    if (!email) missingFields.push("email");
+    if (!questionId) missingFields.push("question.id");
+    if (!questionNumber) missingFields.push("question.number");
+    if (!fileName) missingFields.push("fileName");
+    if (!base64Content) missingFields.push("base64Content");
+
+    if (missingFields.length) {
       return {
         statusCode: 400,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ error: "Faltan datos obligatorios para subir el documento" })
+        body: JSON.stringify({
+          error: "Faltan datos obligatorios para subir el documento",
+          detail: `Campos faltantes: ${missingFields.join(", ")}`,
+          missingFields
+        })
       };
     }
 

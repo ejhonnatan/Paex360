@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Paex360 - Documentos PDF</title>
+  <title>Paex360 - Documentos</title>
   <link rel="icon" href="paex360-logo.png" type="image/png">
 
   <style>
@@ -264,7 +264,7 @@
   <div class="topbar">
     <div class="brand">
       <img src="paex360-logo.png" alt="Paex360">
-      <span id="centerTitle">Documentos PDF</span>
+      <span id="centerTitle">Documentos</span>
     </div>
 
     <div class="actions">
@@ -297,7 +297,7 @@
         </div>
 
         <div class="empty-viewer" id="emptyViewer">
-          Selecciona un PDF del listado para visualizarlo aquí.
+          Selecciona un documento del listado para visualizarlo o descargarlo.
         </div>
 
         <iframe id="pdfFrame" class="pdf-frame" style="display:none;" title="Visor PDF"></iframe>
@@ -434,12 +434,15 @@
         pdfFrame.style.display = "none";
         pdfFrame.src = "";
         emptyViewer.style.display = "flex";
-        emptyViewer.textContent = "Este tipo de archivo no se puede visualizar aquí. Puedes abrirlo o descargarlo en una nueva pestaña.";
+        emptyViewer.textContent = "Este tipo de archivo no se puede visualizar aquí. Puedes descargarlo para abrirlo localmente.";
       }
 
       openNewTabBtn.style.display = safeUrl ? "inline-flex" : "none";
-      openNewTabBtn.href = safeUrl;
-      openNewTabBtn.textContent = previewable ? "Abrir en nueva pestaña" : "Abrir / Descargar";
+      const openUrl = safeUrl
+        ? (previewable ? safeUrl : `${safeUrl}${safeUrl.includes("?") ? "&" : "?"}download=1`)
+        : "#";
+      openNewTabBtn.href = openUrl;
+      openNewTabBtn.textContent = previewable ? "Abrir en nueva pestaña" : "Descargar";
 
       const forceDownloadUrl = safeUrl ? `${safeUrl}${safeUrl.includes("?") ? "&" : "?"}download=1` : "#";
       downloadBtn.style.display = safeUrl ? "inline-flex" : "none";
@@ -460,7 +463,7 @@
         pdfFrame.style.display = "none";
         pdfFrame.src = "";
         emptyViewer.style.display = "flex";
-        emptyViewer.textContent = "Selecciona un PDF del listado para visualizarlo aquí.";
+        emptyViewer.textContent = "Selecciona un documento del listado para visualizarlo o descargarlo.";
         openNewTabBtn.style.display = "none";
         downloadBtn.style.display = "none";
         return;
@@ -524,7 +527,7 @@
       throw new Error("Invalid center");
     }
 
-    centerTitle.textContent = `${centerCfg.label} - Documentos PDF`;
+    centerTitle.textContent = `${centerCfg.label} - Documentos`;
     centerBox.textContent = centerCfg.label;
 
     let firebaseConfig = null;
@@ -619,7 +622,7 @@
         }
 
         if (permissions.Puede_Documentos !== true) {
-          showError("Tu usuario no tiene permisos para visualizar documentos PDF.");
+          showError("Tu usuario no tiene permisos para visualizar documentos.");
           return;
         }
 

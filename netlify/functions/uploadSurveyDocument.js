@@ -28,7 +28,9 @@ exports.handler = async (event) => {
     const fileName = String(body.fileName || "").trim();
     const mimeTypeRaw = String(body.mimeType || "").trim().toLowerCase();
     const mimeType = mimeTypeRaw || "application/octet-stream";
-    let base64Content = String(body.base64Content || "").trim();
+    const hasBase64Content = Object.prototype.hasOwnProperty.call(body, "base64Content");
+    let base64Content = hasBase64Content ? String(body.base64Content ?? "") : "";
+    base64Content = base64Content.trim();
 
     const missingFields = [];
     if (!surveyCode) missingFields.push("surveyCode");
@@ -37,7 +39,7 @@ exports.handler = async (event) => {
     if (!questionId) missingFields.push("question.id");
     if (!questionNumber) missingFields.push("question.number");
     if (!fileName) missingFields.push("fileName");
-    if (!base64Content) missingFields.push("base64Content");
+    if (!hasBase64Content) missingFields.push("base64Content");
 
     if (missingFields.length) {
       return {

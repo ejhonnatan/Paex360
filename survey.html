@@ -810,6 +810,76 @@
       fileInput.value = "";
     }
 
+
+    async function acquireQuestionLock(question){
+      if (!question || !currentUser?.email || !surveyData?.surveyCode) return;
+
+      let result = null;
+      try {
+        result = await fetchJSON("/.netlify/functions/acquireSurveyQuestionLock", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          surveyCode: surveyData.surveyCode,
+          center,
+          email: currentUser.email,
+          questionId: question.id,
+          questionNumber: question.number
+        })
+        });
+      } catch (error) {
+        console.warn("No se pudo adquirir lock de pregunta, se continúa sin bloqueo:", error);
+        result = { locked: false };
+      }
+
+      const lockedByOther = result?.locked === true;
+      isQuestionLockedByOther = lockedByOther;
+      lockedQuestionId = question.id;
+
+      const controls = [evidenceText, improvementActions, tutorComments, certifierObservations, fileInput, saveBtn];
+      controls.forEach((el) => { el.disabled = lockedByOther; });
+      document.querySelectorAll('input[name="selfScore"], input[name="certifierScore"]').forEach((el) => {
+        el.disabled = lockedByOther;
+      });
+
+      if (lockedByOther) {
+        showError("Esta pregunta está siendo editada por otro usuario en este momento. Puedes avanzar a otra pregunta.");
+        setSaveState("Pregunta bloqueada temporalmente");
+      }
+    }
+
+    async function releaseQuestionLockById(questionId){
+      if (!questionId || !currentUser?.email || !surveyData?.surveyCode) return;
+      try {
+        await fetchJSON("/.netlify/functions/releaseSurveyQuestionLock", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            surveyCode: surveyData.surveyCode,
+            center,
+            email: currentUser.email,
+            questionId
+          })
+        });
+      } catch (_) {}
+    }
+
+    async function refreshQuestionLock(){
+      const question = getCurrentQuestion();
+      if (!question) return;
+
+      if (lockedQuestionId && lockedQuestionId !== question.id) {
+        await releaseQuestionLockById(lockedQuestionId);
+      }
+
+      await acquireQuestionLock(question);
+
+      clearInterval(lockRefreshTimer);
+      lockRefreshTimer = setInterval(() => {
+        acquireQuestionLock(question).catch(() => {});
+      }, 15000);
+    }
+
     function renderQuestion(){
       clearMessages();
 
@@ -828,6 +898,11 @@
       prevBtn.disabled = currentQuestionIndex === 0;
       nextBtn.textContent = currentQuestionIndex === surveyData.totalQuestions - 1 ? "✓" : "➡";
       nextBtn.title = currentQuestionIndex === surveyData.totalQuestions - 1 ? "Finalizar" : "Siguiente";
+
+      void refreshQuestionLock().catch((error) => {
+        console.warn("Error refrescando lock de pregunta:", error);
+        isQuestionLockedByOther = false;
+      });
     }
 
     function validateCurrentQuestion({ silent = false } = {}){
@@ -856,6 +931,22 @@
       }
 
       return data;
+    }
+
+
+    function formatSpainDateTime(value = new Date()){
+      const date = value instanceof Date ? value : new Date(value);
+      if(Number.isNaN(date.getTime())) return "Fecha inválida";
+      return new Intl.DateTimeFormat("es-ES", {
+        timeZone: "Europe/Madrid",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false
+      }).format(date);
     }
 
     function fileToBase64(file){
@@ -956,11 +1047,10 @@
         mergeSavedAnswers(result.answers || []);
         mergeUploadedDocuments(result.uploadedDocuments || []);
 
-        const savedQuestionNumber = Number(result.header?.current_question_number || 1);
-        currentQuestionIndex = Math.max(0, Math.min(savedQuestionNumber - 1, surveyData.totalQuestions - 1));
+        currentQuestionIndex = 0;
 
         if(result.header?.updated_at){
-          setSaveState(`Último guardado: ${new Date(result.header.updated_at).toLocaleString("es-ES")}`);
+          setSaveState(`Último guardado (España): ${formatSpainDateTime(result.header.updated_at)}`);
         } else {
           setSaveState("Guardado recuperado");
         }
@@ -1020,7 +1110,7 @@
         });
 
         if(response?.header?.updated_at){
-          setSaveState(`Guardado: ${new Date(response.header.updated_at).toLocaleString("es-ES")}`);
+          setSaveState(`Guardado (España): ${formatSpainDateTime(response.header.updated_at)}`);
         } else {
           setSaveState("Guardado correctamente");
         }

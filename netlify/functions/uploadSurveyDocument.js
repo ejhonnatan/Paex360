@@ -1,4 +1,15 @@
 const { getDb } = require("./db");
+const path = require("path");
+
+function buildUploadFileName(originalName, questionNumber) {
+  const ext = String(path.extname(originalName) || "").trim();
+  const base = String(path.basename(originalName, ext) || "").trim() || "archivo";
+  const now = new Date();
+  const iso = now.toISOString().split(".")[0];
+  const timestamp = iso.replace(/[-:]/g, "").replace("T", "_");
+  const questionTag = Number(questionNumber || 0);
+  return `${base}_#${questionTag}_${timestamp}${ext}`;
+}
 
 const LOCK_WINDOW_MINUTES = 30;
 
@@ -40,6 +51,8 @@ exports.handler = async (event) => {
     if (!questionNumber) missingFields.push("question.number");
     if (!fileName) missingFields.push("fileName");
     if (!hasBase64Content) missingFields.push("base64Content");
+
+    const uniqueFileName = buildUploadFileName(fileName, questionNumber);
 
     if (missingFields.length) {
       return {
@@ -169,7 +182,7 @@ exports.handler = async (event) => {
         questionId,
         questionNumber,
         referenceFileName || null,
-        fileName,
+        uniqueFileName,
         mimeType,
         base64Content,
         byteSize

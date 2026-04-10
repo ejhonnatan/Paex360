@@ -437,12 +437,14 @@
         emptyViewer.textContent = "Este tipo de archivo no se puede visualizar aquí. Puedes descargarlo para abrirlo localmente.";
       }
 
-      openNewTabBtn.style.display = safeUrl ? "inline-flex" : "none";
-      const openUrl = safeUrl
-        ? (previewable ? safeUrl : `${safeUrl}${safeUrl.includes("?") ? "&" : "?"}download=1`)
-        : "#";
-      openNewTabBtn.href = openUrl;
-      openNewTabBtn.textContent = previewable ? "Abrir en nueva pestaña" : "Descargar";
+      if (previewable && safeUrl) {
+        openNewTabBtn.style.display = "inline-flex";
+        openNewTabBtn.href = safeUrl;
+        openNewTabBtn.textContent = "Abrir en nueva pestaña";
+      } else {
+        openNewTabBtn.style.display = "none";
+        openNewTabBtn.href = "#";
+      }
 
       const forceDownloadUrl = safeUrl ? `${safeUrl}${safeUrl.includes("?") ? "&" : "?"}download=1` : "#";
       downloadBtn.style.display = safeUrl ? "inline-flex" : "none";
@@ -642,3 +644,4 @@
   </script>
 </body>
 </html>
+

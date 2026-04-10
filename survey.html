@@ -968,12 +968,9 @@
       const question = getCurrentQuestion();
       if(!question) return false;
       if(!file) return false;
-      if (isQuestionLockedByOther) {
-        showError("La pregunta está bloqueada por otro usuario.");
-        return false;
-      }
 
-const base64Content = await fileToBase64(file);
+      const mimeType = file.type || "application/octet-stream";
+      const base64Content = await fileToBase64(file);
 
       setSaveState("Subiendo documento...");
 
@@ -994,7 +991,7 @@ const base64Content = await fileToBase64(file);
             ? question.referenceFiles[0]
             : "",
           fileName: file.name,
-          mimeType: file.type,
+          mimeType,
           base64Content
         })
       });
@@ -1004,8 +1001,8 @@ const base64Content = await fileToBase64(file);
       if (response.document) answer.uploadedDocuments.push(response.document);
 
       renderReferenceFiles(answer);
-      setSaveState(`Documento guardado (España): ${formatSpainDateTime()}`);
-      showSuccess("Documento PDF cargado correctamente.");
+      setSaveState(`Documento guardado: ${new Date().toLocaleString("es-ES")}`);
+      showSuccess("Documento cargado correctamente.");
 
       return true;
     }

@@ -153,6 +153,21 @@ exports.handler = async (event) => {
 
     await db.execute({
       sql: `
+        UPDATE survey_response_headers
+        SET
+          respondent_email = ?,
+          respondent_name = ?,
+          status = 'draft',
+          current_question_number = ?,
+          total_questions = ?,
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `,
+      args: [email, respondentName || null, questionNumber, totalQuestions || 7, headerId]
+    });
+
+    await db.execute({
+      sql: `
         INSERT INTO survey_uploaded_documents (
           response_header_id,
           question_id,

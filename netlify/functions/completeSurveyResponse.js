@@ -25,16 +25,38 @@ exports.handler = async (event) => {
 
     const db = getDb();
 
+    const headerResult = await db.execute({
+      sql: `
+        SELECT id
+        FROM survey_response_headers
+        WHERE survey_code = ? AND center_code = ?
+        ORDER BY COALESCE(updated_at, created_at) DESC, id DESC
+        LIMIT 1
+      `,
+      args: [surveyCode, center]
+    });
+
+    const headerId = headerResult.rows[0]?.id;
+
+    if (!headerId) {
+      return {
+        statusCode: 404,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ error: "No existe una encuesta guardada para este centro" })
+      };
+    }
+
     await db.execute({
       sql: `
         UPDATE survey_response_headers
         SET
+          respondent_email = ?,
           status = 'submitted',
           submitted_at = CURRENT_TIMESTAMP,
           updated_at = CURRENT_TIMESTAMP
-        WHERE survey_code = ? AND center_code = ? AND respondent_email = ?
+        WHERE id = ?
       `,
-      args: [surveyCode, center, email]
+      args: [email, headerId]
     });
 
     return {

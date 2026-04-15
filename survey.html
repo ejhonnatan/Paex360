@@ -578,7 +578,8 @@
 
     const CENTER_LABELS = {
       salus: "Clínica SALUS",
-      diagonal: "Clínica Diagonal"
+      diagonal: "Clínica Diagonal",
+      icr: "ICR"
     };
 
     let auth;
@@ -1019,6 +1020,23 @@
 
       if(!center || !CENTER_LABELS[center]){
         throw new Error("Centro no válido en la URL.");
+      }
+
+      const permsResp = await fetchJSON("/.netlify/functions/getPermissions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: cleanEmail })
+      });
+
+      const permissions = permsResp?.permissions || {};
+      const tieneCentro = (
+        (center === "diagonal" && permissions.Clinica_Diagonal === true) ||
+        (center === "salus" && permissions.Clinica_Salus === true) ||
+        (center === "icr" && permissions.Clinica_ICR === true)
+      );
+
+      if (!tieneCentro) {
+        throw new Error("No tienes permisos para ingresar a este centro.");
       }
 
       return { ok: true };

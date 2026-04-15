@@ -84,7 +84,7 @@ exports.handler = async (event) => {
     let headerId = headerResult.rows[0]?.id;
 
     if (!headerId) {
-      const insertHeaderResult = await db.execute({
+      await db.execute({
         sql: `
           INSERT INTO survey_response_headers (
             survey_code,
@@ -99,7 +99,6 @@ exports.handler = async (event) => {
             updated_at
           )
           VALUES (?, ?, ?, ?, 'draft', ?, 0, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-          RETURNING id
         `,
         args: [
           surveyCode,
@@ -111,7 +110,18 @@ exports.handler = async (event) => {
         ]
       });
 
-      headerId = insertHeaderResult.rows[0]?.id;
+      const insertedHeaderResult = await db.execute({
+        sql: `
+          SELECT id
+          FROM survey_response_headers
+          WHERE survey_code = ? AND center_code = ? AND respondent_email = ?
+          ORDER BY id DESC
+          LIMIT 1
+        `,
+        args: [surveyCode, center, email]
+      });
+
+      headerId = insertedHeaderResult.rows[0]?.id;
     }
 
     if (!headerId) {

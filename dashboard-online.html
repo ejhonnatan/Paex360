@@ -49,8 +49,36 @@
     .circle-label{margin-top:4px;font-size:28px;color:#243d84}
 
     .footer-note{margin-top:10px;text-align:right;color:#5a6b8c;font-size:12px;font-weight:700}
+    .sheet-tabs{display:flex;gap:8px;justify-content:center;margin:0 0 12px}
+    .sheet-tab-btn{cursor:pointer;border:1px solid #59398d;background:#fff;color:#59398d;padding:8px 12px;border-radius:999px;font-weight:900}
+    .sheet-tab-btn.active{background:#59398d;color:#fff}
+    .sheet-panel{display:none}
+    .sheet-panel.active{display:block}
+
+    .ambito-sheet{background:#fff;border:2px solid #d1d5db;border-radius:16px;padding:14px}
+    .ambito-sheet-title{margin:0 0 12px;background:#5b2c86;color:#fff;border-radius:10px;padding:10px 12px;font-size:30px;font-weight:900;letter-spacing:.5px}
+    .ambito-sheet-grid{display:grid;grid-template-columns:minmax(400px,1fr) 280px;gap:14px;align-items:start}
+    .subambito-table{width:100%;border-collapse:collapse;border:1px solid #c7ced9}
+    .subambito-table th,.subambito-table td{border:1px solid #c7ced9;padding:8px 10px;vertical-align:top}
+    .subambito-table th{background:#f3f4f6;color:#55318d;font-size:14px;text-align:left}
+    .subambito-table td{font-size:14px}
+    .subambito-name{font-weight:700;color:#1f2937}
+    .score-cell{font-size:22px;font-weight:900;text-align:center;color:#111827}
+    .pass-cell{font-size:24px;text-align:center}
+    .maturity-card{background:#f6f2dd;border-radius:12px;padding:10px}
+    .maturity-title{font-size:34px;color:#2b3d8a;margin:0 0 8px}
+    .maturity-level{border-radius:4px;padding:5px 8px;color:#111827;font-size:13px;font-weight:700;margin-bottom:6px}
+    .m0{background:#ef4444;color:#fff}
+    .m1{background:#f59e0b}
+    .m2{background:#facc15}
+    .m3{background:#84cc16}
+    .m4{background:#10b981}
+    .next-ambito-wrap{display:flex;justify-content:flex-end;margin-top:10px}
+    .next-ambito-btn{border:2px solid #7a4fb4;background:#f5f3ff;color:#5b2c86;border-radius:12px;padding:8px 12px;font-weight:900}
+
     @media (max-width:900px){.title-box h1{font-size:38px}.dashboard-grid{grid-template-columns:repeat(2,minmax(220px,1fr))}.ambito-title{font-size:28px}}
-    @media (max-width:640px){.dashboard-grid{grid-template-columns:1fr}.circle{--size:130px}.circle .txt b{font-size:44px}}
+    @media (max-width:1024px){.ambito-sheet-grid{grid-template-columns:1fr}}
+    @media (max-width:640px){.dashboard-grid{grid-template-columns:1fr}.circle{--size:130px}.circle .txt b{font-size:44px}.ambito-sheet-title{font-size:22px}.score-cell{font-size:18px}}
   </style>
 </head>
 <body>
@@ -71,8 +99,40 @@
         </div>
       </div>
 
-      <div class="dashboard-grid" id="dashboardGrid"></div>
-      <div class="footer-note" id="updatedAt"></div>
+      <div class="sheet-tabs">
+        <button class="sheet-tab-btn active" id="sheet1Btn">Hoja 1 · Resumen</button>
+        <button class="sheet-tab-btn" id="sheet2Btn">Hoja 2 · Ámbito 1</button>
+      </div>
+
+      <section class="sheet-panel active" id="sheet1Panel">
+        <div class="dashboard-grid" id="dashboardGrid"></div>
+        <div class="footer-note" id="updatedAt"></div>
+      </section>
+
+      <section class="sheet-panel" id="sheet2Panel">
+        <article class="ambito-sheet">
+          <h2 class="ambito-sheet-title" id="sheet2Title">ÁMBITO 1: ESTRATEGIA</h2>
+          <div class="ambito-sheet-grid">
+            <div>
+              <table class="subambito-table">
+                <thead>
+                  <tr>
+                    <th>Subámbitos</th>
+                    <th>Autoevaluación</th>
+                    <th>ICDQ</th>
+                    <th>Superado</th>
+                  </tr>
+                </thead>
+                <tbody id="ambito1Rows"></tbody>
+              </table>
+            </div>
+            <aside class="maturity-card" id="maturityLegend"></aside>
+          </div>
+          <div class="next-ambito-wrap">
+            <button class="next-ambito-btn" id="nextAmbitoBtn">Ver siguiente ámbito</button>
+          </div>
+        </article>
+      </section>
     </section>
   </main>
 
@@ -91,6 +151,12 @@
     const loader = document.getElementById("loader");
     const content = document.getElementById("content");
     const dashboardGrid = document.getElementById("dashboardGrid");
+    const sheet1Btn = document.getElementById("sheet1Btn");
+    const sheet2Btn = document.getElementById("sheet2Btn");
+    const sheet1Panel = document.getElementById("sheet1Panel");
+    const sheet2Panel = document.getElementById("sheet2Panel");
+    const ambito1Rows = document.getElementById("ambito1Rows");
+    const maturityLegend = document.getElementById("maturityLegend");
 
     const showError = (t) => { msg.style.display = "block"; msg.textContent = t; loader.style.display = "none"; content.style.display = "none"; };
     const setLoading = (on, text = "Cargando dashboard online...") => { loader.style.display = on ? "block" : "none"; loader.textContent = text; if(on){msg.style.display="none";} };
@@ -186,6 +252,49 @@
       </article>`;
     }
 
+    function switchSheet(sheetNumber){
+      const showSheet1 = sheetNumber === 1;
+      sheet1Btn.classList.toggle("active", showSheet1);
+      sheet2Btn.classList.toggle("active", !showSheet1);
+      sheet1Panel.classList.toggle("active", showSheet1);
+      sheet2Panel.classList.toggle("active", !showSheet1);
+    }
+
+    function renderMaturityLegend(){
+      maturityLegend.innerHTML = `
+        <h3 class="maturity-title">📌 Nivel de Madurez</h3>
+        <div class="maturity-level m0"><strong>0</strong> · No se hace ninguna o alguna anecdótica</div>
+        <div class="maturity-level m1"><strong>1</strong> · Se hace en algún área o actividad y no generalizado</div>
+        <div class="maturity-level m2"><strong>2</strong> · Enfocado y desplegado en la mayoría de áreas</div>
+        <div class="maturity-level m3"><strong>3</strong> · Desplegado en todas las áreas. Revisado y aplicado</div>
+        <div class="maturity-level m4"><strong>4</strong> · Referente en este aspecto</div>
+      `;
+    }
+
+    function renderSheet2Ambito1(ambitoQuestions, latestByQuestion){
+      const [ambito1] = ambitoQuestions;
+      const questions = ambito1 || [];
+      ambito1Rows.innerHTML = "";
+
+      questions.forEach((question) => {
+        const row = latestByQuestion.get(Number(question.number));
+        const selfScore = Number.isFinite(row?.selfScore) ? Number(row.selfScore) : null;
+        const certifierScore = Number.isFinite(row?.certifierScore) ? Number(row.certifierScore) : 0;
+        const passed = certifierScore >= 4;
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><div class="subambito-name">${question.number}. ${question.text || ""}</div></td>
+          <td class="score-cell">${selfScore === null ? "-" : selfScore}</td>
+          <td class="score-cell">${certifierScore}</td>
+          <td class="pass-cell">${passed ? "✅" : "❌"}</td>
+        `;
+        ambito1Rows.appendChild(tr);
+      });
+
+      renderMaturityLegend();
+    }
+
     async function loadSurveyDefinition(surveyCode){
       const r = await fetch(`/.netlify/functions/getSurvey?surveyCode=${encodeURIComponent(surveyCode)}`);
       const data = await r.json().catch(() => ({}));
@@ -274,9 +383,22 @@
         });
 
         dashboardGrid.innerHTML = cards.join("");
+        renderSheet2Ambito1(ambitoQuestions, latestByQuestion);
 
         const updatedAt = matrixData.rows?.[0]?.headerUpdatedAt || matrixData.rows?.[0]?.answerUpdatedAt || null;
         document.getElementById("updatedAt").textContent = updatedAt ? `Última actualización: ${new Date(updatedAt).toLocaleString("es-ES")}` : "Sin datos para mostrar todavía";
+
+        sheet1Btn.onclick = () => switchSheet(1);
+        sheet2Btn.onclick = () => switchSheet(2);
+        document.getElementById("nextAmbitoBtn").onclick = () => {
+          msg.style.display = "block";
+          msg.textContent = "Próximamente se habilitará la Hoja del Ámbito 2.";
+          setTimeout(() => {
+            msg.style.display = "none";
+            msg.textContent = "";
+            switchSheet(1);
+          }, 1800);
+        };
 
         setLoading(false);
         content.style.display = "block";

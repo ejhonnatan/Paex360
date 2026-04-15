@@ -56,7 +56,8 @@
     .sheet-panel.active{display:block}
 
     .ambito-sheet{background:#fff;border:2px solid #d1d5db;border-radius:16px;padding:14px}
-    .ambito-sheet-title{margin:0 0 12px;background:#5b2c86;color:#fff;border-radius:10px;padding:10px 12px;font-size:30px;font-weight:900;letter-spacing:.5px}
+    .ambito-sheet-title{margin:0 0 12px;background:#5b2c86;color:#fff;border-radius:10px;padding:10px 12px;font-size:30px;font-weight:900;letter-spacing:.5px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .ambito-total{font-size:20px;font-weight:900;white-space:nowrap}
     .ambito-sheet-grid{display:grid;grid-template-columns:minmax(400px,1fr) 280px;gap:14px;align-items:start}
     .subambito-table{width:100%;border-collapse:collapse;border:1px solid #c7ced9}
     .subambito-table th,.subambito-table td{border:1px solid #c7ced9;padding:8px 10px;vertical-align:top}
@@ -111,7 +112,10 @@
 
       <section class="sheet-panel" id="sheet2Panel">
         <article class="ambito-sheet">
-          <h2 class="ambito-sheet-title" id="sheet2Title">ÁMBITO 1: ESTRATEGIA</h2>
+          <h2 class="ambito-sheet-title" id="sheet2Title">
+            <span>ÁMBITO 1: ESTRATEGIA</span>
+            <span class="ambito-total" id="ambito1Total">CALIFICACIÓN TOTAL: 0%</span>
+          </h2>
           <div class="ambito-sheet-grid">
             <div>
               <table class="subambito-table">
@@ -157,6 +161,7 @@
     const sheet2Panel = document.getElementById("sheet2Panel");
     const ambito1Rows = document.getElementById("ambito1Rows");
     const maturityLegend = document.getElementById("maturityLegend");
+    const ambito1Total = document.getElementById("ambito1Total");
 
     const showError = (t) => { msg.style.display = "block"; msg.textContent = t; loader.style.display = "none"; content.style.display = "none"; };
     const setLoading = (on, text = "Cargando dashboard online...") => { loader.style.display = on ? "block" : "none"; loader.textContent = text; if(on){msg.style.display="none";} };
@@ -275,12 +280,25 @@
       const [ambito1] = ambitoQuestions;
       const questions = ambito1 || [];
       ambito1Rows.innerHTML = "";
+      let fundamentalObtained = 0;
+      let nonFundamentalObtained = 0;
+      let fundamentalCount = 0;
+      let nonFundamentalCount = 0;
 
       questions.forEach((question) => {
         const row = latestByQuestion.get(Number(question.number));
         const selfScore = Number.isFinite(row?.selfScore) ? Number(row.selfScore) : null;
         const certifierScore = Number.isFinite(row?.certifierScore) ? Number(row.certifierScore) : 0;
         const passed = certifierScore >= 4;
+        const isFundamental = String(question.category || "").toUpperCase() === "FUNDAMENTAL";
+
+        if (isFundamental) {
+          fundamentalObtained += certifierScore;
+          fundamentalCount += 1;
+        } else {
+          nonFundamentalObtained += certifierScore;
+          nonFundamentalCount += 1;
+        }
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
@@ -291,6 +309,13 @@
         `;
         ambito1Rows.appendChild(tr);
       });
+
+      const obtainedTotal = fundamentalObtained + nonFundamentalObtained;
+      const maxFundamental = fundamentalCount * 4;
+      const maxNonFundamental = nonFundamentalCount * 4;
+      const maxTotal = maxFundamental + maxNonFundamental;
+      const totalPct = maxTotal > 0 ? (obtainedTotal * 100) / maxTotal : 0;
+      ambito1Total.textContent = `CALIFICACIÓN TOTAL: ${Math.round(totalPct)}%`;
 
       renderMaturityLegend();
     }

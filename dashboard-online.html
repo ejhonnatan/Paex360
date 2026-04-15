@@ -77,7 +77,7 @@
   </main>
 
   <script type="module">
-    const CENTERS = { salus: { label: "Clínica SALUS" }, diagonal: { label: "Clínica Diagonal" } };
+    const CENTERS = { salus: { label: "Clínica SALUS" }, diagonal: { label: "Clínica Diagonal" }, icr: { label: "ICR" } };
     const AMBITOS = [
       { key: "paex360-ambito1", title: "Ámbito 1" },
       { key: "paex360-ambito2", title: "Ámbito 2" },
@@ -149,6 +149,7 @@
     function validarAccesoCentro(permissions){
       if (centerKey === "diagonal") return permissions.Clinica_Diagonal === true;
       if (centerKey === "salus") return permissions.Clinica_Salus === true;
+      if (centerKey === "icr") return permissions.Clinica_ICR === true;
       return false;
     }
 

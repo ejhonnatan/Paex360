@@ -101,8 +101,13 @@
       </div>
 
       <div class="sheet-tabs">
-        <button class="sheet-tab-btn active" id="sheet1Btn">Hoja 1 · Resumen</button>
-        <button class="sheet-tab-btn" id="sheet2Btn">Hoja 2 · Ámbito 1</button>
+        <button class="sheet-tab-btn active" data-sheet="summary">Hoja 1 · Resumen</button>
+        <button class="sheet-tab-btn" data-sheet="ambito-1">Hoja 2 · Ámbito 1</button>
+        <button class="sheet-tab-btn" data-sheet="ambito-2">Hoja 3 · Ámbito 2</button>
+        <button class="sheet-tab-btn" data-sheet="ambito-3">Hoja 4 · Ámbito 3</button>
+        <button class="sheet-tab-btn" data-sheet="ambito-4">Hoja 5 · Ámbito 4</button>
+        <button class="sheet-tab-btn" data-sheet="ambito-5">Hoja 6 · Ámbito 5</button>
+        <button class="sheet-tab-btn" data-sheet="ambito-6">Hoja 7 · Ámbito 6</button>
       </div>
 
       <section class="sheet-panel active" id="sheet1Panel">
@@ -110,11 +115,11 @@
         <div class="footer-note" id="updatedAt"></div>
       </section>
 
-      <section class="sheet-panel" id="sheet2Panel">
+      <section class="sheet-panel" id="detailPanel">
         <article class="ambito-sheet">
           <h2 class="ambito-sheet-title" id="sheet2Title">
             <span>ÁMBITO 1: ESTRATEGIA</span>
-            <span class="ambito-total" id="ambito1Total">CALIFICACIÓN TOTAL: 0%</span>
+            <span class="ambito-total" id="ambitoTotal">CALIFICACIÓN TOTAL: 0%</span>
           </h2>
           <div class="ambito-sheet-grid">
             <div>
@@ -155,13 +160,16 @@
     const loader = document.getElementById("loader");
     const content = document.getElementById("content");
     const dashboardGrid = document.getElementById("dashboardGrid");
-    const sheet1Btn = document.getElementById("sheet1Btn");
-    const sheet2Btn = document.getElementById("sheet2Btn");
+    const sheetButtons = Array.from(document.querySelectorAll(".sheet-tab-btn"));
     const sheet1Panel = document.getElementById("sheet1Panel");
-    const sheet2Panel = document.getElementById("sheet2Panel");
+    const detailPanel = document.getElementById("detailPanel");
     const ambito1Rows = document.getElementById("ambito1Rows");
     const maturityLegend = document.getElementById("maturityLegend");
-    const ambito1Total = document.getElementById("ambito1Total");
+    const ambitoTotal = document.getElementById("ambitoTotal");
+    const sheet2Title = document.getElementById("sheet2Title");
+    let currentDetailAmbitoIndex = 0;
+    let cachedAmbitoQuestions = [];
+    let cachedLatestByQuestion = new Map();
 
     const showError = (t) => { msg.style.display = "block"; msg.textContent = t; loader.style.display = "none"; content.style.display = "none"; };
     const setLoading = (on, text = "Cargando dashboard online...") => { loader.style.display = on ? "block" : "none"; loader.textContent = text; if(on){msg.style.display="none";} };
@@ -257,12 +265,22 @@
       </article>`;
     }
 
-    function switchSheet(sheetNumber){
-      const showSheet1 = sheetNumber === 1;
-      sheet1Btn.classList.toggle("active", showSheet1);
-      sheet2Btn.classList.toggle("active", !showSheet1);
-      sheet1Panel.classList.toggle("active", showSheet1);
-      sheet2Panel.classList.toggle("active", !showSheet1);
+    function switchSheet(sheetKey){
+      sheetButtons.forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.sheet === sheetKey);
+      });
+
+      const showSummary = sheetKey === "summary";
+      sheet1Panel.classList.toggle("active", showSummary);
+      detailPanel.classList.toggle("active", !showSummary);
+
+      if (sheetKey.startsWith("ambito-")) {
+        const idx = Number(sheetKey.replace("ambito-", "")) - 1;
+        if (Number.isInteger(idx) && idx >= 0 && idx < AMBITOS.length) {
+          currentDetailAmbitoIndex = idx;
+          renderDetailSheet(currentDetailAmbitoIndex, cachedAmbitoQuestions, cachedLatestByQuestion);
+        }
+      }
     }
 
     function renderMaturityLegend(){
@@ -276,9 +294,10 @@
       `;
     }
 
-    function renderSheet2Ambito1(ambitoQuestions, latestByQuestion){
-      const [ambito1] = ambitoQuestions;
-      const questions = ambito1 || [];
+    function renderDetailSheet(ambitoIndex, ambitoQuestions, latestByQuestion){
+      const questions = ambitoQuestions[ambitoIndex] || [];
+      const ambitoLabel = AMBITOS[ambitoIndex]?.title || `Ámbito ${ambitoIndex + 1}`;
+      sheet2Title.querySelector("span").textContent = ambitoLabel.toUpperCase();
       ambito1Rows.innerHTML = "";
       let fundamentalObtained = 0;
       let nonFundamentalObtained = 0;
@@ -315,7 +334,7 @@
       const maxNonFundamental = nonFundamentalCount * 4;
       const maxTotal = maxFundamental + maxNonFundamental;
       const totalPct = maxTotal > 0 ? (obtainedTotal * 100) / maxTotal : 0;
-      ambito1Total.textContent = `CALIFICACIÓN TOTAL: ${Math.round(totalPct)}%`;
+      ambitoTotal.textContent = `CALIFICACIÓN TOTAL: ${Math.round(totalPct)}%`;
 
       renderMaturityLegend();
     }
@@ -408,21 +427,23 @@
         });
 
         dashboardGrid.innerHTML = cards.join("");
-        renderSheet2Ambito1(ambitoQuestions, latestByQuestion);
+        cachedAmbitoQuestions = ambitoQuestions;
+        cachedLatestByQuestion = latestByQuestion;
+        renderDetailSheet(currentDetailAmbitoIndex, cachedAmbitoQuestions, cachedLatestByQuestion);
 
         const updatedAt = matrixData.rows?.[0]?.headerUpdatedAt || matrixData.rows?.[0]?.answerUpdatedAt || null;
         document.getElementById("updatedAt").textContent = updatedAt ? `Última actualización: ${new Date(updatedAt).toLocaleString("es-ES")}` : "Sin datos para mostrar todavía";
 
-        sheet1Btn.onclick = () => switchSheet(1);
-        sheet2Btn.onclick = () => switchSheet(2);
+        sheetButtons.forEach((btn) => {
+          btn.onclick = () => switchSheet(btn.dataset.sheet || "summary");
+        });
         document.getElementById("nextAmbitoBtn").onclick = () => {
-          msg.style.display = "block";
-          msg.textContent = "Próximamente se habilitará la Hoja del Ámbito 2.";
-          setTimeout(() => {
-            msg.style.display = "none";
-            msg.textContent = "";
-            switchSheet(1);
-          }, 1800);
+          const nextIdx = currentDetailAmbitoIndex + 1;
+          if (nextIdx < AMBITOS.length) {
+            switchSheet(`ambito-${nextIdx + 1}`);
+            return;
+          }
+          switchSheet("summary");
         };
 
         setLoading(false);

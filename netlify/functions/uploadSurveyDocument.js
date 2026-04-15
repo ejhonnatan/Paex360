@@ -108,6 +108,13 @@ exports.handler = async (event) => {
             updated_at
           )
           VALUES (?, ?, ?, ?, 'draft', ?, 0, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+          ON CONFLICT(survey_code, center_code, respondent_email)
+          DO UPDATE SET
+            respondent_name = excluded.respondent_name,
+            current_question_number = excluded.current_question_number,
+            total_questions = excluded.total_questions,
+            status = 'draft',
+            updated_at = CURRENT_TIMESTAMP
         `,
         args: [
           surveyCode,
@@ -135,21 +142,6 @@ exports.handler = async (event) => {
     if (!headerId) {
       throw new Error("No fue posible obtener el encabezado de la encuesta");
     }
-
-    await db.execute({
-      sql: `
-        UPDATE survey_response_headers
-        SET
-          respondent_email = ?,
-          respondent_name = ?,
-          status = 'draft',
-          current_question_number = ?,
-          total_questions = ?,
-          updated_at = CURRENT_TIMESTAMP
-        WHERE id = ?
-      `,
-      args: [email, respondentName || null, questionNumber, totalQuestions || 7, headerId]
-    });
 
     await db.execute({
       sql: `

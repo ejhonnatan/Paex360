@@ -66,6 +66,13 @@ exports.handler = async (event) => {
             updated_at
           )
           VALUES (?, ?, ?, ?, 'draft', ?, 0, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+          ON CONFLICT(survey_code, center_code, respondent_email)
+          DO UPDATE SET
+            respondent_name = excluded.respondent_name,
+            current_question_number = excluded.current_question_number,
+            total_questions = excluded.total_questions,
+            status = 'draft',
+            updated_at = CURRENT_TIMESTAMP
         `,
         args: [
           surveyCode,

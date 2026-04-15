@@ -56,7 +56,7 @@ exports.handler = async (event) => {
           updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
       `,
-      args: [email, headerId]
+      args: [headerId]
     });
 
     return {

@@ -147,7 +147,6 @@ exports.handler = async (event) => {
       sql: `
         UPDATE survey_response_headers
         SET
-          respondent_email = ?,
           respondent_name = ?,
           status = 'draft',
           current_question_number = ?,
@@ -155,7 +154,7 @@ exports.handler = async (event) => {
           updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
       `,
-      args: [email, respondentName || null, questionNumber, totalQuestions || 7, headerId]
+      args: [respondentName || null, questionNumber, totalQuestions || 7, headerId]
     });
 
     await db.execute({

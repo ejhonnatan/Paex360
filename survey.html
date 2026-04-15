@@ -594,6 +594,8 @@
     let lockRefreshTimer = null;
     let lockedQuestionId = null;
     let isQuestionLockedByOther = false;
+    const MAX_SILENT_SAVE_RETRIES = 2;
+    const SILENT_SAVE_RETRY_BASE_DELAY_MS = 1200;
 
     const answers = {};
 
@@ -629,6 +631,19 @@
 
     function setSaveState(text){
       saveState.textContent = text || "";
+    }
+
+    function shouldRetrySilentSave(error){
+      const msg = String(error?.message || "").toLowerCase();
+      if (!msg) return false;
+      return (
+        msg.includes("error http 5") ||
+        msg.includes("server_error") ||
+        msg.includes("bad gateway") ||
+        msg.includes("gateway") ||
+        msg.includes("failed to fetch") ||
+        msg.includes("sqlite_constraint")
+      );
     }
 
     function createScoreOptions(container, name, selectedValue){
@@ -1081,7 +1096,7 @@
       }
     }
 
-    async function saveCurrentQuestion({ silent = false, completeAfterSave = false } = {}){
+    async function saveCurrentQuestion({ silent = false, completeAfterSave = false, retryAttempt = 0 } = {}){
       const question = getCurrentQuestion();
       if(!question) return false;
       if (isQuestionLockedByOther) {
@@ -1154,6 +1169,16 @@
         return true;
       } catch (error) {
         console.error("saveCurrentQuestion error:", error);
+        const canRetrySilently = silent && retryAttempt < MAX_SILENT_SAVE_RETRIES && shouldRetrySilentSave(error);
+        if (canRetrySilently) {
+          const retryDelay = SILENT_SAVE_RETRY_BASE_DELAY_MS * Math.pow(2, retryAttempt);
+          setSaveState(`Error al guardar. Reintentando (${retryAttempt + 1}/${MAX_SILENT_SAVE_RETRIES})...`);
+          setTimeout(() => {
+            saveCurrentQuestion({ silent: true, completeAfterSave, retryAttempt: retryAttempt + 1 });
+          }, retryDelay);
+          return false;
+        }
+
         if(!silent){
           showError(error.message || "No fue posible guardar la respuesta.");
         }

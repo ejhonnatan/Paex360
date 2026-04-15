@@ -11,8 +11,6 @@ function buildUploadFileName(originalName, questionNumber) {
   return `${base}_#${questionTag}_${timestamp}${ext}`;
 }
 
-const LOCK_WINDOW_MINUTES = 30;
-
 exports.handler = async (event) => {
   try {
     if (event.httpMethod !== "POST") {
@@ -81,37 +79,6 @@ exports.handler = async (event) => {
 
     const db = getDb();
 
-    const activeEditorResult = await db.execute({
-      sql: `
-        SELECT respondent_email, respondent_name, updated_at
-        FROM survey_response_headers
-        WHERE survey_code = ?
-          AND center_code = ?
-          AND LOWER(status) = 'draft'
-          AND respondent_email <> ?
-          AND COALESCE(updated_at, created_at) >= datetime('now', '-' || ? || ' minutes')
-        ORDER BY updated_at DESC
-        LIMIT 1
-      `,
-      args: [surveyCode, center, email, LOCK_WINDOW_MINUTES]
-    });
-
-    if (activeEditorResult.rows.length) {
-      const activeEditor = activeEditorResult.rows[0];
-      return {
-        statusCode: 423,
-        headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
-        body: JSON.stringify({
-          error: "La encuesta está en uso por otro usuario en los últimos minutos. Intenta nuevamente pronto.",
-          activeEditor: {
-            email: activeEditor.respondent_email || null,
-            name: activeEditor.respondent_name || null,
-            updatedAt: activeEditor.updated_at || null
-          }
-        })
-      };
-    }
-
     const headerResult = await db.execute({
       sql: `
         SELECT id
@@ -168,6 +135,21 @@ exports.handler = async (event) => {
     if (!headerId) {
       throw new Error("No fue posible obtener el encabezado de la encuesta");
     }
+
+    await db.execute({
+      sql: `
+        UPDATE survey_response_headers
+        SET
+          respondent_email = ?,
+          respondent_name = ?,
+          status = 'draft',
+          current_question_number = ?,
+          total_questions = ?,
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `,
+      args: [email, respondentName || null, questionNumber, totalQuestions || 7, headerId]
+    });
 
     await db.execute({
       sql: `

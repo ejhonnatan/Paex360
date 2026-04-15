@@ -1153,10 +1153,12 @@
 
         return true;
       } catch (error) {
+        console.error("saveCurrentQuestion error:", error);
         if(!silent){
           showError(error.message || "No fue posible guardar la respuesta.");
         }
-        setSaveState("Error al guardar");
+        const detail = String(error?.message || "").trim();
+        setSaveState(detail ? `Error al guardar: ${detail}` : "Error al guardar");
         return false;
       } finally {
         isSaving = false;

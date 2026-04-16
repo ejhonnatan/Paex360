@@ -186,6 +186,8 @@
     const centerKey = getQueryParam("center").toLowerCase();
     const centerCfg = CENTERS[centerKey];
 
+    setLoading(true, "Inicializando dashboard...");
+
     if (!centerCfg) {
       showError("Centro inválido. Vuelve y selecciona un centro.");
       throw new Error("Invalid center");
@@ -205,8 +207,22 @@
       throw e;
     }
 
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    let initializeApp;
+    let getAuth;
+    let onAuthStateChanged;
+    let signOut;
+
+    try {
+      const firebaseAppModule = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+      const firebaseAuthModule = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
+      initializeApp = firebaseAppModule.initializeApp;
+      getAuth = firebaseAuthModule.getAuth;
+      onAuthStateChanged = firebaseAuthModule.onAuthStateChanged;
+      signOut = firebaseAuthModule.signOut;
+    } catch (e) {
+      showError("No se pudo cargar el SDK de Firebase. Revisa conectividad o bloqueadores del navegador.");
+      throw e;
+    }
 
     const auth = getAuth(initializeApp(firebaseConfig));
 
@@ -434,21 +450,16 @@
 
         const cards = AMBITOS.map((ambito, idx) => {
           const questions = ambitoQuestions[idx] || [];
-<<<<<<< codex/add-icr-center-and-user-permissions-bs7t4y
           let autoFundamentalPoints = 0;
           let autoNonFundamentalPoints = 0;
           let icdqFundamentalPoints = 0;
           let icdqNonFundamentalPoints = 0;
-=======
-          let fundamentalPoints = 0;
-          let nonFundamentalPoints = 0;
->>>>>>> main
+ main
           let fundamentalCount = 0;
           let nonFundamentalCount = 0;
 
           questions.forEach((question) => {
             const row = latestByQuestion.get(Number(question.number));
-<<<<<<< codex/add-icr-center-and-user-permissions-bs7t4y
             const autoScore = Number.isFinite(row?.selfScore) ? Number(row.selfScore) : 0;
             const icdqScore = Number.isFinite(row?.certifierScore) ? Number(row.certifierScore) : 0;
             const isFundamental = String(question.category || "").toUpperCase() === "FUNDAMENTAL";
@@ -460,27 +471,17 @@
             } else {
               autoNonFundamentalPoints += autoScore;
               icdqNonFundamentalPoints += icdqScore;
-=======
-            const score = Number.isFinite(row?.certifierScore) ? Number(row.certifierScore) : 0;
-            const isFundamental = String(question.category || "").toUpperCase() === "FUNDAMENTAL";
-
-            if (isFundamental) {
-              fundamentalPoints += score;
-              fundamentalCount += 1;
-            } else {
-              nonFundamentalPoints += score;
->>>>>>> main
+ main
               nonFundamentalCount += 1;
             }
           });
 
           const maxTotal = ((fundamentalCount * 4) + (nonFundamentalCount * 4));
-<<<<<<< codex/add-icr-center-and-user-permissions-bs7t4y
           const autoPct = maxTotal > 0 ? ((autoFundamentalPoints + autoNonFundamentalPoints) * 100) / maxTotal : 0;
           const icdqPct = maxTotal > 0 ? ((icdqFundamentalPoints + icdqNonFundamentalPoints) * 100) / maxTotal : 0;
-=======
-          const completionPct = maxTotal > 0 ? ((fundamentalPoints + nonFundamentalPoints) * 100) / maxTotal : 0;
->>>>>>> main
+          const autoPct = maxTotal > 0 ? ((autoFundamentalPoints + autoNonFundamentalPoints) * 100) / maxTotal : 0;
+          const icdqPct = maxTotal > 0 ? ((icdqFundamentalPoints + icdqNonFundamentalPoints) * 100) / maxTotal : 0;
+ main
 
           return buildAmbitoCard(
             ambito.title,

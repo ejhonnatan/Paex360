@@ -384,7 +384,9 @@
 
         rows.forEach((row) => {
           if (!Number.isFinite(row.questionNumber)) return;
-          if (!Number.isFinite(row.selfScore)) return;
+          const hasSelf = Number.isFinite(row.selfScore);
+          const hasCertifier = Number.isFinite(row.certifierScore);
+          if (!hasSelf && !hasCertifier) return;
 
           const current = latestByQuestion.get(row.questionNumber);
           const rowTs = Date.parse(row.answerUpdatedAt || row.headerUpdatedAt || 0) || 0;
@@ -397,26 +399,27 @@
 
         const cards = AMBITOS.map((ambito, idx) => {
           const questions = ambitoQuestions[idx] || [];
-          const totalQuestions = questions.length;
-          let answeredQuestions = 0;
           let fundamentalPoints = 0;
           let nonFundamentalPoints = 0;
+          let fundamentalCount = 0;
+          let nonFundamentalCount = 0;
 
           questions.forEach((question) => {
             const row = latestByQuestion.get(Number(question.number));
-            if (!row || !Number.isFinite(row.selfScore)) return;
+            const score = Number.isFinite(row?.certifierScore) ? Number(row.certifierScore) : 0;
+            const isFundamental = String(question.category || "").toUpperCase() === "FUNDAMENTAL";
 
-            answeredQuestions += 1;
-            const score = Number(row.selfScore || 0);
-
-            if (String(question.category || "").toUpperCase() === "FUNDAMENTAL") {
+            if (isFundamental) {
               fundamentalPoints += score;
+              fundamentalCount += 1;
             } else {
               nonFundamentalPoints += score;
+              nonFundamentalCount += 1;
             }
           });
 
-          const completionPct = totalQuestions > 0 ? (answeredQuestions * 100) / totalQuestions : 0;
+          const maxTotal = ((fundamentalCount * 4) + (nonFundamentalCount * 4));
+          const completionPct = maxTotal > 0 ? ((fundamentalPoints + nonFundamentalPoints) * 100) / maxTotal : 0;
 
           return buildAmbitoCard(
             ambito.title,

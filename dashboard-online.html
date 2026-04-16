@@ -42,9 +42,9 @@
     .stats-wrap{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
     .stats-group{border:1px solid rgba(255,255,255,.35);border-radius:12px;padding:8px}
     .stats-group-title{text-align:center;font-size:12px;font-weight:900;margin-bottom:2px}
-    .stats-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-weight:800;font-size:13px}
+    .stats-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-weight:800;font-size:11px}
     .stats-row div{text-align:center}
-        .stats-row .value{font-size:44px;line-height:1.05;margin-top:2px}
+        .stats-row .value{font-size:18px;line-height:1.1;margin-top:2px}
 
     .circle-wrap{text-align:center}
     .circle{--size:160px;--thickness:12px;position:relative;width:var(--size);height:var(--size);margin:0 auto;border-radius:50%;background:conic-gradient(#283b87 calc(var(--pct)*1%),var(--ring) 0)}
@@ -84,8 +84,8 @@
     .next-ambito-btn{border:2px solid #7a4fb4;background:#f5f3ff;color:#5b2c86;border-radius:12px;padding:8px 12px;font-weight:900}
 
     @media (max-width:1450px){.dashboard-grid{grid-template-columns:repeat(auto-fit,minmax(360px,1fr))}}
-    @media (max-width:1024px){.page{padding:0 16px 22px}.ambito-sheet-grid{grid-template-columns:1fr}.stats-row .value{font-size:34px}}
-    @media (max-width:640px){.dashboard-grid{grid-template-columns:1fr}.circle{--size:130px}.circle .txt b{font-size:44px}.ambito-sheet-title{font-size:22px}.score-cell{font-size:18px}.gauge{max-width:180px;height:72px}.stats-row .value{font-size:30px}}
+    @media (max-width:1024px){.page{padding:0 16px 22px}.ambito-sheet-grid{grid-template-columns:1fr}.stats-row .value{font-size:18px}}
+    @media (max-width:640px){.dashboard-grid{grid-template-columns:1fr}.circle{--size:130px}.circle .txt b{font-size:44px}.ambito-sheet-title{font-size:22px}.score-cell{font-size:18px}.gauge{max-width:180px;height:72px}.stats-row .value{font-size:17px}}
   </style>
 </head>
 <body>
@@ -310,11 +310,11 @@
             <div class="stats-group-title">Autoevaluación</div>
             <div class="stats-row">
               <div>
-                <div style="opacity:.9;font-size:12px">Fundamentales</div>
+                <div style="opacity:.9;font-size:11px">Fundamentales</div>
                 <div class="value">${autoFundamentalPoints} pts</div>
               </div>
               <div>
-                <div style="opacity:.9;font-size:12px">No Fundamentales</div>
+                <div style="opacity:.9;font-size:11px">No Fundament.</div>
                 <div class="value">${autoNonFundamentalPoints} pts</div>
               </div>
             </div>
@@ -323,11 +323,11 @@
             <div class="stats-group-title">ICDQ</div>
             <div class="stats-row">
               <div>
-                <div style="opacity:.9;font-size:12px">Fundamentales</div>
+                <div style="opacity:.9;font-size:11px">Fundamentales</div>
                 <div class="value">${icdqFundamentalPoints} pts</div>
               </div>
               <div>
-                <div style="opacity:.9;font-size:12px">No Fundamentales</div>
+                <div style="opacity:.9;font-size:11px">No Fundament.</div>
                 <div class="value">${icdqNonFundamentalPoints} pts</div>
               </div>
             </div>

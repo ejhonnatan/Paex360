@@ -463,17 +463,18 @@
       const perms = data?.permissions || {};
       const puedeDiagonal = perms.Clinica_Diagonal === true;
       const puedeSalus = perms.Clinica_Salus === true;
+      const puedeIcr = perms.Clinica_ICR === true;
 
-      if (!puedeDiagonal && !puedeSalus) {
+      if (!puedeDiagonal && !puedeSalus && !puedeIcr) {
         showPermMessage("No tienes permisos para visualizar ningún tablero.");
         return;
       }
 
       hidePermMessage();
-      renderBotonesCentros({ puedeDiagonal, puedeSalus });
+      renderBotonesCentros({ puedeDiagonal, puedeSalus, puedeIcr });
     }
 
-    function renderBotonesCentros({ puedeDiagonal, puedeSalus }) {
+    function renderBotonesCentros({ puedeDiagonal, puedeSalus, puedeIcr }) {
       centrosContainer.innerHTML = "";
 
       if (puedeDiagonal) {
@@ -489,6 +490,14 @@
         btn.className = "centro-btn";
         btn.textContent = "Clínica SALUS";
         btn.onclick = () => window.location.href = "center.html?center=salus";
+        centrosContainer.appendChild(btn);
+      }
+
+      if (puedeIcr) {
+        const btn = document.createElement("button");
+        btn.className = "centro-btn";
+        btn.textContent = "ICR";
+        btn.onclick = () => window.location.href = "center.html?center=icr";
         centrosContainer.appendChild(btn);
       }
     }

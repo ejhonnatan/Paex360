@@ -434,15 +434,21 @@
 
         const cards = AMBITOS.map((ambito, idx) => {
           const questions = ambitoQuestions[idx] || [];
+<<<<<<< codex/add-icr-center-and-user-permissions-bs7t4y
           let autoFundamentalPoints = 0;
           let autoNonFundamentalPoints = 0;
           let icdqFundamentalPoints = 0;
           let icdqNonFundamentalPoints = 0;
+=======
+          let fundamentalPoints = 0;
+          let nonFundamentalPoints = 0;
+>>>>>>> main
           let fundamentalCount = 0;
           let nonFundamentalCount = 0;
 
           questions.forEach((question) => {
             const row = latestByQuestion.get(Number(question.number));
+<<<<<<< codex/add-icr-center-and-user-permissions-bs7t4y
             const autoScore = Number.isFinite(row?.selfScore) ? Number(row.selfScore) : 0;
             const icdqScore = Number.isFinite(row?.certifierScore) ? Number(row.certifierScore) : 0;
             const isFundamental = String(question.category || "").toUpperCase() === "FUNDAMENTAL";
@@ -454,13 +460,27 @@
             } else {
               autoNonFundamentalPoints += autoScore;
               icdqNonFundamentalPoints += icdqScore;
+=======
+            const score = Number.isFinite(row?.certifierScore) ? Number(row.certifierScore) : 0;
+            const isFundamental = String(question.category || "").toUpperCase() === "FUNDAMENTAL";
+
+            if (isFundamental) {
+              fundamentalPoints += score;
+              fundamentalCount += 1;
+            } else {
+              nonFundamentalPoints += score;
+>>>>>>> main
               nonFundamentalCount += 1;
             }
           });
 
           const maxTotal = ((fundamentalCount * 4) + (nonFundamentalCount * 4));
+<<<<<<< codex/add-icr-center-and-user-permissions-bs7t4y
           const autoPct = maxTotal > 0 ? ((autoFundamentalPoints + autoNonFundamentalPoints) * 100) / maxTotal : 0;
           const icdqPct = maxTotal > 0 ? ((icdqFundamentalPoints + icdqNonFundamentalPoints) * 100) / maxTotal : 0;
+=======
+          const completionPct = maxTotal > 0 ? ((fundamentalPoints + nonFundamentalPoints) * 100) / maxTotal : 0;
+>>>>>>> main
 
           return buildAmbitoCard(
             ambito.title,

@@ -454,6 +454,7 @@
           let autoNonFundamentalPoints = 0;
           let icdqFundamentalPoints = 0;
           let icdqNonFundamentalPoints = 0;
+ main
           let fundamentalCount = 0;
           let nonFundamentalCount = 0;
 
@@ -470,6 +471,7 @@
             } else {
               autoNonFundamentalPoints += autoScore;
               icdqNonFundamentalPoints += icdqScore;
+ main
               nonFundamentalCount += 1;
             }
           });
@@ -477,6 +479,9 @@
           const maxTotal = ((fundamentalCount * 4) + (nonFundamentalCount * 4));
           const autoPct = maxTotal > 0 ? ((autoFundamentalPoints + autoNonFundamentalPoints) * 100) / maxTotal : 0;
           const icdqPct = maxTotal > 0 ? ((icdqFundamentalPoints + icdqNonFundamentalPoints) * 100) / maxTotal : 0;
+          const autoPct = maxTotal > 0 ? ((autoFundamentalPoints + autoNonFundamentalPoints) * 100) / maxTotal : 0;
+          const icdqPct = maxTotal > 0 ? ((icdqFundamentalPoints + icdqNonFundamentalPoints) * 100) / maxTotal : 0;
+ main
 
           return buildAmbitoCard(
             ambito.title,

@@ -152,6 +152,26 @@
   </main>
 
   <script type="module">
+    window.__dashboardOnlineBooted = true;
+    window.addEventListener("error", (event) => {
+      const msg = document.getElementById("msg");
+      const loader = document.getElementById("loader");
+      if (loader) loader.style.display = "none";
+      if (msg) {
+        msg.style.display = "block";
+        msg.textContent = `Error de inicialización: ${event.message || "Error desconocido"}`;
+      }
+    });
+    window.addEventListener("unhandledrejection", (event) => {
+      const msg = document.getElementById("msg");
+      const loader = document.getElementById("loader");
+      if (loader) loader.style.display = "none";
+      if (msg) {
+        msg.style.display = "block";
+        const reason = event?.reason?.message || String(event?.reason || "Error desconocido");
+        msg.textContent = `Error de inicialización: ${reason}`;
+      }
+    });
     const CENTERS = { salus: { label: "Clínica SALUS" }, diagonal: { label: "Clínica Diagonal" }, icr: { label: "ICR" } };
     const AMBITOS = [
       { key: "paex360-ambito1", title: "Ámbito 1" },
@@ -454,7 +474,6 @@
           let autoNonFundamentalPoints = 0;
           let icdqFundamentalPoints = 0;
           let icdqNonFundamentalPoints = 0;
- main
           let fundamentalCount = 0;
           let nonFundamentalCount = 0;
 
@@ -471,7 +490,6 @@
             } else {
               autoNonFundamentalPoints += autoScore;
               icdqNonFundamentalPoints += icdqScore;
- main
               nonFundamentalCount += 1;
             }
           });
@@ -479,9 +497,6 @@
           const maxTotal = ((fundamentalCount * 4) + (nonFundamentalCount * 4));
           const autoPct = maxTotal > 0 ? ((autoFundamentalPoints + autoNonFundamentalPoints) * 100) / maxTotal : 0;
           const icdqPct = maxTotal > 0 ? ((icdqFundamentalPoints + icdqNonFundamentalPoints) * 100) / maxTotal : 0;
-          const autoPct = maxTotal > 0 ? ((autoFundamentalPoints + autoNonFundamentalPoints) * 100) / maxTotal : 0;
-          const icdqPct = maxTotal > 0 ? ((icdqFundamentalPoints + icdqNonFundamentalPoints) * 100) / maxTotal : 0;
- main
 
           return buildAmbitoCard(
             ambito.title,
@@ -521,6 +536,21 @@
         showError(`No se pudo cargar el Dashboard Online: ${error.message}`);
       }
     });
+  </script>
+  <script>
+    setTimeout(() => {
+      if (window.__dashboardOnlineBooted) return;
+      const msg = document.getElementById("msg");
+      const loader = document.getElementById("loader");
+      if (loader) {
+        loader.style.display = "block";
+        loader.textContent = "No se pudo inicializar el dashboard. Recarga la página (Ctrl+F5).";
+      }
+      if (msg) {
+        msg.style.display = "block";
+        msg.textContent = "Error de inicialización del script del dashboard.";
+      }
+    }, 1200);
   </script>
 </body>
 </html>

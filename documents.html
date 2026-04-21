@@ -308,7 +308,8 @@
   <script type="module">
     const CENTERS = {
       salus: { label: "Clínica SALUS" },
-      diagonal: { label: "Clínica Diagonal" }
+      diagonal: { label: "Clínica Diagonal" },
+      icr: { label: "ICR" }
     };
 
     const msg = document.getElementById("msg");
@@ -352,6 +353,7 @@
     function validarAccesoCentro(permissions, center){
       if (center === "diagonal") return permissions.Clinica_Diagonal === true;
       if (center === "salus") return permissions.Clinica_Salus === true;
+      if (center === "icr") return permissions.Clinica_ICR === true;
       return false;
     }
 

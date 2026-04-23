@@ -1,4 +1,11 @@
 const { getDb } = require("./db");
+const QUESTION_ID_FACTOR = 100000;
+
+function toLogicalQuestionId(storedQuestionId) {
+  const n = Number(storedQuestionId || 0);
+  if (!Number.isFinite(n) || n <= 0) return 0;
+  return n >= QUESTION_ID_FACTOR ? Math.floor(n / QUESTION_ID_FACTOR) : n;
+}
 
 exports.handler = async (event) => {
   try {
@@ -114,7 +121,7 @@ exports.handler = async (event) => {
         answers: answersResult.rows,
         uploadedDocuments: (uploadedResult.rows || []).map(row => ({
           id: Number(row.id),
-          questionId: Number(row.question_id || 0),
+          questionId: toLogicalQuestionId(row.question_id),
           questionNumber: Number(row.question_number || 0),
           referenceFileName: row.reference_file_name || null,
           originalFileName: row.original_file_name || "",

@@ -1,5 +1,6 @@
 const { getDb } = require("./db");
 const path = require("path");
+const QUESTION_ID_FACTOR = 100000;
 
 function buildUploadFileName(originalName, questionNumber, sequenceNumber) {
   const ext = String(path.extname(originalName) || "").trim();
@@ -147,27 +148,14 @@ exports.handler = async (event) => {
         SELECT COUNT(*) AS total
         FROM survey_uploaded_documents
         WHERE response_header_id = ?
-          AND question_id = ?
+          AND question_number = ?
       `,
-      args: [headerId, questionId]
+      args: [headerId, questionNumber]
     });
     const existingDocsCount = Number(existingDocsResult.rows[0]?.total || 0);
     const sequenceNumber = existingDocsCount + 1;
     const uniqueFileName = buildUploadFileName(fileName, questionNumber, sequenceNumber);
-
-    await db.execute({
-      sql: `
-        UPDATE survey_response_headers
-        SET
-          respondent_name = ?,
-          status = 'draft',
-          current_question_number = ?,
-          total_questions = ?,
-          updated_at = CURRENT_TIMESTAMP
-        WHERE id = ?
-      `,
-      args: [respondentName || null, questionNumber, totalQuestions || 7, headerId]
-    });
+    const storedQuestionId = (questionId * QUESTION_ID_FACTOR) + sequenceNumber;
 
     await db.execute({
       sql: `
@@ -201,7 +189,7 @@ exports.handler = async (event) => {
       `,
       args: [
         headerId,
-        questionId,
+        storedQuestionId,
         questionNumber,
         referenceFileName || null,
         uniqueFileName,
@@ -229,7 +217,7 @@ exports.handler = async (event) => {
         ORDER BY id DESC
         LIMIT 1
       `,
-      args: [headerId, questionId]
+      args: [headerId, storedQuestionId]
     });
 
     const row = savedResult.rows[0];
@@ -245,7 +233,7 @@ exports.handler = async (event) => {
         document: {
           id: Number(row.id),
           responseHeaderId: Number(row.response_header_id),
-          questionId: Number(row.question_id),
+          questionId,
           questionNumber: Number(row.question_number),
           referenceFileName: row.reference_file_name || null,
           originalFileName: row.original_file_name,

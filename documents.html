@@ -147,6 +147,24 @@
       gap:10px;
     }
 
+    .filters{
+      display:grid;
+      gap:8px;
+      margin:0 0 14px 0;
+    }
+
+    .filter-input,
+    .filter-select{
+      width:100%;
+      border:1px solid var(--border);
+      border-radius:10px;
+      padding:10px 12px;
+      font-size:13px;
+      font-weight:700;
+      color:#111827;
+      background:#fff;
+    }
+
     .doc-row{
       display:grid;
       grid-template-columns:1fr 34px;
@@ -282,6 +300,18 @@
         <h3 class="sidebar-title">Centro actual</h3>
         <div class="center-box" id="centerBox">Cargando...</div>
 
+        <div class="filters">
+          <input
+            type="text"
+            id="searchInput"
+            class="filter-input"
+            placeholder="Buscar documento por nombre..."
+          />
+          <select id="questionFilter" class="filter-select">
+            <option value="all">Todas las preguntas</option>
+          </select>
+        </div>
+
         <h3 class="sidebar-title">Listado de documentos</h3>
         <div class="doc-list" id="documentsList"></div>
       </aside>
@@ -323,9 +353,13 @@
     const emptyViewer = document.getElementById("emptyViewer");
     const openNewTabBtn = document.getElementById("openNewTabBtn");
     const downloadBtn = document.getElementById("downloadBtn");
+    const searchInput = document.getElementById("searchInput");
+    const questionFilter = document.getElementById("questionFilter");
 
     let loadedDocuments = [];
     let selectedPath = "";
+    let currentSearchText = "";
+    let currentQuestionFilter = "all";
 
     function showError(text){
       msg.style.display = "block";
@@ -458,6 +492,51 @@
       });
     }
 
+    function extractQuestionNumber(doc){
+      const byField = Number(doc?.questionNumber || 0);
+      if (Number.isFinite(byField) && byField > 0) return byField;
+      const name = String(doc?.nombre || "");
+      const match = name.match(/_#(\d+)_/);
+      return match ? Number(match[1]) : 0;
+    }
+
+    function updateQuestionFilterOptions(documents){
+      const currentValue = currentQuestionFilter;
+      const questionNumbers = Array.from(new Set((documents || [])
+        .map(extractQuestionNumber)
+        .filter(n => Number.isFinite(n) && n > 0)))
+        .sort((a, b) => a - b);
+
+      questionFilter.innerHTML = '<option value="all">Todas las preguntas</option>';
+      questionNumbers.forEach((num) => {
+        const opt = document.createElement("option");
+        opt.value = String(num);
+        opt.textContent = `Pregunta #${num}`;
+        questionFilter.appendChild(opt);
+      });
+
+      if ([...questionFilter.options].some(o => o.value === currentValue)) {
+        questionFilter.value = currentValue;
+      } else {
+        questionFilter.value = "all";
+        currentQuestionFilter = "all";
+      }
+    }
+
+    function getFilteredDocuments(documents){
+      const search = currentSearchText.trim().toLowerCase();
+      const question = currentQuestionFilter;
+      return (documents || []).filter((doc) => {
+        const name = String(doc?.nombre || "").toLowerCase();
+        if (search && !name.includes(search)) return false;
+        if (question !== "all") {
+          const docQ = extractQuestionNumber(doc);
+          if (String(docQ) !== String(question)) return false;
+        }
+        return true;
+      });
+    }
+
     function renderDocuments(documents){
       documentsList.innerHTML = "";
 
@@ -473,6 +552,8 @@
         return;
       }
 
+      let hasSelectedInList = false;
+
       documents.forEach((doc, index) => {
         if (!doc || !doc.nombre || !doc.ruta) {
           return;
@@ -486,6 +567,7 @@
         btn.textContent = doc.nombre;
         btn.dataset.path = doc.ruta;
         btn.onclick = () => selectDocument(doc);
+        if (doc.ruta === selectedPath) hasSelectedInList = true;
 
         const deleteBtn = document.createElement("button");
         deleteBtn.className = "doc-delete-btn";
@@ -501,7 +583,8 @@
             await eliminarDocumento(centerKey, Number(doc.id || 0), String(doc.source || ""));
 
             loadedDocuments = await pedirDocumentos(centerKey);
-            renderDocuments(loadedDocuments);
+            updateQuestionFilterOptions(loadedDocuments);
+            applyFiltersAndRender();
             setLoading(false);
             content.style.display = "grid";
           } catch (error) {
@@ -516,11 +599,20 @@
         row.appendChild(btn);
         row.appendChild(deleteBtn);
         documentsList.appendChild(row);
-
-        if (index === 0) {
-          setTimeout(() => selectDocument(doc), 0);
-        }
       });
+
+      if (!hasSelectedInList && documents[0]) {
+        setTimeout(() => selectDocument(documents[0]), 0);
+      } else {
+        Array.from(documentsList.querySelectorAll(".doc-btn")).forEach(btn => {
+          btn.classList.toggle("active", btn.dataset.path === selectedPath);
+        });
+      }
+    }
+
+    function applyFiltersAndRender(){
+      const filtered = getFilteredDocuments(loadedDocuments);
+      renderDocuments(filtered);
     }
 
     const centerKey = getQueryParam("center").toLowerCase();
@@ -632,8 +724,8 @@
 
         setLoading(true, "Cargando documentos...");
         loadedDocuments = await pedirDocumentos(centerKey);
-
-        renderDocuments(loadedDocuments);
+        updateQuestionFilterOptions(loadedDocuments);
+        applyFiltersAndRender();
 
         setLoading(false);
         content.style.display = "grid";
@@ -643,7 +735,16 @@
         showError("No se pudo cargar los documentos: " + e.message);
       }
     });
+
+    searchInput.addEventListener("input", () => {
+      currentSearchText = searchInput.value || "";
+      applyFiltersAndRender();
+    });
+
+    questionFilter.addEventListener("change", () => {
+      currentQuestionFilter = questionFilter.value || "all";
+      applyFiltersAndRender();
+    });
   </script>
 </body>
 </html>
-

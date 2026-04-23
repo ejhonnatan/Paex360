@@ -27,8 +27,6 @@
     .dashboard-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:20px;align-items:stretch}
     .ambito-card,.global-card{background:var(--purple);border:2px solid var(--border);border-radius:28px;padding:14px;color:#fff;min-height:290px}
     .global-card{grid-column:4}
-    .global-card{grid-column:4}
-  main
     .ambito-title{text-align:center;font-size:clamp(34px,2.6vw,56px);font-weight:900;margin:0 0 10px}
     .gauge-pair{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:2px}
     .gauge-box{border:1px solid rgba(255,255,255,.35);border-radius:12px;padding:4px}
@@ -86,8 +84,6 @@
     .next-ambito-btn{border:2px solid #7a4fb4;background:#f5f3ff;color:#5b2c86;border-radius:12px;padding:8px 12px;font-weight:900}
 
     @media (max-width:1450px){.dashboard-grid{grid-template-columns:repeat(auto-fit,minmax(360px,1fr))}.global-card{grid-column:auto}}
-    @media (max-width:1450px){.dashboard-grid{grid-template-columns:repeat(auto-fit,minmax(360px,1fr))}.global-card{grid-column:auto}}
-main
     @media (max-width:1024px){.page{padding:0 16px 22px}.ambito-sheet-grid{grid-template-columns:1fr}.stats-row .value{font-size:18px}}
     @media (max-width:640px){.dashboard-grid{grid-template-columns:1fr}.circle{--size:130px}.circle .txt b{font-size:44px}.ambito-sheet-title{font-size:22px}.score-cell{font-size:18px}.gauge{max-width:180px;height:72px}.stats-row .value{font-size:17px}}
   </style>
@@ -172,7 +168,8 @@ main
       if (loader) loader.style.display = "none";
       if (msg) {
         msg.style.display = "block";
-        const reason = event?.reason?.message || String(event?.reason || "Error desconocido");
+        const rejectionReason = event && Object.prototype.hasOwnProperty.call(event, "reason") ? event.reason : null;
+        const reason = (rejectionReason && rejectionReason.message) ? rejectionReason.message : String(rejectionReason || "Error desconocido");
         msg.textContent = `Error de inicialización: ${reason}`;
       }
     });
@@ -225,7 +222,7 @@ main
       try {
         const r = await fetch("/.netlify/functions/getConfig", { cache: "no-store" });
         const cfg = await r.json().catch(() => ({}));
-        if (!r.ok) throw new Error(cfg?.error || "getConfig no respondió OK");
+        if (!r.ok) throw new Error((cfg && cfg.error) || "getConfig no respondió OK");
         firebaseConfig = cfg.firebaseConfig || cfg;
       } catch (e) {
         showError("No se pudo cargar la configuración de Firebase.");
@@ -268,7 +265,7 @@ main
         body: JSON.stringify({ email })
       });
       const data = await resp.json().catch(() => ({}));
-      if (!resp.ok) throw new Error(data?.error || "No se pudieron consultar permisos");
+      if (!resp.ok) throw new Error((data && data.error) || "No se pudieron consultar permisos");
       return data.permissions || {};
     }
 
@@ -305,10 +302,6 @@ main
     function buildAmbitoCard(title, autoPct, icdqPct, autoFundamentalPoints, autoNonFundamentalPoints, icdqFundamentalPoints, icdqNonFundamentalPoints, extraClass = ""){
       return `
       <article class="ambito-card ${extraClass}">
-    function buildAmbitoCard(title, autoPct, icdqPct, autoFundamentalPoints, autoNonFundamentalPoints, icdqFundamentalPoints, icdqNonFundamentalPoints, extraClass = ""){
-      return `
-      <article class="ambito-card ${extraClass}">
-      main
         <h3 class="ambito-title">${title}</h3>
         <div class="gauge-pair">
           ${buildGaugeMarkup("Autoevaluación", autoPct)}
@@ -355,8 +348,8 @@ main
 
       (questions || []).forEach((question) => {
         const row = latestByQuestion.get(Number(question.number));
-        const autoScore = Number.isFinite(row?.selfScore) ? Number(row.selfScore) : 0;
-        const icdqScore = Number.isFinite(row?.certifierScore) ? Number(row.certifierScore) : 0;
+        const autoScore = Number.isFinite(row && row.selfScore) ? Number(row.selfScore) : 0;
+        const icdqScore = Number.isFinite(row && row.certifierScore) ? Number(row.certifierScore) : 0;
         const isFundamental = String(question.category || "").toUpperCase() === "FUNDAMENTAL";
 
         if (isFundamental) {
@@ -384,7 +377,6 @@ main
       };
     }
 
-  main
     function switchSheet(sheetKey){
       sheetButtons.forEach((btn) => {
         btn.classList.toggle("active", btn.dataset.sheet === sheetKey);
@@ -416,7 +408,8 @@ main
 
     function renderDetailSheet(ambitoIndex, ambitoQuestions, latestByQuestion){
       const questions = ambitoQuestions[ambitoIndex] || [];
-      const ambitoLabel = AMBITOS[ambitoIndex]?.title || `Ámbito ${ambitoIndex + 1}`;
+      const ambitoMeta = AMBITOS[ambitoIndex];
+      const ambitoLabel = (ambitoMeta && ambitoMeta.title) || `Ámbito ${ambitoIndex + 1}`;
       sheet2Title.querySelector("span").textContent = ambitoLabel.toUpperCase();
       ambito1Rows.innerHTML = "";
       let fundamentalObtained = 0;
@@ -426,8 +419,8 @@ main
 
       questions.forEach((question) => {
         const row = latestByQuestion.get(Number(question.number));
-        const selfScore = Number.isFinite(row?.selfScore) ? Number(row.selfScore) : null;
-        const certifierScore = Number.isFinite(row?.certifierScore) ? Number(row.certifierScore) : 0;
+        const selfScore = Number.isFinite(row && row.selfScore) ? Number(row.selfScore) : null;
+        const certifierScore = Number.isFinite(row && row.certifierScore) ? Number(row.certifierScore) : 0;
         const passed = certifierScore >= 4;
         const isFundamental = String(question.category || "").toUpperCase() === "FUNDAMENTAL";
 
@@ -462,14 +455,14 @@ main
     async function loadSurveyDefinition(surveyCode){
       const r = await fetch(`/.netlify/functions/getSurvey?surveyCode=${encodeURIComponent(surveyCode)}`);
       const data = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(data?.error || `No se pudo cargar ${surveyCode}`);
+      if (!r.ok) throw new Error((data && data.error) || `No se pudo cargar ${surveyCode}`);
       return data.questions || [];
     }
 
     async function loadMatrix(){
       const r = await fetch(`/.netlify/functions/getSurveyDashboardMatrix?center=${encodeURIComponent(centerKey)}`);
       const data = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(data?.error || "No se pudo cargar la matriz del dashboard");
+      if (!r.ok) throw new Error((data && data.error) || "No se pudo cargar la matriz del dashboard");
       return data;
     }
 
@@ -531,37 +524,7 @@ main
               metrics.icdqNonFundamentalPoints
             );
           });
-          const metrics = calculateMetrics(questions, latestByQuestion);
 
-          return buildAmbitoCard(
-            ambito.title,
-            metrics.autoPct,
-            metrics.icdqPct,
-            metrics.autoFundamentalPoints,
-            metrics.autoNonFundamentalPoints,
-            metrics.icdqFundamentalPoints,
-            metrics.icdqNonFundamentalPoints
-          );
-        });
-
-        const globalQuestions = ambitoQuestions.flat();
-        const globalMetrics = calculateMetrics(globalQuestions, latestByQuestion);
-        cards.push(buildAmbitoCard(
-          "Global",
-          globalMetrics.autoPct,
-          globalMetrics.icdqPct,
-          globalMetrics.autoFundamentalPoints,
-          globalMetrics.autoNonFundamentalPoints,
-          globalMetrics.icdqFundamentalPoints,
-          globalMetrics.icdqNonFundamentalPoints,
-          "global-card"
-        ));
-
-        dashboardGrid.innerHTML = cards.join("");
-        cachedAmbitoQuestions = ambitoQuestions;
-        cachedLatestByQuestion = latestByQuestion;
-        renderDetailSheet(currentDetailAmbitoIndex, cachedAmbitoQuestions, cachedLatestByQuestion);
-          main
           const globalQuestions = ambitoQuestions.flat();
           const globalMetrics = calculateMetrics(globalQuestions, latestByQuestion);
           cards.push(buildAmbitoCard(
@@ -580,7 +543,8 @@ main
           cachedLatestByQuestion = latestByQuestion;
           renderDetailSheet(currentDetailAmbitoIndex, cachedAmbitoQuestions, cachedLatestByQuestion);
 
-          const updatedAt = matrixData.rows?.[0]?.headerUpdatedAt || matrixData.rows?.[0]?.answerUpdatedAt || null;
+          const firstRow = matrixData && Array.isArray(matrixData.rows) ? matrixData.rows[0] : null;
+          const updatedAt = (firstRow && firstRow.headerUpdatedAt) || (firstRow && firstRow.answerUpdatedAt) || null;
           document.getElementById("updatedAt").textContent = updatedAt ? `Última actualización: ${new Date(updatedAt).toLocaleString("es-ES")}` : "Sin datos para mostrar todavía";
 
           sheetButtons.forEach((btn) => {

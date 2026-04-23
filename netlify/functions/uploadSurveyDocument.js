@@ -1,17 +1,16 @@
 const { getDb } = require("./db");
 const path = require("path");
 
-function buildUploadFileName(originalName, questionNumber) {
+function buildUploadFileName(originalName, questionNumber, sequenceNumber) {
   const ext = String(path.extname(originalName) || "").trim();
   const base = String(path.basename(originalName, ext) || "").trim() || "archivo";
   const now = new Date();
   const iso = now.toISOString().split(".")[0];
   const timestamp = iso.replace(/[-:]/g, "").replace("T", "_");
   const questionTag = Number(questionNumber || 0);
-  return `${base}_#${questionTag}_${timestamp}${ext}`;
+  const sequenceTag = Number(sequenceNumber || 1);
+  return `${base}_#${questionTag}_#${sequenceTag}_${timestamp}${ext}`;
 }
-
-const LOCK_WINDOW_MINUTES = 30;
 
 exports.handler = async (event) => {
   try {
@@ -52,8 +51,6 @@ exports.handler = async (event) => {
     if (!fileName) missingFields.push("fileName");
     if (!hasBase64Content) missingFields.push("base64Content");
 
-    const uniqueFileName = buildUploadFileName(fileName, questionNumber);
-
     if (missingFields.length) {
       return {
         statusCode: 400,
@@ -81,85 +78,96 @@ exports.handler = async (event) => {
 
     const db = getDb();
 
-    const activeEditorResult = await db.execute({
-      sql: `
-        SELECT respondent_email, respondent_name, updated_at
-        FROM survey_response_headers
-        WHERE survey_code = ?
-          AND center_code = ?
-          AND LOWER(status) = 'draft'
-          AND respondent_email <> ?
-          AND COALESCE(updated_at, created_at) >= datetime('now', '-' || ? || ' minutes')
-        ORDER BY updated_at DESC
-        LIMIT 1
-      `,
-      args: [surveyCode, center, email, LOCK_WINDOW_MINUTES]
-    });
-
-    if (activeEditorResult.rows.length) {
-      const activeEditor = activeEditorResult.rows[0];
-      return {
-        statusCode: 423,
-        headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
-        body: JSON.stringify({
-          error: "La encuesta está en uso por otro usuario en los últimos minutos. Intenta nuevamente pronto.",
-          activeEditor: {
-            email: activeEditor.respondent_email || null,
-            name: activeEditor.respondent_name || null,
-            updatedAt: activeEditor.updated_at || null
-          }
-        })
-      };
-    }
-
-    await db.execute({
-      sql: `
-        INSERT INTO survey_response_headers (
-          survey_code,
-          center_code,
-          respondent_email,
-          respondent_name,
-          status,
-          current_question_number,
-          answered_questions_count,
-          total_questions,
-          created_at,
-          updated_at
-        )
-        VALUES (?, ?, ?, ?, 'draft', ?, 0, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-        ON CONFLICT(survey_code, center_code, respondent_email)
-        DO UPDATE SET
-          respondent_name = excluded.respondent_name,
-          current_question_number = excluded.current_question_number,
-          total_questions = excluded.total_questions,
-          status = 'draft',
-          updated_at = CURRENT_TIMESTAMP
-      `,
-      args: [
-        surveyCode,
-        center,
-        email,
-        respondentName || null,
-        questionNumber,
-        totalQuestions || 7
-      ]
-    });
-
     const headerResult = await db.execute({
       sql: `
         SELECT id
         FROM survey_response_headers
-        WHERE survey_code = ? AND center_code = ? AND respondent_email = ?
+        WHERE survey_code = ? AND center_code = ?
+        ORDER BY COALESCE(updated_at, created_at) DESC, id DESC
         LIMIT 1
       `,
-      args: [surveyCode, center, email]
+      args: [surveyCode, center]
     });
 
-    const headerId = headerResult.rows[0]?.id;
+    let headerId = headerResult.rows[0]?.id;
+
+    if (!headerId) {
+      await db.execute({
+        sql: `
+          INSERT INTO survey_response_headers (
+            survey_code,
+            center_code,
+            respondent_email,
+            respondent_name,
+            status,
+            current_question_number,
+            answered_questions_count,
+            total_questions,
+            created_at,
+            updated_at
+          )
+          VALUES (?, ?, ?, ?, 'draft', ?, 0, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+          ON CONFLICT(survey_code, center_code, respondent_email)
+          DO UPDATE SET
+            respondent_name = excluded.respondent_name,
+            current_question_number = excluded.current_question_number,
+            total_questions = excluded.total_questions,
+            status = 'draft',
+            updated_at = CURRENT_TIMESTAMP
+        `,
+        args: [
+          surveyCode,
+          center,
+          email,
+          respondentName || null,
+          questionNumber,
+          totalQuestions || 7
+        ]
+      });
+
+      const insertedHeaderResult = await db.execute({
+        sql: `
+          SELECT id
+          FROM survey_response_headers
+          WHERE survey_code = ? AND center_code = ? AND respondent_email = ?
+          ORDER BY id DESC
+          LIMIT 1
+        `,
+        args: [surveyCode, center, email]
+      });
+      headerId = insertedHeaderResult.rows[0]?.id;
+    }
 
     if (!headerId) {
       throw new Error("No fue posible obtener el encabezado de la encuesta");
     }
+
+    const existingDocsResult = await db.execute({
+      sql: `
+        SELECT COUNT(*) AS total
+        FROM survey_uploaded_documents
+        WHERE response_header_id = ?
+          AND question_id = ?
+      `,
+      args: [headerId, questionId]
+    });
+    const existingDocsCount = Number(existingDocsResult.rows[0]?.total || 0);
+    const sequenceNumber = existingDocsCount + 1;
+    const uniqueFileName = buildUploadFileName(fileName, questionNumber, sequenceNumber);
+
+    await db.execute({
+      sql: `
+        UPDATE survey_response_headers
+        SET
+          respondent_name = ?,
+          status = 'draft',
+          current_question_number = ?,
+          total_questions = ?,
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `,
+      args: [respondentName || null, questionNumber, totalQuestions || 7, headerId]
+    });
 
     await db.execute({
       sql: `

@@ -1,14 +1,15 @@
 const { getDb } = require("./db");
 const path = require("path");
 
-function buildUploadFileName(originalName, questionNumber) {
+function buildUploadFileName(originalName, questionNumber, sequenceNumber) {
   const ext = String(path.extname(originalName) || "").trim();
   const base = String(path.basename(originalName, ext) || "").trim() || "archivo";
   const now = new Date();
   const iso = now.toISOString().split(".")[0];
   const timestamp = iso.replace(/[-:]/g, "").replace("T", "_");
   const questionTag = Number(questionNumber || 0);
-  return `${base}_#${questionTag}_${timestamp}${ext}`;
+  const sequenceTag = Number(sequenceNumber || 1);
+  return `${base}_#${questionTag}_#${sequenceTag}_${timestamp}${ext}`;
 }
 
 exports.handler = async (event) => {
@@ -49,8 +50,6 @@ exports.handler = async (event) => {
     if (!questionNumber) missingFields.push("question.number");
     if (!fileName) missingFields.push("fileName");
     if (!hasBase64Content) missingFields.push("base64Content");
-
-    const uniqueFileName = buildUploadFileName(fileName, questionNumber);
 
     if (missingFields.length) {
       return {
@@ -142,6 +141,33 @@ exports.handler = async (event) => {
     if (!headerId) {
       throw new Error("No fue posible obtener el encabezado de la encuesta");
     }
+
+    const existingDocsResult = await db.execute({
+      sql: `
+        SELECT COUNT(*) AS total
+        FROM survey_uploaded_documents
+        WHERE response_header_id = ?
+          AND question_id = ?
+      `,
+      args: [headerId, questionId]
+    });
+    const existingDocsCount = Number(existingDocsResult.rows[0]?.total || 0);
+    const sequenceNumber = existingDocsCount + 1;
+    const uniqueFileName = buildUploadFileName(fileName, questionNumber, sequenceNumber);
+
+    await db.execute({
+      sql: `
+        UPDATE survey_response_headers
+        SET
+          respondent_name = ?,
+          status = 'draft',
+          current_question_number = ?,
+          total_questions = ?,
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `,
+      args: [respondentName || null, questionNumber, totalQuestions || 7, headerId]
+    });
 
     await db.execute({
       sql: `

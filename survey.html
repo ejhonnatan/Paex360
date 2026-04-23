@@ -489,7 +489,7 @@
         <div class="reference-files-box" id="referenceFilesBox"></div>
 
         <div class="upload-box">
-          <input type="file" id="fileInput" multiple>
+          <input type="file" id="fileInput" multiple="multiple" accept="*/*">
           <div class="file-note">Los archivos visibles arriba son archivos de referencia del criterio. Si cargas uno o varios archivos aquí, se agregarán como documentos asociados a esta pregunta en tu encuesta.</div>
         </div>
       </div>
@@ -1308,11 +1308,23 @@
         clearTimeout(autosaveTimer);
         await saveCurrentQuestion({ silent: true });
 
+        const uploadErrors = [];
         for (const file of selectedFiles) {
-          await uploadCurrentQuestionFile(file);
+          try {
+            await uploadCurrentQuestionFile(file);
+          } catch (fileError) {
+            uploadErrors.push(`${file.name}: ${fileError.message || "Error al subir"}`);
+          }
         }
 
         fileInput.value = "";
+
+        if (uploadErrors.length) {
+          showError(`Algunos archivos no se pudieron subir:\n${uploadErrors.join("\n")}`);
+          setSaveState("Carga parcial de archivos");
+        } else {
+          showSuccess(`${selectedFiles.length} archivo(s) subido(s) correctamente.`);
+        }
       } catch (error) {
         console.error(error);
         showError(error.message || "No fue posible cargar el documento.");

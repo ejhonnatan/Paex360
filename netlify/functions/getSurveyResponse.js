@@ -1,6 +1,11 @@
 const { getDb } = require("./db");
+const QUESTION_ID_FACTOR = 100000;
 
-const LOCK_WINDOW_MINUTES = 30;
+function toLogicalQuestionId(storedQuestionId) {
+  const n = Number(storedQuestionId || 0);
+  if (!Number.isFinite(n) || n <= 0) return 0;
+  return n >= QUESTION_ID_FACTOR ? Math.floor(n / QUESTION_ID_FACTOR) : n;
+}
 
 exports.handler = async (event) => {
   try {
@@ -27,37 +32,6 @@ exports.handler = async (event) => {
 
     const db = getDb();
 
-    const activeEditorResult = await db.execute({
-      sql: `
-        SELECT respondent_email, respondent_name, updated_at
-        FROM survey_response_headers
-        WHERE survey_code = ?
-          AND center_code = ?
-          AND LOWER(status) = 'draft'
-          AND respondent_email <> ?
-          AND COALESCE(updated_at, created_at) >= datetime('now', '-' || ? || ' minutes')
-        ORDER BY updated_at DESC
-        LIMIT 1
-      `,
-      args: [surveyCode, center, email, LOCK_WINDOW_MINUTES]
-    });
-
-    if (activeEditorResult.rows.length) {
-      const activeEditor = activeEditorResult.rows[0];
-      return {
-        statusCode: 423,
-        headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
-        body: JSON.stringify({
-          error: "La encuesta está en uso por otro usuario en los últimos minutos. Intenta nuevamente pronto.",
-          activeEditor: {
-            email: activeEditor.respondent_email || null,
-            name: activeEditor.respondent_name || null,
-            updatedAt: activeEditor.updated_at || null
-          }
-        })
-      };
-    }
-
     const headerResult = await db.execute({
       sql: `
         SELECT
@@ -74,10 +48,11 @@ exports.handler = async (event) => {
           updated_at,
           submitted_at
         FROM survey_response_headers
-        WHERE survey_code = ? AND center_code = ? AND respondent_email = ?
+        WHERE survey_code = ? AND center_code = ?
+        ORDER BY COALESCE(updated_at, created_at) DESC, id DESC
         LIMIT 1
       `,
-      args: [surveyCode, center, email]
+      args: [surveyCode, center]
     });
 
     if (!headerResult.rows.length) {
@@ -146,7 +121,7 @@ exports.handler = async (event) => {
         answers: answersResult.rows,
         uploadedDocuments: (uploadedResult.rows || []).map(row => ({
           id: Number(row.id),
-          questionId: Number(row.question_id || 0),
+          questionId: toLogicalQuestionId(row.question_id),
           questionNumber: Number(row.question_number || 0),
           referenceFileName: row.reference_file_name || null,
           originalFileName: row.original_file_name || "",

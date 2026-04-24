@@ -194,6 +194,50 @@
       border-color:#000;
     }
 
+    .question-jump-wrap{
+      margin:0 0 12px;
+      padding:8px 10px;
+      border:1px solid #d4d4d8;
+      background:#fff;
+    }
+
+    .question-jump-title{
+      margin:0 0 8px;
+      font-size:12px;
+      font-weight:bold;
+      color:#111827;
+      text-align:center;
+    }
+
+    .question-jump-list{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      justify-content:center;
+    }
+
+    .question-jump-btn{
+      border:1px solid #6b2c91;
+      background:#fff;
+      color:#6b2c91;
+      font-size:12px;
+      font-weight:bold;
+      padding:5px 9px;
+      border-radius:999px;
+      cursor:pointer;
+      min-width:40px;
+    }
+
+    .question-jump-btn.active{
+      background:#6b2c91;
+      color:#fff;
+    }
+
+    .question-jump-btn:disabled{
+      opacity:.6;
+      cursor:not-allowed;
+    }
+
     .question-box{
       padding:8px 10px 0;
       margin-bottom:12px;
@@ -467,6 +511,11 @@
         <span id="metaProgress"></span>
       </div>
 
+      <div class="question-jump-wrap" id="questionJumpWrap">
+        <p class="question-jump-title">Ir directamente a una pregunta del ámbito seleccionado</p>
+        <div class="question-jump-list" id="questionJumpList"></div>
+      </div>
+
       <div class="question-box">
         <h2 class="question-title" id="questionTitle"></h2>
         <div class="question-category" id="questionCategory"></div>
@@ -553,6 +602,7 @@
     const metaProgress = document.getElementById("metaProgress");
     const footerProgress = document.getElementById("footerProgress");
     const surveyTitle = document.getElementById("surveyTitle");
+    const questionJumpList = document.getElementById("questionJumpList");
     const questionTitle = document.getElementById("questionTitle");
     const questionCategory = document.getElementById("questionCategory");
     const referenceFilesBox = document.getElementById("referenceFilesBox");
@@ -711,6 +761,32 @@
 
     function getCurrentQuestion(){
       return surveyData?.questions?.[currentQuestionIndex] || null;
+    }
+
+    function renderQuestionJumpButtons(){
+      if (!questionJumpList) return;
+
+      questionJumpList.innerHTML = "";
+      const questionList = Array.isArray(surveyData?.questions) ? surveyData.questions : [];
+
+      questionList.forEach((question, index) => {
+        const jumpBtn = document.createElement("button");
+        jumpBtn.type = "button";
+        jumpBtn.className = "question-jump-btn";
+        jumpBtn.textContent = String(question.number ?? index + 1);
+        jumpBtn.title = `Ir a la pregunta ${question.number ?? index + 1}`;
+        jumpBtn.classList.toggle("active", index === currentQuestionIndex);
+        jumpBtn.disabled = index === currentQuestionIndex;
+        jumpBtn.addEventListener("click", async () => {
+          if (index === currentQuestionIndex) return;
+
+          clearTimeout(autosaveTimer);
+          await saveCurrentQuestion({ silent: true });
+          currentQuestionIndex = index;
+          renderQuestion();
+        });
+        questionJumpList.appendChild(jumpBtn);
+      });
     }
 
     function ensureAnswer(question){
@@ -910,6 +986,7 @@
       footerProgress.textContent = progressText;
 
       loadStateIntoForm();
+      renderQuestionJumpButtons();
 
       prevBtn.disabled = currentQuestionIndex === 0;
       nextBtn.textContent = currentQuestionIndex === surveyData.totalQuestions - 1 ? "✓" : "➡";
@@ -1236,6 +1313,7 @@
 
         hideLoader();
         surveyCard.style.display = "block";
+        renderQuestionJumpButtons();
         renderQuestion();
 
       }catch(error){

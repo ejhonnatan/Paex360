@@ -543,8 +543,13 @@
           cachedLatestByQuestion = latestByQuestion;
           renderDetailSheet(currentDetailAmbitoIndex, cachedAmbitoQuestions, cachedLatestByQuestion);
 
-          const firstRow = matrixData && Array.isArray(matrixData.rows) ? matrixData.rows[0] : null;
-          const updatedAt = (firstRow && firstRow.headerUpdatedAt) || (firstRow && firstRow.answerUpdatedAt) || null;
+          const matrixRows = matrixData && Array.isArray(matrixData.rows) ? matrixData.rows : [];
+          let latestTimestamp = 0;
+          matrixRows.forEach((row) => {
+            const rowTimestamp = Date.parse((row && (row.answerUpdatedAt || row.headerUpdatedAt)) || 0) || 0;
+            if (rowTimestamp > latestTimestamp) latestTimestamp = rowTimestamp;
+          });
+          const updatedAt = latestTimestamp > 0 ? new Date(latestTimestamp).toISOString() : null;
           document.getElementById("updatedAt").textContent = updatedAt ? `Última actualización: ${new Date(updatedAt).toLocaleString("es-ES")}` : "Sin datos para mostrar todavía";
 
           sheetButtons.forEach((btn) => {

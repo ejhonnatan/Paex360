@@ -13,6 +13,34 @@ function buildUploadFileName(originalName, questionNumber, sequenceNumber) {
   return `${base}_#${questionTag}_#${sequenceTag}_${timestamp}${ext}`;
 }
 
+function toSequenceFromStoredQuestionId(storedQuestionId, logicalQuestionId) {
+  const value = Number(storedQuestionId || 0);
+  const logicalId = Number(logicalQuestionId || 0);
+  if (!Number.isFinite(value) || !Number.isFinite(logicalId) || logicalId <= 0) return null;
+
+  if (value >= QUESTION_ID_FACTOR) {
+    const decodedLogicalId = Math.floor(value / QUESTION_ID_FACTOR);
+    if (decodedLogicalId !== logicalId) return null;
+    const seq = value % QUESTION_ID_FACTOR;
+    return seq > 0 ? seq : null;
+  }
+
+  if (value === logicalId) return 1;
+  return null;
+}
+
+function nextAvailableSequence(existingQuestionIds, logicalQuestionId) {
+  const used = new Set();
+  (existingQuestionIds || []).forEach((rawId) => {
+    const sequence = toSequenceFromStoredQuestionId(rawId, logicalQuestionId);
+    if (Number.isFinite(sequence) && sequence > 0) used.add(sequence);
+  });
+
+  let candidate = 1;
+  while (used.has(candidate)) candidate += 1;
+  return candidate;
+}
+
 exports.handler = async (event) => {
   try {
     if (event.httpMethod !== "POST") {
@@ -145,15 +173,15 @@ exports.handler = async (event) => {
 
     const existingDocsResult = await db.execute({
       sql: `
-        SELECT COUNT(*) AS total
+        SELECT question_id
         FROM survey_uploaded_documents
         WHERE response_header_id = ?
           AND question_number = ?
       `,
       args: [headerId, questionNumber]
     });
-    const existingDocsCount = Number(existingDocsResult.rows[0]?.total || 0);
-    const sequenceNumber = existingDocsCount + 1;
+    const existingQuestionIds = (existingDocsResult.rows || []).map((row) => Number(row.question_id || 0));
+    const sequenceNumber = nextAvailableSequence(existingQuestionIds, questionId);
     const uniqueFileName = buildUploadFileName(fileName, questionNumber, sequenceNumber);
     const storedQuestionId = (questionId * QUESTION_ID_FACTOR) + sequenceNumber;
 

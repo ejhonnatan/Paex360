@@ -54,6 +54,7 @@ exports.handler = async (event) => {
     const permissions = {
       Clinica_Diagonal: toBool(userRow.Clinica_Diagonal),
       Clinica_Salus: toBool(userRow.Clinica_Salus),
+      Clinica_ICR: toBool(userRow.Clinica_ICR),
       Puede_Documentos: toBool(userRow.Puede_Documentos)
     };
 

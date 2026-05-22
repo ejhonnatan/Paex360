@@ -661,13 +661,24 @@ exports.handler = async (event) => {
       };
     }
 
+    const fundamentalQuestionNumbers = new Set([1, 2, 3, 8, 9, 14, 19, 21, 25, 41, 45, 46]);
+    const surveyWithNormalizedCategories = {
+      ...survey,
+      questions: (survey.questions || []).map((question) => ({
+        ...question,
+        category: fundamentalQuestionNumbers.has(Number(question.number))
+          ? "FUNDAMENTAL"
+          : "NO FUNDAMENTAL"
+      }))
+    };
+
     return {
       statusCode: 200,
       headers: {
         "Content-Type": "application/json",
         "Cache-Control": "no-store"
       },
-      body: JSON.stringify(survey)
+      body: JSON.stringify(surveyWithNormalizedCategories)
     };
 
   } catch (error) {

@@ -1,4 +1,6 @@
 const { getDb } = require("./db");
+const { requireCenterUser } = require("./notificationAuth");
+const { addNotification, changedAnswerFields } = require("./surveyNotifications");
 const { withSurveyTransaction, requireQuestionOwner } = require("./surveyConcurrency");
 const path = require("path");
 const QUESTION_ID_FACTOR = 100000;
@@ -106,6 +108,7 @@ exports.handler = async (event) => {
       };
     }
 
+    await requireCenterUser(event, center, email);
     return await withSurveyTransaction(getDb(), async (db) => {
       await requireQuestionOwner(db, surveyCode, center, questionId, email);
 
@@ -251,6 +254,8 @@ exports.handler = async (event) => {
       });
 
       const row = savedResult.rows[0];
+      await addNotification(db, { center, surveyCode, questionId, questionNumber, email,
+        kind:"document_uploaded", fields:["documents"], preview:row.original_file_name });
 
       return {
         statusCode: 200,

@@ -1,4 +1,5 @@
 const LOCK_MINUTES = 2;
+const { ensureNotifications } = require("./surveyNotifications");
 
 async function ensureQuestionLocks(db) {
   await db.execute(`CREATE TABLE IF NOT EXISTS survey_question_locks (
@@ -12,6 +13,7 @@ async function ensureQuestionLocks(db) {
 
 async function withSurveyTransaction(db, callback) {
   await ensureQuestionLocks(db);
+  await ensureNotifications(db);
   const tx = await db.transaction("write");
   try {
     const result = await callback(tx);

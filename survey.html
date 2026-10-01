@@ -477,6 +477,7 @@
       }
     }
   </style>
+  <link rel="stylesheet" href="notifications.css">
 </head>
 
 <body>
@@ -614,6 +615,7 @@
   </dialog>
 
   <script type="module">
+    import { initNotifications } from "./notifications.js";
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import {
       getAuth,
@@ -665,7 +667,8 @@
     let auth;
     let currentUser = null;
     let surveyData = null;
-    let currentSurveyCode = "paex360-ambito1";
+    let currentSurveyCode = /^paex360-ambito[1-6]$/.test(params.get("survey") || "")
+      ? params.get("survey") : "paex360-ambito1";
     let currentQuestionIndex = 0;
     let autosaveTimer = null;
     let isSaving = false;
@@ -1152,7 +1155,9 @@
     }
 
     async function fetchJSON(url, options = {}){
-      const response = await fetch(url, options);
+      const headers = new Headers(options.headers || {});
+      if (currentUser && options.method === "POST") headers.set("Authorization", `Bearer ${await currentUser.getIdToken()}`);
+      const response = await fetch(url, { ...options, headers });
       const data = await response.json().catch(() => ({}));
 
       if(!response.ok){
@@ -1598,6 +1603,7 @@
 
         onAuthStateChanged(auth, async (user) => {
           try{
+            initNotifications(null);
             if(!user){
               hideLoader();
               window.location.href = "index.html";
@@ -1605,6 +1611,15 @@
             }
 
             currentUser = user;
+            initNotifications(user, { beforeNavigate:async () => {
+              clearTimeout(autosaveTimer);
+              const deadline = Date.now() + 10000;
+              while (isSaving && Date.now() < deadline) await new Promise(resolve => setTimeout(resolve,100));
+              if (isSaving) return false;
+              if (!isQuestionLockedByOther && !await saveCurrentQuestion({silent:true})) return false;
+              await releaseQuestionLockById(lockedQuestionId);
+              return true;
+            } });
             metaUser.textContent = user.email || "-";
             metaCenter.textContent = CENTER_LABELS[center] || center || "-";
 
@@ -1616,6 +1631,9 @@
 
             showLoader("Cargando respuestas guardadas...");
             await loadSavedResponse();
+            const requestedQuestion = Number(params.get("question"));
+            const requestedIndex = surveyData.questions.findIndex(question => question.id === requestedQuestion);
+            if (requestedIndex >= 0) currentQuestionIndex = requestedIndex;
 
             hideLoader();
             surveyCard.style.display = "block";

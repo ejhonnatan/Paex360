@@ -87,6 +87,7 @@
     @media (max-width:1024px){.page{padding:0 16px 22px}.ambito-sheet-grid{grid-template-columns:1fr}.stats-row .value{font-size:18px}}
     @media (max-width:640px){.dashboard-grid{grid-template-columns:1fr}.circle{--size:130px}.circle .txt b{font-size:44px}.ambito-sheet-title{font-size:22px}.score-cell{font-size:18px}.gauge{max-width:180px;height:72px}.stats-row .value{font-size:17px}}
   </style>
+  <link rel="stylesheet" href="notifications.css">
 </head>
 <body>
   <div class="topbar">
@@ -152,6 +153,7 @@
   </main>
 
   <script type="module">
+    import { initNotifications } from "./notifications.js";
     window.__dashboardOnlineBooted = true;
     window.addEventListener("error", (event) => {
       const msg = document.getElementById("msg");
@@ -467,6 +469,7 @@
     }
 
       onAuthStateChanged(auth, async (user) => {
+      initNotifications(user);
         if (!user) {
           clearInactivityTimer();
           window.location.href = "index.html";

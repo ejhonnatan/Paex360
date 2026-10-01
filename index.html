@@ -243,6 +243,7 @@
       display:inline-block;
     }
   </style>
+  <link rel="stylesheet" href="notifications.css">
 </head>
 
 <body>
@@ -311,6 +312,7 @@
   </div>
 
   <script type="module">
+    import { initNotifications } from "./notifications.js";
     const loginPanel = document.getElementById("loginPanel");
     const centrosPanel = document.getElementById("centrosPanel");
     const heroPanel = document.getElementById("heroPanel");
@@ -531,6 +533,7 @@
     });
 
     onAuthStateChanged(auth, async (user) => {
+      initNotifications(user);
       if (!user) {
         clearInactivityTimer();
         showLogin();

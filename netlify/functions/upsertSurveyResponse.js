@@ -1,4 +1,6 @@
 const { getDb } = require("./db");
+const { requireCenterUser } = require("./notificationAuth");
+const { addNotification, changedAnswerFields } = require("./surveyNotifications");
 const { withSurveyTransaction, requireQuestionOwner } = require("./surveyConcurrency");
 
 exports.handler = async (event) => {
@@ -36,6 +38,7 @@ exports.handler = async (event) => {
       };
     }
 
+    await requireCenterUser(event, center, email);
     return await withSurveyTransaction(getDb(), async (db) => {
       await requireQuestionOwner(db, surveyCode, center, questionId, email);
 
@@ -103,6 +106,12 @@ exports.handler = async (event) => {
       if (!headerId) {
         throw new Error("No fue posible obtener el encabezado de la encuesta");
       }
+
+      const previousResult = await db.execute({
+        sql:"SELECT * FROM survey_response_answers WHERE response_header_id = ? AND question_id = ?",
+        args:[headerId, questionId]
+      });
+      const changedFields = changedAnswerFields(previousResult.rows[0], answer);
 
       await db.execute({
         sql: `
@@ -184,6 +193,12 @@ exports.handler = async (event) => {
         `,
         args: [headerId]
       });
+
+      if (changedFields.length) {
+        await addNotification(db, { center, surveyCode, questionId, questionNumber, email,
+          kind:changedFields.includes("tutorComments") ? "tutor_comment" : "answer_changed",
+          fields:changedFields, preview:changedFields.includes("tutorComments") ? answer.tutorComments || "" : "" });
+      }
 
       return {
         statusCode: 200,

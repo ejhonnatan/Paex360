@@ -107,6 +107,7 @@
       }
     }
   </style>
+  <link rel="stylesheet" href="notifications.css">
 </head>
 
 <body>
@@ -131,6 +132,7 @@
   <script src="https://cdn.jsdelivr.net/npm/powerbi-client@2.23.1/dist/powerbi.min.js"></script>
 
   <script type="module">
+    import { initNotifications } from "./notifications.js";
     const WORKSPACE_ID = "7230301b-540b-4f1a-b94d-c3ff22d4564d";
 
     const CENTERS = {
@@ -311,6 +313,7 @@
     }
 
     onAuthStateChanged(auth, async (user) => {
+      initNotifications(user);
       if (!user) {
         clearInactivityTimer();
         window.location.href = "index.html";

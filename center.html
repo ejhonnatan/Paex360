@@ -216,6 +216,7 @@
       }
     }
   </style>
+  <link rel="stylesheet" href="notifications.css">
 </head>
 
 <body>
@@ -272,6 +273,7 @@
   </div>
 
   <script type="module">
+    import { initNotifications } from "./notifications.js";
     const CENTERS = {
       salus: { label: "Clínica SALUS" },
       diagonal: { label: "Clínica Diagonal" },
@@ -411,6 +413,7 @@
     attachActivityListeners();
 
     onAuthStateChanged(auth, async (user) => {
+      initNotifications(user);
       if (!user) {
         clearInactivityTimer();
         window.location.href = "index.html";

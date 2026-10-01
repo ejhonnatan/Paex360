@@ -1,4 +1,5 @@
 const { getDb } = require("./db");
+const { withSurveyTransaction, requireQuestionOwner } = require("./surveyConcurrency");
 
 exports.handler = async (event) => {
   try {
@@ -35,25 +36,137 @@ exports.handler = async (event) => {
       };
     }
 
-    const db = getDb();
+    return await withSurveyTransaction(getDb(), async (db) => {
+      await requireQuestionOwner(db, surveyCode, center, questionId, email);
 
-    const headerResult = await db.execute({
-      sql: `
-        SELECT id
-        FROM survey_response_headers
-        WHERE survey_code = ? AND center_code = ?
-        ORDER BY COALESCE(updated_at, created_at) DESC, id DESC
-        LIMIT 1
-      `,
-      args: [surveyCode, center]
-    });
+      const headerResult = await db.execute({
+        sql: `
+          SELECT id
+          FROM survey_response_headers
+          WHERE survey_code = ? AND center_code = ?
+          ORDER BY COALESCE(updated_at, created_at) DESC, id DESC
+          LIMIT 1
+        `,
+        args: [surveyCode, center]
+      });
 
-    let headerId = headerResult.rows[0]?.id;
+      let headerId = headerResult.rows[0]?.id;
 
-    if (!headerId) {
+      if (!headerId) {
+        await db.execute({
+          sql: `
+            INSERT INTO survey_response_headers (
+              survey_code,
+              center_code,
+              respondent_email,
+              respondent_name,
+              status,
+              current_question_number,
+              answered_questions_count,
+              total_questions,
+              created_at,
+              updated_at
+            )
+            VALUES (?, ?, ?, ?, 'draft', ?, 0, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            ON CONFLICT(survey_code, center_code, respondent_email)
+            DO UPDATE SET
+              respondent_name = excluded.respondent_name,
+              current_question_number = excluded.current_question_number,
+              total_questions = excluded.total_questions,
+              status = 'draft',
+              updated_at = CURRENT_TIMESTAMP
+          `,
+          args: [
+            surveyCode,
+            center,
+            email,
+            respondentName || null,
+            currentQuestionNumber,
+            totalQuestions
+          ]
+        });
+
+        const insertedHeaderResult = await db.execute({
+          sql: `
+            SELECT id
+            FROM survey_response_headers
+            WHERE survey_code = ? AND center_code = ? AND respondent_email = ?
+            ORDER BY id DESC
+            LIMIT 1
+          `,
+          args: [surveyCode, center, email]
+        });
+
+        headerId = insertedHeaderResult.rows[0]?.id;
+      }
+
+      if (!headerId) {
+        throw new Error("No fue posible obtener el encabezado de la encuesta");
+      }
+
       await db.execute({
         sql: `
-          INSERT INTO survey_response_headers (
+          INSERT INTO survey_response_answers (
+            response_header_id,
+            question_id,
+            question_number,
+            self_score,
+            evidence_text,
+            improvement_actions,
+            tutor_comments,
+            certifier_score,
+            certifier_observations,
+            created_at,
+            updated_at
+          )
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+          ON CONFLICT(response_header_id, question_id)
+          DO UPDATE SET
+            question_number = excluded.question_number,
+            self_score = excluded.self_score,
+            evidence_text = excluded.evidence_text,
+            improvement_actions = excluded.improvement_actions,
+            tutor_comments = excluded.tutor_comments,
+            certifier_score = excluded.certifier_score,
+            certifier_observations = excluded.certifier_observations,
+            updated_at = CURRENT_TIMESTAMP
+        `,
+        args: [
+          headerId,
+          questionId,
+          questionNumber,
+          answer.selfScore ?? null,
+          answer.evidenceText ?? "",
+          answer.improvementActions ?? "",
+          answer.tutorComments ?? "",
+          answer.certifierScore ?? null,
+          answer.certifierObservations ?? ""
+        ]
+      });
+
+      await db.execute({
+        sql: `
+          UPDATE survey_response_headers
+          SET
+            respondent_name = ?,
+            status = 'draft',
+            current_question_number = ?,
+            answered_questions_count = (
+              SELECT COUNT(*)
+              FROM survey_response_answers
+              WHERE response_header_id = ?
+                AND self_score IS NOT NULL
+            ),
+            updated_at = CURRENT_TIMESTAMP
+          WHERE id = ?
+        `,
+        args: [respondentName || null, currentQuestionNumber, headerId, headerId]
+      });
+
+      const finalHeaderResult = await db.execute({
+        sql: `
+          SELECT
+            id,
             survey_code,
             center_code,
             respondent_email,
@@ -63,137 +176,27 @@ exports.handler = async (event) => {
             answered_questions_count,
             total_questions,
             created_at,
-            updated_at
-          )
-          VALUES (?, ?, ?, ?, 'draft', ?, 0, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-          ON CONFLICT(survey_code, center_code, respondent_email)
-          DO UPDATE SET
-            respondent_name = excluded.respondent_name,
-            current_question_number = excluded.current_question_number,
-            total_questions = excluded.total_questions,
-            status = 'draft',
-            updated_at = CURRENT_TIMESTAMP
-        `,
-        args: [
-          surveyCode,
-          center,
-          email,
-          respondentName || null,
-          currentQuestionNumber,
-          totalQuestions
-        ]
-      });
-
-      const insertedHeaderResult = await db.execute({
-        sql: `
-          SELECT id
+            updated_at,
+            submitted_at
           FROM survey_response_headers
-          WHERE survey_code = ? AND center_code = ? AND respondent_email = ?
-          ORDER BY id DESC
+          WHERE id = ?
           LIMIT 1
         `,
-        args: [surveyCode, center, email]
+        args: [headerId]
       });
 
-      headerId = insertedHeaderResult.rows[0]?.id;
-    }
-
-    if (!headerId) {
-      throw new Error("No fue posible obtener el encabezado de la encuesta");
-    }
-
-    await db.execute({
-      sql: `
-        INSERT INTO survey_response_answers (
-          response_header_id,
-          question_id,
-          question_number,
-          self_score,
-          evidence_text,
-          improvement_actions,
-          tutor_comments,
-          certifier_score,
-          certifier_observations,
-          created_at,
-          updated_at
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-        ON CONFLICT(response_header_id, question_id)
-        DO UPDATE SET
-          question_number = excluded.question_number,
-          self_score = excluded.self_score,
-          evidence_text = excluded.evidence_text,
-          improvement_actions = excluded.improvement_actions,
-          tutor_comments = excluded.tutor_comments,
-          certifier_score = excluded.certifier_score,
-          certifier_observations = excluded.certifier_observations,
-          updated_at = CURRENT_TIMESTAMP
-      `,
-      args: [
-        headerId,
-        questionId,
-        questionNumber,
-        answer.selfScore ?? null,
-        answer.evidenceText ?? "",
-        answer.improvementActions ?? "",
-        answer.tutorComments ?? "",
-        answer.certifierScore ?? null,
-        answer.certifierObservations ?? ""
-      ]
+      return {
+        statusCode: 200,
+        headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+        body: JSON.stringify({
+          ok: true,
+          header: finalHeaderResult.rows[0]
+        })
+      };
     });
-
-    await db.execute({
-      sql: `
-        UPDATE survey_response_headers
-        SET
-          respondent_name = ?,
-          status = 'draft',
-          current_question_number = ?,
-          answered_questions_count = (
-            SELECT COUNT(*)
-            FROM survey_response_answers
-            WHERE response_header_id = ?
-              AND self_score IS NOT NULL
-          ),
-          updated_at = CURRENT_TIMESTAMP
-        WHERE id = ?
-      `,
-      args: [respondentName || null, currentQuestionNumber, headerId, headerId]
-    });
-
-    const finalHeaderResult = await db.execute({
-      sql: `
-        SELECT
-          id,
-          survey_code,
-          center_code,
-          respondent_email,
-          respondent_name,
-          status,
-          current_question_number,
-          answered_questions_count,
-          total_questions,
-          created_at,
-          updated_at,
-          submitted_at
-        FROM survey_response_headers
-        WHERE id = ?
-        LIMIT 1
-      `,
-      args: [headerId]
-    });
-
-    return {
-      statusCode: 200,
-      headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
-      body: JSON.stringify({
-        ok: true,
-        header: finalHeaderResult.rows[0]
-      })
-    };
   } catch (error) {
     return {
-      statusCode: 500,
+      statusCode: error.statusCode || 500,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         error: "Error guardando respuesta",

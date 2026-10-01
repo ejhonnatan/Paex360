@@ -50,7 +50,6 @@ exports.handler = async (event) => {
       sql: `
         UPDATE survey_response_headers
         SET
-          respondent_email = ?,
           status = 'submitted',
           submitted_at = CURRENT_TIMESTAMP,
           updated_at = CURRENT_TIMESTAMP

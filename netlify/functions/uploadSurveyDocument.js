@@ -1,4 +1,5 @@
 const { getDb } = require("./db");
+const { withSurveyTransaction, requireQuestionOwner } = require("./surveyConcurrency");
 const path = require("path");
 const QUESTION_ID_FACTOR = 100000;
 
@@ -105,179 +106,181 @@ exports.handler = async (event) => {
       };
     }
 
-    const db = getDb();
+    return await withSurveyTransaction(getDb(), async (db) => {
+      await requireQuestionOwner(db, surveyCode, center, questionId, email);
 
-    const headerResult = await db.execute({
-      sql: `
-        SELECT id
-        FROM survey_response_headers
-        WHERE survey_code = ? AND center_code = ?
-        ORDER BY COALESCE(updated_at, created_at) DESC, id DESC
-        LIMIT 1
-      `,
-      args: [surveyCode, center]
-    });
-
-    let headerId = headerResult.rows[0]?.id;
-
-    if (!headerId) {
-      await db.execute({
-        sql: `
-          INSERT INTO survey_response_headers (
-            survey_code,
-            center_code,
-            respondent_email,
-            respondent_name,
-            status,
-            current_question_number,
-            answered_questions_count,
-            total_questions,
-            created_at,
-            updated_at
-          )
-          VALUES (?, ?, ?, ?, 'draft', ?, 0, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-          ON CONFLICT(survey_code, center_code, respondent_email)
-          DO UPDATE SET
-            respondent_name = excluded.respondent_name,
-            current_question_number = excluded.current_question_number,
-            total_questions = excluded.total_questions,
-            status = 'draft',
-            updated_at = CURRENT_TIMESTAMP
-        `,
-        args: [
-          surveyCode,
-          center,
-          email,
-          respondentName || null,
-          questionNumber,
-          totalQuestions || 7
-        ]
-      });
-
-      const insertedHeaderResult = await db.execute({
+      const headerResult = await db.execute({
         sql: `
           SELECT id
           FROM survey_response_headers
-          WHERE survey_code = ? AND center_code = ? AND respondent_email = ?
+          WHERE survey_code = ? AND center_code = ?
+          ORDER BY COALESCE(updated_at, created_at) DESC, id DESC
+          LIMIT 1
+        `,
+        args: [surveyCode, center]
+      });
+
+      let headerId = headerResult.rows[0]?.id;
+
+      if (!headerId) {
+        await db.execute({
+          sql: `
+            INSERT INTO survey_response_headers (
+              survey_code,
+              center_code,
+              respondent_email,
+              respondent_name,
+              status,
+              current_question_number,
+              answered_questions_count,
+              total_questions,
+              created_at,
+              updated_at
+            )
+            VALUES (?, ?, ?, ?, 'draft', ?, 0, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            ON CONFLICT(survey_code, center_code, respondent_email)
+            DO UPDATE SET
+              respondent_name = excluded.respondent_name,
+              current_question_number = excluded.current_question_number,
+              total_questions = excluded.total_questions,
+              status = 'draft',
+              updated_at = CURRENT_TIMESTAMP
+          `,
+          args: [
+            surveyCode,
+            center,
+            email,
+            respondentName || null,
+            questionNumber,
+            totalQuestions || 7
+          ]
+        });
+
+        const insertedHeaderResult = await db.execute({
+          sql: `
+            SELECT id
+            FROM survey_response_headers
+            WHERE survey_code = ? AND center_code = ? AND respondent_email = ?
+            ORDER BY id DESC
+            LIMIT 1
+          `,
+          args: [surveyCode, center, email]
+        });
+        headerId = insertedHeaderResult.rows[0]?.id;
+      }
+
+      if (!headerId) {
+        throw new Error("No fue posible obtener el encabezado de la encuesta");
+      }
+
+      const existingDocsResult = await db.execute({
+        sql: `
+          SELECT question_id
+          FROM survey_uploaded_documents
+          WHERE response_header_id = ?
+            AND question_number = ?
+        `,
+        args: [headerId, questionNumber]
+      });
+      const existingQuestionIds = (existingDocsResult.rows || []).map((row) => Number(row.question_id || 0));
+      const sequenceNumber = nextAvailableSequence(existingQuestionIds, questionId);
+      const uniqueFileName = buildUploadFileName(fileName, questionNumber, sequenceNumber);
+      const storedQuestionId = (questionId * QUESTION_ID_FACTOR) + sequenceNumber;
+
+      await db.execute({
+        sql: `
+          UPDATE survey_response_headers
+          SET
+            respondent_name = ?,
+            status = 'draft',
+            current_question_number = ?,
+            total_questions = ?,
+            updated_at = CURRENT_TIMESTAMP
+          WHERE id = ?
+        `,
+        args: [respondentName || null, questionNumber, totalQuestions || 7, headerId]
+      });
+
+      await db.execute({
+        sql: `
+          INSERT INTO survey_uploaded_documents (
+            response_header_id,
+            question_id,
+            question_number,
+            reference_file_name,
+            original_file_name,
+            mime_type,
+            base64_content,
+            byte_size,
+            created_at,
+            updated_at
+          )
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        `,
+        args: [
+          headerId,
+          storedQuestionId,
+          questionNumber,
+          referenceFileName || null,
+          uniqueFileName,
+          mimeType,
+          base64Content,
+          byteSize
+        ]
+      });
+
+      const savedResult = await db.execute({
+        sql: `
+          SELECT
+            id,
+            response_header_id,
+            question_id,
+            question_number,
+            reference_file_name,
+            original_file_name,
+            mime_type,
+            byte_size,
+            created_at,
+            updated_at
+          FROM survey_uploaded_documents
+          WHERE response_header_id = ? AND question_id = ?
           ORDER BY id DESC
           LIMIT 1
         `,
-        args: [surveyCode, center, email]
+        args: [headerId, storedQuestionId]
       });
-      headerId = insertedHeaderResult.rows[0]?.id;
-    }
 
-    if (!headerId) {
-      throw new Error("No fue posible obtener el encabezado de la encuesta");
-    }
+      const row = savedResult.rows[0];
 
-    const existingDocsResult = await db.execute({
-      sql: `
-        SELECT question_id
-        FROM survey_uploaded_documents
-        WHERE response_header_id = ?
-          AND question_number = ?
-      `,
-      args: [headerId, questionNumber]
+      return {
+        statusCode: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-store"
+        },
+        body: JSON.stringify({
+          ok: true,
+          document: {
+            id: Number(row.id),
+            responseHeaderId: Number(row.response_header_id),
+            questionId,
+            questionNumber: Number(row.question_number),
+            referenceFileName: row.reference_file_name || null,
+            originalFileName: row.original_file_name,
+            mimeType: row.mime_type,
+            byteSize: Number(row.byte_size || 0),
+            createdAt: row.created_at || null,
+            updatedAt: row.updated_at || null,
+            ruta: `/.netlify/functions/getStoredDocument?documentId=${row.id}`
+          }
+        })
+      };
     });
-    const existingQuestionIds = (existingDocsResult.rows || []).map((row) => Number(row.question_id || 0));
-    const sequenceNumber = nextAvailableSequence(existingQuestionIds, questionId);
-    const uniqueFileName = buildUploadFileName(fileName, questionNumber, sequenceNumber);
-    const storedQuestionId = (questionId * QUESTION_ID_FACTOR) + sequenceNumber;
-
-    await db.execute({
-      sql: `
-        UPDATE survey_response_headers
-        SET
-          respondent_name = ?,
-          status = 'draft',
-          current_question_number = ?,
-          total_questions = ?,
-          updated_at = CURRENT_TIMESTAMP
-        WHERE id = ?
-      `,
-      args: [respondentName || null, questionNumber, totalQuestions || 7, headerId]
-    });
-
-    await db.execute({
-      sql: `
-        INSERT INTO survey_uploaded_documents (
-          response_header_id,
-          question_id,
-          question_number,
-          reference_file_name,
-          original_file_name,
-          mime_type,
-          base64_content,
-          byte_size,
-          created_at,
-          updated_at
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-      `,
-      args: [
-        headerId,
-        storedQuestionId,
-        questionNumber,
-        referenceFileName || null,
-        uniqueFileName,
-        mimeType,
-        base64Content,
-        byteSize
-      ]
-    });
-
-    const savedResult = await db.execute({
-      sql: `
-        SELECT
-          id,
-          response_header_id,
-          question_id,
-          question_number,
-          reference_file_name,
-          original_file_name,
-          mime_type,
-          byte_size,
-          created_at,
-          updated_at
-        FROM survey_uploaded_documents
-        WHERE response_header_id = ? AND question_id = ?
-        ORDER BY id DESC
-        LIMIT 1
-      `,
-      args: [headerId, storedQuestionId]
-    });
-
-    const row = savedResult.rows[0];
-
-    return {
-      statusCode: 200,
-      headers: {
-        "Content-Type": "application/json",
-        "Cache-Control": "no-store"
-      },
-      body: JSON.stringify({
-        ok: true,
-        document: {
-          id: Number(row.id),
-          responseHeaderId: Number(row.response_header_id),
-          questionId,
-          questionNumber: Number(row.question_number),
-          referenceFileName: row.reference_file_name || null,
-          originalFileName: row.original_file_name,
-          mimeType: row.mime_type,
-          byteSize: Number(row.byte_size || 0),
-          createdAt: row.created_at || null,
-          updatedAt: row.updated_at || null,
-          ruta: `/.netlify/functions/getStoredDocument?documentId=${row.id}`
-        }
-      })
-    };
   } catch (error) {
     console.error("uploadSurveyDocument error:", error);
 
     return {
-      statusCode: 500,
+      statusCode: error.statusCode || 500,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         error: "Error subiendo documento de encuesta",

@@ -1,4 +1,5 @@
 const { getDb } = require("./db");
+const { mergeCollaborativeAnswer } = require("./surveyCollaboration");
 const { requireCenterUser } = require("./notificationAuth");
 const { addNotification, changedAnswerFields } = require("./surveyNotifications");
 const { withSurveyTransaction, requireQuestionOwner } = require("./surveyConcurrency");
@@ -23,7 +24,7 @@ exports.handler = async (event) => {
     const currentQuestionNumber = Number(body.currentQuestionNumber || 1);
 
     const question = body.question || {};
-    const answer = body.answer || {};
+    let answer = body.answer || {};
 
     const questionId = Number(question.id || 0);
     const questionNumber = Number(question.number || 0);
@@ -40,7 +41,7 @@ exports.handler = async (event) => {
 
     await requireCenterUser(event, center, email);
     return await withSurveyTransaction(getDb(), async (db) => {
-      await requireQuestionOwner(db, surveyCode, center, questionId, email);
+      if (body.baseAnswer === undefined) await requireQuestionOwner(db, surveyCode, center, questionId, email);
 
       const headerResult = await db.execute({
         sql: `
@@ -111,6 +112,9 @@ exports.handler = async (event) => {
         sql:"SELECT * FROM survey_response_answers WHERE response_header_id = ? AND question_id = ?",
         args:[headerId, questionId]
       });
+      if (body.baseAnswer !== undefined) {
+        answer = mergeCollaborativeAnswer(previousResult.rows[0], answer, body.baseAnswer, body.changedFields);
+      }
       const changedFields = changedAnswerFields(previousResult.rows[0], answer);
 
       await db.execute({
@@ -205,7 +209,8 @@ exports.handler = async (event) => {
         headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
         body: JSON.stringify({
           ok: true,
-          header: finalHeaderResult.rows[0]
+          header: finalHeaderResult.rows[0],
+          answer
         })
       };
     });
@@ -215,7 +220,9 @@ exports.handler = async (event) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         error: "Error guardando respuesta",
-        detail: error.message
+        detail: error.message,
+        conflicts:error.conflicts || [],
+        currentAnswer:error.currentAnswer || null
       })
     };
   }

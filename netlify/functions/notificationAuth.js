@@ -22,7 +22,7 @@ async function notificationUser(event) {
     .find(row => row.email?.toLowerCase() === email);
   if (!row) fail(403, "Usuario sin permisos registrados.");
   const centers = Object.keys(CENTER_COLUMNS).filter(center => row[CENTER_COLUMNS[center]]?.toLowerCase() === "true");
-  return { email, centers };
+  return { email, centers, displayName:String(user.displayName || "") };
 }
 async function requireCenterUser(event, center, email) {
   const user = await notificationUser(event);

@@ -1,4 +1,5 @@
 const LOCK_MINUTES = 2;
+const { ensurePresence } = require("./surveyCollaboration");
 const { ensureNotifications } = require("./surveyNotifications");
 
 async function ensureQuestionLocks(db) {
@@ -14,6 +15,7 @@ async function ensureQuestionLocks(db) {
 async function withSurveyTransaction(db, callback) {
   await ensureQuestionLocks(db);
   await ensureNotifications(db);
+  await ensurePresence(db);
   const tx = await db.transaction("write");
   try {
     const result = await callback(tx);
@@ -28,6 +30,15 @@ async function withSurveyTransaction(db, callback) {
 }
 
 async function requireQuestionOwner(db, surveyCode, center, questionId, email) {
+  const collaborators = await db.execute({
+    sql:`SELECT user_email FROM survey_presence WHERE survey_code = ? AND center_code = ?
+      AND question_id = ? AND user_email <> ? AND updated_at >= datetime('now', '-45 seconds') LIMIT 1`,
+    args:[surveyCode, center, questionId, email]
+  });
+  if (collaborators.rows.length) {
+    const error = new Error("Esta encuesta usa edición compartida. Recarga la página para guardar sin sobrescribir cambios ajenos.");
+    error.statusCode = 423; throw error;
+  }
   const result = await db.execute({
     sql: `UPDATE survey_question_locks SET updated_at = CURRENT_TIMESTAMP
       WHERE survey_code = ? AND center_code = ? AND question_id = ?

@@ -478,6 +478,15 @@
     }
   </style>
   <link rel="stylesheet" href="notifications.css">
+  <style>
+    .collaboration-box{margin:12px 0;padding:10px;border:1px solid #d5c3e2;background:#faf6ff;font-size:12px;line-height:1.5}
+    .collaboration-box strong{display:block;color:#552279}
+    .collaboration-person{display:block;overflow-wrap:anywhere}
+    .collaboration-conflict{border:1px solid #d88906;background:#fff8e7;margin:12px 0;padding:12px;font-size:12px}
+    .collaboration-conflict[hidden]{display:none}
+    .collaboration-conflict p{white-space:pre-wrap;overflow-wrap:anywhere}
+    .collaboration-conflict .btn{margin:4px 6px 4px 0}
+  </style>
 </head>
 
 <body>
@@ -536,6 +545,12 @@
         <div class="question-jump-list" id="questionJumpList"></div>
       </div>
 
+      <div class="collaboration-box" aria-live="polite">
+        <strong>Colaboración en línea</strong>
+        <div id="collaborationStatus">Conectando...</div>
+        <div id="collaborationPeople"></div>
+      </div>
+      <div id="collaborationConflict" class="collaboration-conflict" role="alert" hidden></div>
       <div class="question-box">
         <h2 class="question-title" id="questionTitle"></h2>
         <div class="question-category" id="questionCategory"></div>
@@ -615,6 +630,7 @@
   </dialog>
 
   <script type="module">
+    import { FIELD_LABELS, answerSnapshot, savedAnswer, changedFields, reconcileRemote, reconcileSaved } from "./collaboration.js";
     import { initNotifications } from "./notifications.js";
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import {
@@ -674,13 +690,24 @@
     let isSaving = false;
     let pendingSave = false;
     let isSwitchingSurvey = false;
-    let lockRefreshTimer = null;
-    let lockedQuestionId = null;
-    let isQuestionLockedByOther = false;
+    let collaborationTimer = null;
+    let isQuestionReadOnly = false;
     const MAX_SILENT_SAVE_RETRIES = 2;
     const SILENT_SAVE_RETRY_BASE_DELAY_MS = 1200;
 
     const answers = {};
+    const answerBaselines = {};
+    const sessionId = crypto.randomUUID();
+    const collaborationStatus = document.getElementById("collaborationStatus");
+    const collaborationPeople = document.getElementById("collaborationPeople");
+    const collaborationConflict = document.getElementById("collaborationConflict");
+    let collaborationGeneration = 0;
+    let lastEditAt = 0;
+    let lastField = "";
+    let collaborationBusy = false;
+    let collaborationPaused = false;
+    let collaborationEventTimer = null;
+    const fieldControls = {evidenceText,improvementActions,tutorComments,certifierObservations};
 
     function showLoader(text = "Cargando encuesta..."){
       loader.style.display = "block";
@@ -743,7 +770,7 @@
         radio.type = "radio";
         radio.name = name;
         radio.value = String(i);
-        radio.checked = Number(selectedValue) === i;
+        radio.checked = selectedValue !== null && selectedValue !== undefined && Number(selectedValue) === i;
 
         wrapper.appendChild(number);
         wrapper.appendChild(radio);
@@ -900,7 +927,7 @@
           if (index === currentQuestionIndex) return;
 
           clearTimeout(autosaveTimer);
-          await saveCurrentQuestion({ silent: true });
+          if(!await saveCurrentQuestion({ silent: true })) return;
           currentQuestionIndex = index;
           renderQuestion();
         });
@@ -931,6 +958,7 @@
     function clearAnswersState(){
       Object.keys(answers).forEach(key => {
         delete answers[key];
+        delete answerBaselines[key];
       });
     }
 
@@ -1009,6 +1037,7 @@
       if(!currentQuestion) return;
 
       const answer = ensureAnswer(currentQuestion);
+      answerBaselines[currentQuestion.id] ||= answerSnapshot(answer);
 
       createScoreOptions(selfScoreGroup, "selfScore", answer.selfScore);
       createScoreOptions(certifierScoreGroup, "certifierScore", answer.certifierScore);
@@ -1023,91 +1052,141 @@
 
 
     function setQuestionReadOnly(readOnly){
-      isQuestionLockedByOther = readOnly;
+      isQuestionReadOnly = readOnly;
       [evidenceText, improvementActions, tutorComments, certifierObservations, fileInput, saveBtn]
         .forEach(el => { el.disabled = readOnly; });
       document.querySelectorAll('input[name="selfScore"], input[name="certifierScore"]')
         .forEach(el => { el.disabled = readOnly; });
     }
 
-    async function acquireQuestionLock(question){
-      if (!question || !currentUser?.email || !surveyData?.surveyCode) return;
-      const surveyCode = surveyData.surveyCode;
-      const wasReadOnly = isQuestionLockedByOther;
-      const isCurrent = () => surveyData?.surveyCode === surveyCode && getCurrentQuestion()?.id === question.id;
-      try {
-        const result = await fetchJSON("/.netlify/functions/acquireSurveyQuestionLock", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ surveyCode, center, email: currentUser.email,
-            questionId: question.id, questionNumber: question.number })
-        });
-        if (!isCurrent()) {
-          if (!result.locked) await releaseQuestionLockById(question.id, surveyCode);
-          return;
-        }
-        lockedQuestionId = question.id;
-        if (result.locked) {
-          clearTimeout(autosaveTimer);
-          setQuestionReadOnly(true);
-          showError(`Esta pregunta está siendo editada por ${result.ownerEmail || "otro usuario"}. Puedes trabajar en otra pregunta de la misma encuesta.`);
-          setSaveState("Pregunta en consulta: otro usuario la está editando");
-          return;
-        }
-        if (wasReadOnly || !result.renewed) {
-          setQuestionReadOnly(true);
-          const saved = await fetchJSON("/.netlify/functions/getSurveyResponse", {
-            method:"POST", headers:{ "Content-Type":"application/json" },
-            body:JSON.stringify({ surveyCode, center, email:currentUser.email })
-          });
-          if (!isCurrent()) return;
-          delete answers[question.id];
-          mergeSavedAnswers((saved.answers || []).filter(row => Number(row.question_id) === question.id));
-          mergeUploadedDocuments((saved.uploadedDocuments || []).filter(doc => Number(doc.questionId) === question.id));
-          loadStateIntoForm();
-          clearMessages();
-          setSaveState("Pregunta disponible para editar");
-        }
-        setQuestionReadOnly(false);
-      } catch (error) {
-        if (!isCurrent()) return;
-        clearTimeout(autosaveTimer);
-        setQuestionReadOnly(true);
-        showError("No se pudo comprobar el bloqueo de esta pregunta. Se reintentará automáticamente.");
-        setSaveState("Esperando conexión para habilitar la edición");
-      }
-    }
-
-    async function releaseQuestionLockById(questionId, surveyCode = surveyData?.surveyCode){
-      if (!questionId || !currentUser?.email || !surveyData?.surveyCode) return;
-      try {
-        await fetchJSON("/.netlify/functions/releaseSurveyQuestionLock", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            surveyCode,
-            center,
-            email: currentUser.email,
-            questionId
-          })
-        });
-      } catch (_) {}
-    }
-
-    async function refreshQuestionLock(){
+    function updateCollaborativeForm(){
       const question = getCurrentQuestion();
-      if (!question) return;
-      clearInterval(lockRefreshTimer);
-
-      if (lockedQuestionId && lockedQuestionId !== question.id) {
-        await releaseQuestionLockById(lockedQuestionId);
+      if(!question) return;
+      const answer = ensureAnswer(question);
+      for(const [key,control] of Object.entries(fieldControls)) {
+        if(control.value.trim() !== (answer[key] || "")) control.value = answer[key] || "";
       }
+      for(const [key,group] of [["selfScore",selfScoreGroup],["certifierScore",certifierScoreGroup]]) {
+        const checked = group.querySelector("input:checked");
+        if((checked ? Number(checked.value) : null) !== answer[key]) createScoreOptions(group,key,answer[key]);
+      }
+    }
 
-      await acquireQuestionLock(question);
+    function renderParticipants(participants){
+      collaborationPeople.replaceChildren();
+      const others = participants.filter(person => person.session_id !== sessionId);
+      collaborationStatus.textContent = others.length ? `${others.length + 1} sesiones en este centro. Los cambios guardados se sincronizan automáticamente.` : "Estás conectado. Otras personas pueden entrar y editar contigo.";
+      for(const person of others) {
+        const line = document.createElement("span");
+        line.className = "collaboration-person";
+        const identity = person.user_name ? `${person.user_name} (${person.user_email})` : person.user_email;
+        const activity = Number(person.is_editing) ? `Editando ${FIELD_LABELS[person.active_field] || "la respuesta"}` : "Visualizando";
+        const scope = person.survey_code.replace("paex360-ambito", "Ámbito ");
+        line.textContent = `● ${identity} · ${scope} · Pregunta ${person.question_number} · ${activity}`;
+        collaborationPeople.append(line);
+      }
+      document.querySelectorAll(".question-jump-btn").forEach((button,index) => {
+        const question = surveyData.questions[index];
+        const viewers = others.filter(person => person.survey_code === surveyData.surveyCode && Number(person.question_id) === question.id);
+        button.title = `Ir a la pregunta ${question.number}${viewers.length ? " · En línea: " + viewers.map(person => person.user_name || person.user_email).join(", ") : ""}`;
+        button.style.boxShadow = viewers.length ? "0 0 0 2px #16a34a" : "";
+      });
+    }
 
-      clearInterval(lockRefreshTimer);
-      lockRefreshTimer = setInterval(() => {
-        if (getCurrentQuestion()?.id === question.id) acquireQuestionLock(question).catch(() => {});
-      }, 15000);
+    async function syncCollaboration(generation = collaborationGeneration){
+      if(collaborationPaused || collaborationBusy || !currentUser || !surveyData) return;
+      const question = getCurrentQuestion();
+      if(!question) return;
+      const surveyCode = surveyData.surveyCode;
+      collaborationBusy = true;
+      try {
+        const result = await fetchJSON("/.netlify/functions/updateSurveyPresence", {
+          method:"POST",headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({surveyCode,center,email:currentUser.email,sessionId,
+            questionId:question.id,questionNumber:question.number,activeField:lastField,
+            isEditing:Date.now() - lastEditAt < 8000})
+        });
+        if(generation !== collaborationGeneration || surveyData.surveyCode !== surveyCode || getCurrentQuestion()?.id !== question.id) return;
+        renderParticipants(result.participants || []);
+        if(isSaving) return;
+        readFormIntoState();
+        const row = (result.answers || []).find(row => Number(row.question_id) === question.id);
+        if(row) {
+          const answer = ensureAnswer(question);
+          const merged = reconcileRemote(answerBaselines[question.id],answerSnapshot(answer),savedAnswer(row));
+          answerBaselines[question.id] = merged.base;
+          Object.assign(answer,merged.local);
+          updateCollaborativeForm();
+        }
+        const answer = ensureAnswer(question);
+        const documents = (result.uploadedDocuments || []).filter(doc => Number(doc.questionId) === question.id);
+        if(!fileInput.files?.length && JSON.stringify((answer.uploadedDocuments || []).map(doc => doc.id)) !== JSON.stringify(documents.map(doc => doc.id))) {
+          answer.uploadedDocuments = documents;
+          renderReferenceFiles(answer);
+        }
+      } catch(error) {
+        if(generation === collaborationGeneration) collaborationStatus.textContent = "Sin conexión con la colaboración. Tus cambios locales se conservan; reintentando...";
+      } finally { collaborationBusy = false; }
+    }
+
+    async function leaveCollaboration(surveyCode = surveyData?.surveyCode){
+      if(!surveyCode || !currentUser) return;
+      collaborationPaused = true;
+      collaborationGeneration++;
+      clearInterval(collaborationTimer);
+      clearTimeout(collaborationEventTimer);
+      const deadline = Date.now() + 5000;
+      while(collaborationBusy && Date.now() < deadline) await new Promise(resolve => setTimeout(resolve,100));
+      try {
+        await fetchJSON("/.netlify/functions/updateSurveyPresence", {
+          method:"POST",headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({surveyCode,center,email:currentUser.email,sessionId,leave:true})
+        });
+      } catch(_) {}
+    }
+
+    function refreshCollaboration(){
+      collaborationPaused = false;
+      clearInterval(collaborationTimer);
+      const generation = ++collaborationGeneration;
+      lastField = ""; lastEditAt = 0;
+      collaborationPeople.replaceChildren();
+      collaborationStatus.textContent = "Actualizando quién está en línea...";
+      void syncCollaboration(generation);
+      collaborationTimer = setInterval(() => { if(!document.hidden) void syncCollaboration(generation); },5000);
+      return Promise.resolve();
+    }
+
+    function showCollaborationConflicts(error, question){
+      clearTimeout(autosaveTimer);
+      collaborationConflict.hidden = false;
+      collaborationConflict.replaceChildren();
+      const heading = document.createElement("strong");
+      heading.textContent = "Hay cambios simultáneos en el mismo campo. Tus cambios no se han borrado.";
+      collaborationConflict.append(heading);
+      for(const key of error.data?.conflicts || []) {
+        const text = document.createElement("p");
+        text.textContent = `${FIELD_LABELS[key]}\nVersión guardada: ${error.data.currentAnswer[key] ?? "Sin valor"}\nTu versión: ${ensureAnswer(question)[key] ?? "Sin valor"}`;
+        collaborationConflict.append(text);
+      }
+      const resolve = async useRemote => {
+        if(getCurrentQuestion()?.id !== question.id) return;
+        const answer = ensureAnswer(question);
+        readFormIntoState();
+        for(const key of error.data.conflicts) {
+          answerBaselines[question.id][key] = error.data.currentAnswer[key];
+          if(useRemote) answer[key] = error.data.currentAnswer[key];
+        }
+        collaborationConflict.hidden = true;
+        updateCollaborativeForm();
+        await saveCurrentQuestion({silent:false});
+      };
+      for(const [label,useRemote] of [["Usar versión guardada",true],["Guardar mi versión",false]]) {
+        const button = document.createElement("button");
+        button.type = "button"; button.className = "btn"; button.textContent = label;
+        button.addEventListener("click",() => { void resolve(useRemote); });
+        collaborationConflict.append(button);
+      }
     }
 
     function renderQuestion(){
@@ -1125,15 +1204,16 @@
 
       loadStateIntoForm();
       renderQuestionJumpButtons();
-      setQuestionReadOnly(true);
+      setQuestionReadOnly(false);
+      collaborationConflict.hidden = true;
 
       prevBtn.disabled = currentQuestionIndex === 0;
       nextBtn.textContent = currentQuestionIndex === surveyData.totalQuestions - 1 ? "✓" : "➡";
       nextBtn.title = currentQuestionIndex === surveyData.totalQuestions - 1 ? "Finalizar" : "Siguiente";
 
-      void refreshQuestionLock().catch((error) => {
+      void refreshCollaboration().catch((error) => {
         console.warn("Error refrescando lock de pregunta:", error);
-        setQuestionReadOnly(true);
+        collaborationStatus.textContent = "No se pudo actualizar la colaboración.";
       });
     }
 
@@ -1166,6 +1246,7 @@
           : (data?.error || data?.detail || `Error HTTP ${response.status}`);
         const error = new Error(message);
         error.statusCode = response.status;
+        error.data = data;
         throw error;
       }
 
@@ -1207,7 +1288,7 @@
       const question = getCurrentQuestion();
       if(!question) return false;
       if(!file) return false;
-      if (isQuestionLockedByOther) throw new Error("Esta pregunta no está disponible para editar.");
+      if (isQuestionReadOnly) throw new Error("Esta pregunta no está disponible para editar.");
 
       const mimeType = file.type || "application/octet-stream";
       const base64Content = await fileToBase64(file);
@@ -1218,6 +1299,7 @@
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          collaborative:true,
           surveyCode: surveyData.surveyCode,
           center,
           email: currentUser.email,
@@ -1320,8 +1402,8 @@
     async function saveCurrentQuestion({ silent = false, completeAfterSave = false, retryAttempt = 0 } = {}){
       const question = getCurrentQuestion();
       if(!question) return false;
-      if (isQuestionLockedByOther) {
-        if (!silent) showError("La pregunta está bloqueada por otro usuario.");
+      if (isQuestionReadOnly) {
+        if (!silent) showError("Esta pregunta todavía no está disponible para editar.");
         return false;
       }
 
@@ -1334,10 +1416,17 @@
 
       if(isSaving){
         pendingSave = true;
-        return true;
+        const deadline = Date.now() + 15000;
+        while(isSaving && Date.now() < deadline) await new Promise(resolve => setTimeout(resolve,100));
+        if(isSaving || !collaborationConflict.hidden) return false;
+        return saveCurrentQuestion({silent,completeAfterSave,retryAttempt});
       }
 
       isSaving = true;
+      const sentAnswer = answerSnapshot(answer);
+      const baseAnswer = {...answerBaselines[question.id]};
+      const dirtyFields = changedFields(baseAnswer,sentAnswer);
+      const saveSurveyCode = surveyData.surveyCode;
       setSaveState("Guardando...");
 
       try {
@@ -1355,6 +1444,8 @@
               id: question.id,
               number: question.number
             },
+            baseAnswer,
+            changedFields:dirtyFields,
             answer: {
               selfScore: answer.selfScore,
               evidenceText: answer.evidenceText,
@@ -1366,6 +1457,16 @@
           })
         });
 
+        if(response.answer) {
+          if(getCurrentQuestion()?.id === question.id && surveyData.surveyCode === saveSurveyCode) readFormIntoState();
+          const merged = reconcileSaved(sentAnswer,answerSnapshot(answer),response.answer);
+          answerBaselines[question.id] = merged.base;
+          Object.assign(answer,merged.local);
+          if(getCurrentQuestion()?.id === question.id && surveyData.surveyCode === saveSurveyCode) {
+            updateCollaborativeForm();
+            collaborationConflict.hidden = true;
+          }
+        }
         if(response?.header?.updated_at){
           setSaveState(`Guardado (España): ${formatSpainDateTime(response.header.updated_at)}`);
         } else {
@@ -1390,6 +1491,11 @@
         return true;
       } catch (error) {
         console.error("saveCurrentQuestion error:", error);
+        if(error.statusCode === 409) {
+          if(getCurrentQuestion()?.id === question.id && surveyData.surveyCode === saveSurveyCode) showCollaborationConflicts(error,question);
+          setSaveState("Hay cambios simultáneos: elige qué versión conservar");
+          return false;
+        }
         if (error.statusCode === 423) {
           clearTimeout(autosaveTimer);
           setQuestionReadOnly(true);
@@ -1425,8 +1531,13 @@
       }
     }
 
-    function scheduleAutosave(){
-      if (isQuestionLockedByOther) return;
+    function scheduleAutosave(event){
+      const key = event?.target?.name || event?.target?.id;
+      if(Object.hasOwn(FIELD_LABELS,key)) lastField = key;
+      lastEditAt = Date.now();
+      clearTimeout(collaborationEventTimer);
+      collaborationEventTimer = setTimeout(() => { void syncCollaboration(); },400);
+      if (isQuestionReadOnly || !collaborationConflict.hidden) return;
       clearTimeout(autosaveTimer);
       setSaveState("Cambios pendientes...");
 
@@ -1445,8 +1556,8 @@
         isSwitchingSurvey = true;
         clearTimeout(autosaveTimer);
 
-        await saveCurrentQuestion({ silent: true });
-        await releaseQuestionLockById(lockedQuestionId);
+        if(!await saveCurrentQuestion({ silent: true })) { surveySelector.value = currentSurveyCode; return; }
+        await leaveCollaboration();
 
         currentSurveyCode = newSurveyCode;
         currentQuestionIndex = 0;
@@ -1476,13 +1587,16 @@
       }
     }
 
-    backBtn.addEventListener("click", () => {
+    backBtn.addEventListener("click", async () => {
+      clearTimeout(autosaveTimer);
+      if(!await saveCurrentQuestion({silent:false})) return;
+      await leaveCollaboration();
       window.location.href = `center.html?center=${center}`;
     });
 
     prevBtn.addEventListener("click", async () => {
       clearTimeout(autosaveTimer);
-      await saveCurrentQuestion({ silent: true });
+      if(!await saveCurrentQuestion({ silent: true })) return;
 
       if(currentQuestionIndex > 0){
         currentQuestionIndex--;
@@ -1494,7 +1608,7 @@
       clearTimeout(autosaveTimer);
 
       const isLast = currentQuestionIndex === surveyData.totalQuestions - 1;
-      if (isQuestionLockedByOther && !isLast) {
+      if (isQuestionReadOnly && !isLast) {
         currentQuestionIndex++;
         renderQuestion();
         return;
@@ -1521,12 +1635,17 @@
       await switchSurvey(event.target.value);
     });
 
-    selfScoreGroup.addEventListener("change", () => {
-      scheduleAutosave();
+    document.addEventListener("focusin",event => {
+      const key = event.target.name || event.target.id;
+      if(Object.hasOwn(FIELD_LABELS,key)) {lastField = key; void syncCollaboration();}
+    });
+    document.addEventListener("visibilitychange",() => {if(!document.hidden) void syncCollaboration();});
+    selfScoreGroup.addEventListener("change", event => {
+      scheduleAutosave(event);
     });
 
-    certifierScoreGroup.addEventListener("change", () => {
-      scheduleAutosave();
+    certifierScoreGroup.addEventListener("change", event => {
+      scheduleAutosave(event);
     });
 
     evidenceText.addEventListener("input", scheduleAutosave);
@@ -1569,9 +1688,9 @@
     logoutBtn.addEventListener("click", async () => {
       try{
         clearTimeout(autosaveTimer);
-        await saveCurrentQuestion({ silent: true });
-        await releaseQuestionLockById(lockedQuestionId);
-        clearInterval(lockRefreshTimer);
+        if(!await saveCurrentQuestion({ silent: false })) return;
+        await leaveCollaboration();
+        clearInterval(collaborationTimer);
         await signOut(auth);
         window.location.href = "index.html";
       }catch(error){
@@ -1581,14 +1700,12 @@
 
     window.addEventListener("beforeunload", () => {
       clearTimeout(autosaveTimer);
-      clearInterval(lockRefreshTimer);
-      if (lockedQuestionId && currentUser?.email && surveyData?.surveyCode) {
-        navigator.sendBeacon("/.netlify/functions/releaseSurveyQuestionLock", JSON.stringify({
-          surveyCode: surveyData.surveyCode,
-          center,
-          email: currentUser.email,
-          questionId: lockedQuestionId
-        }));
+      clearInterval(collaborationTimer);
+      if (currentUser?.email && surveyData?.surveyCode) {
+        void currentUser.getIdToken().then(token => fetch("/.netlify/functions/updateSurveyPresence", {
+          method:"POST",keepalive:true,headers:{"Content-Type":"application/json",Authorization:`Bearer ${token}`},
+          body:JSON.stringify({surveyCode:surveyData.surveyCode,center,email:currentUser.email,sessionId,leave:true})
+        })).catch(() => {});
       }
     });
 
@@ -1616,8 +1733,8 @@
               const deadline = Date.now() + 10000;
               while (isSaving && Date.now() < deadline) await new Promise(resolve => setTimeout(resolve,100));
               if (isSaving) return false;
-              if (!isQuestionLockedByOther && !await saveCurrentQuestion({silent:true})) return false;
-              await releaseQuestionLockById(lockedQuestionId);
+              if (!isQuestionReadOnly && !await saveCurrentQuestion({silent:true})) return false;
+              await leaveCollaboration();
               return true;
             } });
             metaUser.textContent = user.email || "-";

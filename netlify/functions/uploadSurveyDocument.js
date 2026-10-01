@@ -110,7 +110,7 @@ exports.handler = async (event) => {
 
     await requireCenterUser(event, center, email);
     return await withSurveyTransaction(getDb(), async (db) => {
-      await requireQuestionOwner(db, surveyCode, center, questionId, email);
+      if (body.collaborative !== true) await requireQuestionOwner(db, surveyCode, center, questionId, email);
 
       const headerResult = await db.execute({
         sql: `

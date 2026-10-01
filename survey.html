@@ -332,6 +332,25 @@
       opacity:.75;
     }
 
+    .document-link{
+      border:0; padding:0; background:none; color:var(--primary);
+      text-decoration:underline; cursor:pointer; font:inherit; text-align:left;
+      overflow-wrap:anywhere;
+    }
+    .document-link:focus-visible{ outline:2px solid var(--primary); outline-offset:3px; }
+    .document-viewer{
+      width:min(1100px, 96vw); max-width:96vw; height:90vh; max-height:90vh;
+      padding:16px; border:1px solid var(--border); border-radius:6px;
+    }
+    .document-viewer::backdrop{ background:rgba(0,0,0,.55); }
+    .document-viewer[open]{ display:flex; flex-direction:column; gap:12px; }
+    .document-viewer-header{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+    .document-viewer-header h2{ flex:1; margin:0; font-size:16px; overflow-wrap:anywhere; }
+    .document-viewer-frame{ width:100%; flex:1; min-height:0; border:1px solid var(--border); }
+    .document-viewer-image{ width:100%; flex:1; min-height:0; object-fit:contain; }
+    .document-viewer-status{ margin:0; color:var(--muted); font-size:13px; }
+    .document-viewer [hidden]{ display:none; }
+
     .upload-box{
       margin-top:8px;
       border:1px dashed #cfcfcf;
@@ -583,6 +602,17 @@
     </div>
   </div>
 
+  <dialog id="documentViewer" class="document-viewer" aria-labelledby="documentViewerTitle">
+    <div class="document-viewer-header">
+      <h2 id="documentViewerTitle">Documento adjunto</h2>
+      <a id="documentDownload" class="btn" target="_blank" rel="noopener noreferrer">Descargar</a>
+      <button id="documentViewerClose" class="btn" type="button" autofocus>Cerrar</button>
+    </div>
+    <p id="documentViewerStatus" class="document-viewer-status" role="status"></p>
+    <iframe id="documentViewerFrame" class="document-viewer-frame" title="Visor de documento adjunto" sandbox="allow-same-origin" hidden></iframe>
+    <img id="documentViewerImage" class="document-viewer-image" alt="" hidden>
+  </dialog>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import {
@@ -718,6 +748,83 @@
       }
     }
 
+    const documentViewer = document.getElementById("documentViewer");
+    const documentViewerTitle = document.getElementById("documentViewerTitle");
+    const documentViewerStatus = document.getElementById("documentViewerStatus");
+    const documentViewerFrame = document.getElementById("documentViewerFrame");
+    const documentViewerImage = document.getElementById("documentViewerImage");
+    const documentDownload = document.getElementById("documentDownload");
+    let documentObjectUrl = null;
+    let documentRequest = null;
+
+    function clearDocumentPreview(){
+      documentRequest?.abort();
+      documentRequest = null;
+      documentViewerFrame.hidden = true;
+      documentViewerFrame.removeAttribute("src");
+      documentViewerImage.hidden = true;
+      documentViewerImage.removeAttribute("src");
+      if (documentObjectUrl) URL.revokeObjectURL(documentObjectUrl);
+      documentObjectUrl = null;
+    }
+
+    async function openSurveyDocument(doc){
+      clearDocumentPreview();
+      const name = doc.originalFileName || "Documento adjunto";
+      documentViewerTitle.textContent = name;
+      documentDownload.hidden = true;
+      documentDownload.removeAttribute("href");
+      documentViewerStatus.textContent = "Cargando documento...";
+      if (!documentViewer.open) documentViewer.showModal();
+      const request = new AbortController();
+      documentRequest = request;
+      try {
+        const url = new URL(doc.ruta || "", window.location.origin);
+        if (!doc.ruta || url.origin !== window.location.origin ||
+            url.pathname !== "/.netlify/functions/getStoredDocument") {
+          throw new Error("No hay una dirección válida para este documento.");
+        }
+        const downloadUrl = new URL(url);
+        downloadUrl.searchParams.set("download", "1");
+        documentDownload.href = downloadUrl.href;
+        documentDownload.download = name;
+        documentDownload.hidden = false;
+        const response = await fetch(url, { signal: request.signal });
+        if (!response.ok) throw new Error("No se pudo cargar el documento. Inténtalo de nuevo.");
+        const blob = await response.blob();
+        if (request.signal.aborted) return;
+        const mime = String(doc.mimeType || blob.type || "").toLowerCase().split(";")[0];
+        const isPdf = mime === "application/pdf" || /\.pdf$/i.test(name);
+        const isImage = /^image\/(png|jpeg|gif|webp|bmp|avif)$/.test(mime) ||
+          /\.(png|jpe?g|gif|webp|bmp|avif)$/i.test(name);
+        if (!isPdf && !isImage) {
+          documentViewerStatus.textContent = "Este formato no admite vista previa. Puedes descargarlo para consultarlo.";
+          return;
+        }
+        documentObjectUrl = URL.createObjectURL(isPdf ? new Blob([blob], { type:"application/pdf" }) : blob);
+        if (isPdf) {
+          documentViewerFrame.src = documentObjectUrl;
+          documentViewerFrame.hidden = false;
+        } else {
+          documentViewerImage.alt = name;
+          documentViewerImage.src = documentObjectUrl;
+          documentViewerImage.hidden = false;
+        }
+        documentViewerStatus.textContent = "Si la vista previa no aparece en tu navegador, puedes descargar el documento.";
+      } catch (error) {
+        if (error.name !== "AbortError") documentViewerStatus.textContent = error.message;
+      }
+    }
+
+    document.getElementById("documentViewerClose").addEventListener("click", () => documentViewer.close());
+    documentViewer.addEventListener("close", clearDocumentPreview);
+    documentViewer.addEventListener("click", (event) => {
+      if (event.target !== documentViewer) return;
+      const bounds = documentViewer.getBoundingClientRect();
+      if (event.clientX < bounds.left || event.clientX > bounds.right ||
+          event.clientY < bounds.top || event.clientY > bounds.bottom) documentViewer.close();
+    });
+
     function renderReferenceFiles(answer){
       referenceFilesBox.innerHTML = "";
 
@@ -727,10 +834,19 @@
       uploadedDocuments.forEach((uploadedDocument) => {
         const uploadedRow = document.createElement("div");
         uploadedRow.className = "reference-file-item";
-        uploadedRow.innerHTML = `
-          <span class="reference-file-icon">✅</span>
-          <span><strong>Documento cargado por el cliente:</strong> ${uploadedDocument.originalFileName}</span>
-        `;
+        const icon = document.createElement("span");
+        icon.className = "reference-file-icon";
+        icon.textContent = "✅";
+        const label = document.createElement("strong");
+        label.textContent = "Documento cargado por el cliente: ";
+        const name = uploadedDocument.originalFileName || "Documento adjunto";
+        const link = document.createElement("button");
+        link.type = "button";
+        link.className = "document-link";
+        link.textContent = name;
+        link.setAttribute("aria-label", `Abrir documento ${name}`);
+        link.addEventListener("click", () => openSurveyDocument(uploadedDocument));
+        uploadedRow.append(icon, label, link);
         referenceFilesBox.appendChild(uploadedRow);
       });
 

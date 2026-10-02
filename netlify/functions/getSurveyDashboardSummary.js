@@ -17,8 +17,8 @@ exports.handler = async (event) => {
     const email = String(params.email || "").trim().toLowerCase();
     const status = String(params.status || "").trim().toLowerCase();
 
-    const whereParts = [];
-    const args = [];
+    const whereParts = ["h.survey_year = ?"];
+    const args = [event.surveyYear];
 
     if (surveyCode) {
       whereParts.push("h.survey_code = ?");
@@ -134,7 +134,9 @@ exports.handler = async (event) => {
         "Cache-Control": "no-store"
       },
       body: JSON.stringify({
+        year:event.surveyYear,
         filters: {
+          year:event.surveyYear,
           surveyCode: surveyCode || null,
           center: center || null,
           email: email || null,
@@ -186,3 +188,5 @@ exports.handler = async (event) => {
     };
   }
 };
+const { withSurveyYear } = require("./surveyYears");
+exports.handler = withSurveyYear(exports.handler);

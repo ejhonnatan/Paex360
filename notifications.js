@@ -51,10 +51,10 @@ export function initNotifications(user, { beforeNavigate } = {}) {
     for (const row of rows) {
       const link = document.createElement("a");
       link.className = `notification-item${Number(row.is_read) ? "" : " unread"}`;
-      const params = new URLSearchParams({ center:row.center_code, survey:row.survey_code, question:String(row.question_id) });
+      const params = new URLSearchParams({ center:row.center_code, survey:row.survey_code, question:String(row.question_id), year:String(row.year || 2026) });
       link.href = `survey.html?${params}`;
       const title = document.createElement("strong");
-      title.textContent = `${CENTERS[row.center_code] || row.center_code} · Ámbito ${row.survey_code.replace("paex360-ambito", "")} · Pregunta ${row.question_number}`;
+      title.textContent = `${CENTERS[row.center_code] || row.center_code} · Ámbito ${row.survey_code.replace("paex360-ambito", "")} · Pregunta ${row.question_number} · ${row.year || 2026}`;
       const action = row.kind === "tutor_comment" ? "Cambió los comentarios de tutoría" : row.kind === "document_uploaded" ? "Adjuntó un documento" : "Modificó la respuesta";
       let fields = [];
       try { fields = JSON.parse(row.changed_fields); } catch (_) {}

@@ -598,6 +598,11 @@
         <textarea id="certifierObservations" placeholder=""></textarea>
       </div>
 
+      <div class="section">
+        <label class="section-title" for="improvementPlan">Plan de mejora</label>
+        <textarea id="improvementPlan" placeholder=""></textarea>
+      </div>
+
       <div class="footer-nav">
         <div class="nav-actions">
           <button class="icon-nav-btn" id="prevBtn" title="Anterior">⬅</button>
@@ -631,6 +636,7 @@
 
   <script type="module">
     import { FIELD_LABELS, answerSnapshot, savedAnswer, changedFields, reconcileRemote, reconcileSaved } from "./collaboration.js";
+    import { selectedYear, mountYearSelector, rememberYear } from "./survey-year.js";
     import { initNotifications } from "./notifications.js";
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import {
@@ -663,6 +669,7 @@
     const improvementActions = document.getElementById("improvementActions");
     const tutorComments = document.getElementById("tutorComments");
     const certifierObservations = document.getElementById("certifierObservations");
+    const improvementPlan = document.getElementById("improvementPlan");
     const fileInput = document.getElementById("fileInput");
 
     const prevBtn = document.getElementById("prevBtn");
@@ -685,11 +692,14 @@
     let surveyData = null;
     let currentSurveyCode = /^paex360-ambito[1-6]$/.test(params.get("survey") || "")
       ? params.get("survey") : "paex360-ambito1";
+    let currentYear = selectedYear();
+    const yearSelector = mountYearSelector(year => { void switchSurvey(currentSurveyCode, year); });
     let currentQuestionIndex = 0;
     let autosaveTimer = null;
     let isSaving = false;
     let pendingSave = false;
     let isSwitchingSurvey = false;
+    let isUploadingDocument = false;
     let collaborationTimer = null;
     let isQuestionReadOnly = false;
     const MAX_SILENT_SAVE_RETRIES = 2;
@@ -707,7 +717,7 @@
     let collaborationBusy = false;
     let collaborationPaused = false;
     let collaborationEventTimer = null;
-    const fieldControls = {evidenceText,improvementActions,tutorComments,certifierObservations};
+    const fieldControls = {evidenceText,improvementActions,tutorComments,certifierObservations,improvementPlan};
 
     function showLoader(text = "Cargando encuesta..."){
       loader.style.display = "block";
@@ -946,6 +956,7 @@
           tutorComments: "",
           certifierScore: null,
           certifierObservations: "",
+          improvementPlan: "",
           files: [],
           referenceFiles: question.referenceFiles || [],
           uploadedDocuments: []
@@ -976,6 +987,7 @@
           tutorComments: row.tutor_comments ?? "",
           certifierScore: row.certifier_score ?? null,
           certifierObservations: row.certifier_observations ?? "",
+          improvementPlan: row.improvement_plan ?? "",
           files: [],
           referenceFiles: question.referenceFiles || [],
           uploadedDocuments: []
@@ -1025,6 +1037,7 @@
       answer.tutorComments = tutorComments.value.trim();
       answer.certifierScore = certifierScoreChecked ? Number(certifierScoreChecked.value) : null;
       answer.certifierObservations = certifierObservations.value.trim();
+      answer.improvementPlan = improvementPlan.value.trim();
       answer.files = Array.from(fileInput.files || []).map(file => ({
         name: file.name,
         size: file.size,
@@ -1046,6 +1059,7 @@
       improvementActions.value = answer.improvementActions || "";
       tutorComments.value = answer.tutorComments || "";
       certifierObservations.value = answer.certifierObservations || "";
+      improvementPlan.value = answer.improvementPlan || "";
       renderReferenceFiles(answer);
       fileInput.value = "";
     }
@@ -1053,7 +1067,7 @@
 
     function setQuestionReadOnly(readOnly){
       isQuestionReadOnly = readOnly;
-      [evidenceText, improvementActions, tutorComments, certifierObservations, fileInput, saveBtn]
+      [evidenceText, improvementActions, tutorComments, certifierObservations, improvementPlan, fileInput, saveBtn]
         .forEach(el => { el.disabled = readOnly; });
       document.querySelectorAll('input[name="selfScore"], input[name="certifierScore"]')
         .forEach(el => { el.disabled = readOnly; });
@@ -1235,6 +1249,10 @@
     }
 
     async function fetchJSON(url, options = {}){
+      // Capture the year before authentication awaits; pending requests keep their original scope.
+      if(options.method === "POST" && options.body) {
+        options = {...options, body:JSON.stringify({...JSON.parse(options.body),year:currentYear})};
+      }
       const headers = new Headers(options.headers || {});
       if (currentUser && options.method === "POST") headers.set("Authorization", `Bearer ${await currentUser.getIdToken()}`);
       const response = await fetch(url, { ...options, headers });
@@ -1452,7 +1470,8 @@
               improvementActions: answer.improvementActions,
               tutorComments: answer.tutorComments,
               certifierScore: answer.certifierScore,
-              certifierObservations: answer.certifierObservations
+              certifierObservations: answer.certifierObservations,
+              improvementPlan: answer.improvementPlan
             }
           })
         });
@@ -1546,20 +1565,33 @@
       }, 900);
     }
 
-    async function switchSurvey(newSurveyCode){
-      if (!newSurveyCode || newSurveyCode === currentSurveyCode) {
+    async function switchSurvey(newSurveyCode, newYear = currentYear){
+      if(isSwitchingSurvey || isUploadingDocument) {
+        yearSelector.value = String(currentYear); surveySelector.value = currentSurveyCode; return;
+      }
+      if (!newSurveyCode || (newSurveyCode === currentSurveyCode && newYear === currentYear)) {
         surveySelector.value = currentSurveyCode;
         return;
       }
 
+      let previousScope = null;
       try{
         isSwitchingSurvey = true;
+        surveySelector.disabled = true; yearSelector.disabled = true;
         clearTimeout(autosaveTimer);
 
-        if(!await saveCurrentQuestion({ silent: true })) { surveySelector.value = currentSurveyCode; return; }
+        if(!await saveCurrentQuestion({ silent: true })) { surveySelector.value = currentSurveyCode; yearSelector.value = String(currentYear); return; }
         await leaveCollaboration();
+        previousScope = {year:currentYear,code:currentSurveyCode,index:currentQuestionIndex,data:surveyData,
+          answers:{...answers},baselines:{...answerBaselines},url:location.href};
+        setQuestionReadOnly(true);
 
         currentSurveyCode = newSurveyCode;
+        currentYear = newYear;
+        rememberYear(currentYear);
+        const scopeUrl = new URL(location.href);
+        scopeUrl.searchParams.set("survey", currentSurveyCode); scopeUrl.searchParams.delete("question");
+        history.replaceState(null, "", scopeUrl);
         currentQuestionIndex = 0;
         clearAnswersState();
         clearMessages();
@@ -1580,10 +1612,19 @@
 
       }catch(error){
         hideLoader();
+        if(previousScope) {
+          currentYear = previousScope.year; currentSurveyCode = previousScope.code;
+          currentQuestionIndex = previousScope.index; surveyData = previousScope.data;
+          clearAnswersState(); Object.assign(answers,previousScope.answers); Object.assign(answerBaselines,previousScope.baselines);
+          history.replaceState(null, "", previousScope.url);
+          yearSelector.value = String(currentYear); surveyCard.style.display = "block";
+          renderQuestionJumpButtons(); renderQuestion();
+        }
         surveySelector.value = surveyData?.surveyCode || currentSurveyCode;
         showError(error.message || "Error cambiando de encuesta.");
       }finally{
         isSwitchingSurvey = false;
+        surveySelector.disabled = false; yearSelector.disabled = false;
       }
     }
 
@@ -1591,7 +1632,7 @@
       clearTimeout(autosaveTimer);
       if(!await saveCurrentQuestion({silent:false})) return;
       await leaveCollaboration();
-      window.location.href = `center.html?center=${center}`;
+      window.location.href = `center.html?center=${center}&year=${currentYear}`;
     });
 
     prevBtn.addEventListener("click", async () => {
@@ -1652,11 +1693,15 @@
     improvementActions.addEventListener("input", scheduleAutosave);
     tutorComments.addEventListener("input", scheduleAutosave);
     certifierObservations.addEventListener("input", scheduleAutosave);
+    improvementPlan.addEventListener("input", scheduleAutosave);
 
     fileInput.addEventListener("change", async () => {
       try {
         const selectedFiles = Array.from(fileInput.files || []);
         if (!selectedFiles.length) return;
+        isUploadingDocument = true;
+        surveySelector.disabled = true; yearSelector.disabled = true;
+        [prevBtn,nextBtn,backBtn,logoutBtn,...document.querySelectorAll(".question-jump-btn")].forEach(button => {button.disabled = true;});
 
         clearTimeout(autosaveTimer);
         await saveCurrentQuestion({ silent: true });
@@ -1682,6 +1727,12 @@
         console.error(error);
         showError(error.message || "No fue posible cargar el documento.");
         setSaveState("Error al subir documento");
+      } finally {
+        isUploadingDocument = false;
+        surveySelector.disabled = false; yearSelector.disabled = false;
+        [backBtn,logoutBtn,...document.querySelectorAll(".question-jump-btn")].forEach(button => {button.disabled = false;});
+        prevBtn.disabled = currentQuestionIndex === 0;
+        nextBtn.disabled = false;
       }
     });
 
@@ -1704,7 +1755,7 @@
       if (currentUser?.email && surveyData?.surveyCode) {
         void currentUser.getIdToken().then(token => fetch("/.netlify/functions/updateSurveyPresence", {
           method:"POST",keepalive:true,headers:{"Content-Type":"application/json",Authorization:`Bearer ${token}`},
-          body:JSON.stringify({surveyCode:surveyData.surveyCode,center,email:currentUser.email,sessionId,leave:true})
+          body:JSON.stringify({surveyCode:surveyData.surveyCode,year:currentYear,center,email:currentUser.email,sessionId,leave:true})
         })).catch(() => {});
       }
     });

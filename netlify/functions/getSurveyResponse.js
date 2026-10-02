@@ -81,6 +81,7 @@ exports.handler = async (event) => {
           tutor_comments,
           certifier_score,
           certifier_observations,
+          improvement_plan,
           created_at,
           updated_at
         FROM survey_response_answers
@@ -146,3 +147,6 @@ exports.handler = async (event) => {
     };
   }
 };
+
+const { withSurveyYear } = require("./surveyYears");
+exports.handler = withSurveyYear(exports.handler);

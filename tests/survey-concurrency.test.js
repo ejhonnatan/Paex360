@@ -27,7 +27,7 @@ function fixture() {
     const sql = typeof query === 'string' ? query : query.sql;
     const args = typeof query === 'string' ? [] : query.args || [];
     const stmt = sqlite.prepare(sql);
-    if (/^\s*SELECT/i.test(sql)) return Promise.resolve({ rows: stmt.all(...args) });
+    if (/^\s*(SELECT|PRAGMA)/i.test(sql)) return Promise.resolve({ rows: stmt.all(...args) });
     return Promise.resolve({ rows: [], rowsAffected: Number(stmt.run(...args).changes) });
   }
   let queue = Promise.resolve();
@@ -70,7 +70,7 @@ function fixture() {
       fileName: 'prueba.pdf', mimeType: 'application/pdf', base64Content: 'JVBERg==', ...extra
     }) });
   }
-  return { sqlite, call };
+  return { sqlite, call, load };
 }
 
 test('usuarios simultáneos guardan preguntas distintas en una única encuesta', async () => {
@@ -220,6 +220,153 @@ test('el enlace selecciona el ámbito y la pregunta solicitados al entrar en la 
 });
 
 const COLLAB_BASE = {selfScore:0,evidenceText:'',improvementActions:'',tutorComments:'',certifierScore:null,certifierObservations:''};
+
+test('la migración conserva respuestas históricas, identificadores y adjuntos en 2026', async () => {
+  const {sqlite,call} = fixture();
+  sqlite.exec(`INSERT INTO survey_response_headers(id,survey_code,center_code,respondent_email) VALUES(40,'s1','diagonal','a');
+    INSERT INTO survey_response_answers(response_header_id,question_id,question_number,evidence_text) VALUES(40,1,1,'Histórico');
+    INSERT INTO survey_uploaded_documents(response_header_id,question_id,question_number,original_file_name) VALUES(40,100001,1,'histórico.pdf')`);
+  const old = JSON.parse((await call('getSurveyResponse','a',1,{year:2026})).body);
+  assert.equal(old.header.id,40);assert.equal(old.header.year,2026);
+  assert.equal(old.answers[0].evidence_text,'Histórico');assert.equal(old.answers[0].improvement_plan,'');
+  assert.equal(old.uploadedDocuments.length,1);
+  const next = JSON.parse((await call('getSurveyResponse','a',1,{year:2027})).body);
+  assert.equal(next.exists,false);assert.equal(next.answers.length,0);assert.equal(next.uploadedDocuments.length,0);
+});
+
+test('cada ámbito y pregunta guarda su plan y respuestas por año sin sobrescribir otros años', async () => {
+  const {sqlite,call} = fixture();
+  for(let ambito=1;ambito<=6;ambito++) {
+    for(const year of [2026,2027]) {
+      for(const questionId of [1,2]) {
+        const plan = `Plan ${ambito}/${questionId}/${year}`;
+        const result = await call('upsertSurveyResponse','a',questionId,{
+          surveyCode:`paex360-ambito${ambito}`,year,baseAnswer:{...COLLAB_BASE,improvementPlan:''},
+          changedFields:['improvementPlan'],answer:{...COLLAB_BASE,improvementPlan:plan}
+        });
+        assert.equal(result.statusCode,200,result.body);
+        assert.equal(JSON.parse(result.body).header.year,year);
+      }
+      const result = await call('getSurveyResponse','b',1,{surveyCode:`paex360-ambito${ambito}`,year});
+      const data=JSON.parse(result.body);
+      assert.equal(data.answers.length,2);
+      assert.deepEqual(data.answers.map(row=>row.improvement_plan),[1,2].map(q=>`Plan ${ambito}/${q}/${year}`));
+    }
+  }
+  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM survey_response_headers').get().n,12);
+});
+
+test('el plan respeta cambios de otros campos y detecta conflictos entre dos editores', async () => {
+  const {sqlite,call} = fixture();
+  const base={...COLLAB_BASE,improvementPlan:''};
+  const results=await Promise.all([
+    call('upsertSurveyResponse','a',1,{year:2027,baseAnswer:base,changedFields:['improvementPlan'],answer:{...base,improvementPlan:'Plan nuevo'}}),
+    call('upsertSurveyResponse','b',1,{year:2027,baseAnswer:base,changedFields:['tutorComments'],answer:{...base,tutorComments:'Revisar'}})
+  ]);
+  results.forEach(result=>assert.equal(result.statusCode,200,result.body));
+  const conflict=await call('upsertSurveyResponse','c',1,{year:2027,baseAnswer:base,changedFields:['improvementPlan'],answer:{...base,improvementPlan:'Otro plan'}});
+  assert.equal(conflict.statusCode,409);
+  assert.deepEqual(JSON.parse(conflict.body).conflicts,['improvementPlan']);
+  const row=sqlite.prepare('SELECT improvement_plan,tutor_comments FROM survey_response_answers').get();
+  assert.equal(row.improvement_plan,'Plan nuevo');assert.equal(row.tutor_comments,'Revisar');
+  // A browser from before this release cannot blank the new field.
+  assert.equal((await call('upsertSurveyResponse','a',1,{year:2027,baseAnswer:COLLAB_BASE,changedFields:['evidenceText'],answer:{...COLLAB_BASE,evidenceText:'Evidencia'}})).statusCode,200);
+  assert.equal(sqlite.prepare('SELECT improvement_plan FROM survey_response_answers').get().improvement_plan,'Plan nuevo');
+});
+
+test('archivos, presencia, finalización y dashboard permanecen dentro del año elegido', async () => {
+  const {sqlite,call,load}=fixture();
+  sqlite.exec(`CREATE TABLE center_documents(id INTEGER PRIMARY KEY,center_code TEXT,file_name TEXT,file_url TEXT,file_path TEXT,is_active INTEGER,sort_order INTEGER,created_at TEXT,updated_at TEXT)`);
+  for(const year of [2026,2027]) {
+    await call('upsertSurveyResponse','a',1,{year,baseAnswer:COLLAB_BASE,changedFields:['evidenceText'],answer:{...COLLAB_BASE,evidenceText:String(year)}});
+    assert.equal((await call('uploadSurveyDocument','a',1,{year,collaborative:true,fileName:`${year}.pdf`})).statusCode,200);
+    const response=await call('updateSurveyPresence',String(year),1,{year,sessionId:`session-${year}-0000000001`});
+    assert.equal(response.statusCode,200,response.body);
+    const snapshot=JSON.parse(response.body);
+    assert.equal(snapshot.header.year,year);assert.equal(snapshot.participants.length,1);
+    assert.equal(snapshot.participants[0].year,year);assert.equal(snapshot.participants[0].survey_code,'s1');
+    assert.equal(snapshot.uploadedDocuments.length,1);
+    const docs=JSON.parse((await call('getDocuments','a',1,{year})).body).documents;
+    assert.equal(docs.length,1);assert.ok(docs[0].nombre.startsWith(String(year)));
+    for(const endpoint of ['getSurveyDashboardMatrix','getSurveyDashboardDetail','getSurveyDashboardSummary']) {
+      const result=await load(endpoint).handler({httpMethod:'GET',queryStringParameters:{center:'diagonal',year:String(year)}});
+      assert.equal(result.statusCode,200,result.body);
+      const data=JSON.parse(result.body);assert.equal(data.year,year);
+      if(data.rows) { assert.equal(data.rows.length,1);assert.equal(data.rows[0].evidenceText,String(year));assert.equal(data.rows[0].year,year); }
+    }
+  }
+  await call('completeSurveyResponse','a',1,{year:2027});
+  assert.deepEqual(sqlite.prepare('SELECT status FROM survey_response_headers ORDER BY survey_year').all().map(row=>row.status),['draft','submitted']);
+  const doc=sqlite.prepare('SELECT d.id FROM survey_uploaded_documents d JOIN survey_response_headers h ON d.response_header_id=h.id WHERE h.survey_year=2026').get();
+  assert.equal((await call('deleteDocument','a',1,{year:2027,source:'survey_uploaded_documents',documentId:doc.id})).statusCode,404);
+});
+
+test('las notificaciones incluyen el año real y el nombre público del ámbito', async () => {
+  const {call}=fixture();
+  await call('upsertSurveyResponse','a',1,{surveyCode:'paex360-ambito3',year:2027,baseAnswer:{...COLLAB_BASE,improvementPlan:''},changedFields:['improvementPlan'],answer:{...COLLAB_BASE,improvementPlan:'Nueva actuación'}});
+  const data=JSON.parse((await call('getSurveyNotifications','b')).body);
+  assert.equal(data.notifications[0].year,2027);
+  assert.equal(data.notifications[0].survey_code,'paex360-ambito3');
+  assert.ok(JSON.parse(data.notifications[0].changed_fields).includes('improvementPlan'));
+});
+
+test('años inválidos se rechazan sin modificar datos', async () => {
+  const {sqlite,call}=fixture();
+  for(const year of [2025,2101,2026.5,'texto','']) assert.equal((await call('upsertSurveyResponse','a',1,{year})).statusCode,400);
+  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM survey_response_headers').get().n,0);
+});
+
+test('cambiar de año guarda y abandona el año anterior antes de cargar el nuevo', async () => {
+  const html=fs.readFileSync(path.join(__dirname,'../survey.html'),'utf8');
+  const source=html.slice(html.indexOf('    async function switchSurvey('),html.indexOf('    backBtn.addEventListener'));
+  const calls=[];
+  const context={currentYear:2026,currentSurveyCode:'paex360-ambito1',currentQuestionIndex:2,
+    isSwitchingSurvey:false,isUploadingDocument:false,autosaveTimer:null,answers:{1:{improvementPlan:'Plan anterior'}},answerBaselines:{},
+    surveySelector:{},yearSelector:{value:'2027'},surveyCard:{style:{}},surveyData:{surveyCode:'paex360-ambito1'},
+    URL,location:{href:'https://example.test/survey.html?center=diagonal&question=2'},
+    history:{replaceState(){}},clearTimeout(){},
+    async saveCurrentQuestion(){calls.push(['save',context.currentYear]);return true;},
+    async leaveCollaboration(){calls.push(['leave',context.currentYear]);},
+    setQuestionReadOnly(){},rememberYear(){},clearAnswersState(){calls.push(['clear',context.currentYear]);},
+    clearMessages(){},setSaveState(){},showLoader(){},hideLoader(){},renderQuestionJumpButtons(){},renderQuestion(){},showError(){},
+    async loadSurvey(){},async loadSavedResponse(){calls.push(['load',context.currentYear]);}
+  };
+  vm.createContext(context);vm.runInContext(source,context);
+  await context.switchSurvey('paex360-ambito1',2027);
+  assert.deepEqual(calls,[['save',2026],['leave',2026],['clear',2027],['load',2027]]);
+  assert.equal(context.yearSelector.disabled,false);
+  context.saveCurrentQuestion=async()=>false;
+  await context.switchSurvey('paex360-ambito1',2026);
+  assert.equal(context.currentYear,2027);assert.equal(context.yearSelector.value,'2027');
+  context.saveCurrentQuestion=async()=>true;
+  context.loadSavedResponse=async()=>{throw new Error('Sin conexión');};
+  await context.switchSurvey('paex360-ambito1',2026);
+  assert.equal(context.currentYear,2027);assert.equal(context.surveyCard.style.display,'block');
+});
+
+test('un guardado pendiente conserva su año aunque cambie la pantalla durante la autenticación', async () => {
+  const html=fs.readFileSync(path.join(__dirname,'../survey.html'),'utf8');
+  const source=html.slice(html.indexOf('    async function fetchJSON('),html.indexOf('    function formatSpainDateTime('));
+  let release;let captured;
+  const context={currentYear:2026,Headers,
+    currentUser:{getIdToken:()=>new Promise(resolve=>{release=resolve;})},
+    async fetch(url,options){captured=JSON.parse(options.body);return {ok:true,json:async()=>({ok:true})};}};
+  vm.createContext(context);vm.runInContext(source,context);
+  const pending=context.fetchJSON('/.netlify/functions/upsertSurveyResponse',{method:'POST',body:JSON.stringify({surveyCode:'s1'})});
+  context.currentYear=2027;release('token');await pending;
+  assert.equal(captured.year,2026);
+});
+
+test('los scripts completos de las páginas y módulos anuales tienen sintaxis válida', () => {
+  for(const file of ['survey.html','center.html','documents.html','dashboard-online.html']) {
+    const html=fs.readFileSync(path.join(__dirname,'..',file),'utf8');
+    for(const match of html.matchAll(/<script([^>]*)>([\s\S]*?)<\/script>/g)) {
+      if(match[1].includes('type="module"')) new vm.SourceTextModule(match[2]);
+      else new vm.Script(match[2]);
+    }
+  }
+  for(const file of ['survey-year.js','collaboration.js','notifications.js']) new vm.SourceTextModule(fs.readFileSync(path.join(__dirname,'..',file),'utf8'));
+});
 
 test('dos editores guardan campos distintos de la misma pregunta sin sobrescribirse', async () => {
   const {sqlite,call}=fixture();

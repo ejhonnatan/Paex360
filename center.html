@@ -273,6 +273,9 @@
   </div>
 
   <script type="module">
+    import { selectedYear, mountYearSelector, navigateYear } from "./survey-year.js";
+    const currentYear = selectedYear();
+    mountYearSelector(navigateYear);
     import { initNotifications } from "./notifications.js";
     const CENTERS = {
       salus: { label: "Clínica SALUS" },
@@ -443,15 +446,15 @@
         }
 
         onlineDashboardCard.onclick = () => {
-          window.location.href = `dashboard-online.html?center=${centerKey}`;
+          window.location.href = `dashboard-online.html?center=${centerKey}&year=${currentYear}`;
         };
 
         surveyCard.onclick = () => {
-          window.location.href = `survey.html?center=${centerKey}`;
+          window.location.href = `survey.html?center=${centerKey}&year=${currentYear}`;
         };
 
         pdfCard.onclick = () => {
-          window.location.href = `documents.html?center=${centerKey}`;
+          window.location.href = `documents.html?center=${centerKey}&year=${currentYear}`;
         };
 
         setLoading(false);

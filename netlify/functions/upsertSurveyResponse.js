@@ -61,6 +61,7 @@ exports.handler = async (event) => {
           sql: `
             INSERT INTO survey_response_headers (
               survey_code,
+              survey_year,
               center_code,
               respondent_email,
               respondent_name,
@@ -71,7 +72,7 @@ exports.handler = async (event) => {
               created_at,
               updated_at
             )
-            VALUES (?, ?, ?, ?, 'draft', ?, 0, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            VALUES (?, ?, ?, ?, ?, 'draft', ?, 0, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
             ON CONFLICT(survey_code, center_code, respondent_email)
             DO UPDATE SET
               respondent_name = excluded.respondent_name,
@@ -82,6 +83,7 @@ exports.handler = async (event) => {
           `,
           args: [
             surveyCode,
+            body.year,
             center,
             email,
             respondentName || null,
@@ -115,6 +117,7 @@ exports.handler = async (event) => {
       if (body.baseAnswer !== undefined) {
         answer = mergeCollaborativeAnswer(previousResult.rows[0], answer, body.baseAnswer, body.changedFields);
       }
+      if (answer.improvementPlan === undefined) answer.improvementPlan = previousResult.rows[0]?.improvement_plan ?? "";
       const changedFields = changedAnswerFields(previousResult.rows[0], answer);
 
       await db.execute({
@@ -129,10 +132,11 @@ exports.handler = async (event) => {
             tutor_comments,
             certifier_score,
             certifier_observations,
+            improvement_plan,
             created_at,
             updated_at
           )
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
           ON CONFLICT(response_header_id, question_id)
           DO UPDATE SET
             question_number = excluded.question_number,
@@ -142,6 +146,7 @@ exports.handler = async (event) => {
             tutor_comments = excluded.tutor_comments,
             certifier_score = excluded.certifier_score,
             certifier_observations = excluded.certifier_observations,
+            improvement_plan = excluded.improvement_plan,
             updated_at = CURRENT_TIMESTAMP
         `,
         args: [
@@ -153,7 +158,8 @@ exports.handler = async (event) => {
           answer.improvementActions ?? "",
           answer.tutorComments ?? "",
           answer.certifierScore ?? null,
-          answer.certifierObservations ?? ""
+          answer.certifierObservations ?? "",
+          answer.improvementPlan ?? previousResult.rows[0]?.improvement_plan ?? ""
         ]
       });
 
@@ -227,3 +233,6 @@ exports.handler = async (event) => {
     };
   }
 };
+
+const { withSurveyYear } = require("./surveyYears");
+exports.handler = withSurveyYear(exports.handler);

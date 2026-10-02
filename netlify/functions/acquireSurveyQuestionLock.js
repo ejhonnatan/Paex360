@@ -79,3 +79,6 @@ exports.handler = async (event) => {
     return json(500, { error: "Error adquiriendo bloqueo", detail: error.message || String(error) });
   }
 };
+
+const { withSurveyYear } = require("./surveyYears");
+exports.handler = withSurveyYear(exports.handler);

@@ -8,7 +8,7 @@ function normalizeValue(key, value) {
 }
 function mergeCollaborativeAnswer(previous, answer, base, fields) {
   if (!base || Array.isArray(base) || typeof base !== "object" ||
-      !KEYS.every(key => Object.hasOwn(base, key)) || !Array.isArray(fields) ||
+      !KEYS.every(key => key === "improvementPlan" || Object.hasOwn(base, key)) || !Array.isArray(fields) ||
       fields.some(key => !KEYS.includes(key)) || new Set(fields).size !== fields.length) {
     const error = new Error("Recarga la encuesta antes de guardar los cambios compartidos.");
     error.statusCode = 400; throw error;

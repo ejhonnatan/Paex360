@@ -153,6 +153,9 @@
   </main>
 
   <script type="module">
+    import { selectedYear, mountYearSelector, navigateYear } from "./survey-year.js";
+    const currentYear = selectedYear();
+    mountYearSelector(navigateYear);
     import { initNotifications } from "./notifications.js";
     window.__dashboardOnlineBooted = true;
     window.addEventListener("error", (event) => {
@@ -250,7 +253,7 @@
 
       const auth = getAuth(initializeApp(firebaseConfig));
 
-      document.getElementById("backBtn").onclick = () => { window.location.href = `center.html?center=${centerKey}`; };
+      document.getElementById("backBtn").onclick = () => { window.location.href = `center.html?center=${centerKey}&year=${currentYear}`; };
       document.getElementById("logoutBtn").onclick = async () => { await signOut(auth); window.location.href = "index.html"; };
 
       const INACTIVITY_LIMIT_MS = 30 * 60 * 1000;
@@ -462,7 +465,7 @@
     }
 
     async function loadMatrix(){
-      const r = await fetch(`/.netlify/functions/getSurveyDashboardMatrix?center=${encodeURIComponent(centerKey)}`);
+      const r = await fetch(`/.netlify/functions/getSurveyDashboardMatrix?center=${encodeURIComponent(centerKey)}&year=${currentYear}`);
       const data = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error((data && data.error) || "No se pudo cargar la matriz del dashboard");
       return data;

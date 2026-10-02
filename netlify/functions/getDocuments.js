@@ -98,13 +98,13 @@ exports.handler = async (event) => {
         FROM survey_uploaded_documents d
         INNER JOIN survey_response_headers h
           ON h.id = d.response_header_id
-        WHERE LOWER(TRIM(h.center_code)) = ?
+        WHERE LOWER(TRIM(h.center_code)) = ? AND h.survey_year = ?
         ORDER BY
           COALESCE(d.question_number, 999999) ASC,
           COALESCE(d.updated_at, d.created_at) DESC,
           d.id DESC
       `,
-      args: [center]
+      args: [center, event.surveyYear]
     });
 
     const uploadedDocs = (uploadedResult.rows || []).map((row) => ({
@@ -240,3 +240,6 @@ exports.handler = async (event) => {
     });
   }
 };
+
+const { withSurveyYear } = require("./surveyYears");
+exports.handler = withSurveyYear(exports.handler);

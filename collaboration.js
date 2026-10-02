@@ -1,9 +1,10 @@
 export const FIELD_LABELS = {
   selfScore:"Autoevaluación", evidenceText:"Evidencia", improvementActions:"Acciones de mejora",
   tutorComments:"Comentarios de tutoría", certifierScore:"Evaluación de la certificadora",
+  improvementPlan:"Plan de mejora",
   certifierObservations:"Observaciones de la certificadora"
 };
-const COLUMNS = {selfScore:"self_score",evidenceText:"evidence_text",improvementActions:"improvement_actions",
+const COLUMNS = {improvementPlan:"improvement_plan",selfScore:"self_score",evidenceText:"evidence_text",improvementActions:"improvement_actions",
   tutorComments:"tutor_comments",certifierScore:"certifier_score",certifierObservations:"certifier_observations"};
 export function answerSnapshot(answer) {
   return Object.fromEntries(Object.keys(FIELD_LABELS).map(key => [key,answer[key] ?? (key.endsWith("Score") ? null : "")]));

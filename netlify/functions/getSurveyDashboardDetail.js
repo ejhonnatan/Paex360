@@ -20,8 +20,8 @@ exports.handler = async (event) => {
       ? Number(params.questionNumber)
       : null;
 
-    const whereParts = [];
-    const args = [];
+    const whereParts = ["h.survey_year = ?"];
+    const args = [event.surveyYear];
 
     if (surveyCode) {
       whereParts.push("h.survey_code = ?");
@@ -79,6 +79,7 @@ exports.handler = async (event) => {
           a.tutor_comments,
           a.certifier_score,
           a.certifier_observations,
+          a.improvement_plan,
           a.created_at AS answer_created_at,
           a.updated_at AS answer_updated_at
         FROM survey_response_headers h
@@ -120,6 +121,7 @@ exports.handler = async (event) => {
       tutorComments: row.tutor_comments || "",
       certifierScore: row.certifier_score !== null && row.certifier_score !== undefined ? Number(row.certifier_score) : null,
       certifierObservations: row.certifier_observations || "",
+      improvementPlan: row.improvement_plan || "",
       answerCreatedAt: row.answer_created_at || null,
       answerUpdatedAt: row.answer_updated_at || null
     }));
@@ -131,7 +133,9 @@ exports.handler = async (event) => {
         "Cache-Control": "no-store"
       },
       body: JSON.stringify({
+        year:event.surveyYear,
         filters: {
+          year:event.surveyYear,
           surveyCode: surveyCode || null,
           center: center || null,
           email: email || null,
@@ -155,3 +159,5 @@ exports.handler = async (event) => {
     };
   }
 };
+const { withSurveyYear } = require("./surveyYears");
+exports.handler = withSurveyYear(exports.handler);

@@ -1,4 +1,5 @@
 const ANSWER_FIELDS = {
+  improvementPlan:["improvement_plan", "Plan de mejora"],
   selfScore:["self_score", "Puntuación de autoevaluación"],
   evidenceText:["evidence_text", "Evidencia"],
   improvementActions:["improvement_actions", "Acciones de mejora"],

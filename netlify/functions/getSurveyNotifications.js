@@ -30,3 +30,6 @@ exports.handler = async event => {
       nextBeforeId:list.rows.length === 50 ? Number(list.rows[49].id) : null});
   } catch(error) { return json(error.statusCode || 500, {error:error.message}); }
 };
+
+const { withSurveyYear } = require("./surveyYears");
+exports.handler = withSurveyYear(exports.handler);

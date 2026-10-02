@@ -68,10 +68,10 @@ exports.handler = async (event) => {
           INNER JOIN survey_response_headers h
             ON h.id = d.response_header_id
           WHERE d.id = ?
-            AND LOWER(TRIM(h.center_code)) = ?
+            AND LOWER(TRIM(h.center_code)) = ? AND h.survey_year = ?
           LIMIT 1
         `,
-        args: [documentId, center]
+        args: [documentId, center, event.surveyYear]
       });
 
       if (!existsResult.rows.length) {
@@ -95,3 +95,6 @@ exports.handler = async (event) => {
     });
   }
 };
+
+const { withSurveyYear } = require("./surveyYears");
+exports.handler = withSurveyYear(exports.handler);

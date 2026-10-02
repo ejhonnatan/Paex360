@@ -130,6 +130,7 @@ exports.handler = async (event) => {
           sql: `
             INSERT INTO survey_response_headers (
               survey_code,
+              survey_year,
               center_code,
               respondent_email,
               respondent_name,
@@ -140,7 +141,7 @@ exports.handler = async (event) => {
               created_at,
               updated_at
             )
-            VALUES (?, ?, ?, ?, 'draft', ?, 0, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            VALUES (?, ?, ?, ?, ?, 'draft', ?, 0, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
             ON CONFLICT(survey_code, center_code, respondent_email)
             DO UPDATE SET
               respondent_name = excluded.respondent_name,
@@ -151,6 +152,7 @@ exports.handler = async (event) => {
           `,
           args: [
             surveyCode,
+            body.year,
             center,
             email,
             respondentName || null,
@@ -294,3 +296,6 @@ exports.handler = async (event) => {
     };
   }
 };
+
+const { withSurveyYear } = require("./surveyYears");
+exports.handler = withSurveyYear(exports.handler);

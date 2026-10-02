@@ -77,3 +77,6 @@ exports.handler = async (event) => {
     };
   }
 };
+
+const { withSurveyYear } = require("./surveyYears");
+exports.handler = withSurveyYear(exports.handler);

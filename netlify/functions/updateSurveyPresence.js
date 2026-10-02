@@ -38,12 +38,15 @@ exports.handler = async event => {
           KEYS.includes(body.activeField) ? body.activeField : "",body.isEditing === true ? 1 : 0]
       });
       const result = await db.execute({sql:`SELECT session_id,survey_code,user_email,user_name,question_id,question_number,active_field,is_editing
-        FROM survey_presence WHERE center_code = ? AND updated_at >= datetime('now', '-45 seconds') ORDER BY user_email`,args:[center]});
+        FROM survey_presence WHERE center_code = ? AND (CASE WHEN instr(survey_code, '@') > 0 THEN CAST(substr(survey_code, instr(survey_code, '@') + 1) AS INTEGER) ELSE 2026 END) = ? AND updated_at >= datetime('now', '-45 seconds') ORDER BY user_email`,args:[center,event.surveyYear]});
       return result.rows;
     });
     if(body.leave) return json(200,{ok:true});
-    const saved = await getResponse({...event,body:JSON.stringify({surveyCode,center,email})});
+    const saved = await getResponse({...event,body:JSON.stringify({surveyCode,center,email,year:event.surveyYear})});
     if(saved.statusCode !== 200) return saved;
     return json(200,{participants,...JSON.parse(saved.body)});
   } catch(error) { return json(error.statusCode || 500,{error:error.message}); }
 };
+
+const { withSurveyYear } = require("./surveyYears");
+exports.handler = withSurveyYear(exports.handler);

@@ -337,6 +337,9 @@
   </div>
 
   <script type="module">
+    import { selectedYear, mountYearSelector, navigateYear } from "./survey-year.js";
+    const currentYear = selectedYear();
+    mountYearSelector(navigateYear);
     import { initNotifications } from "./notifications.js";
     const CENTERS = {
       salus: { label: "Clínica SALUS" },
@@ -419,7 +422,7 @@
       const resp = await fetch("/.netlify/functions/getDocuments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ center })
+        body: JSON.stringify({ center, year:currentYear })
       });
 
       const data = await resp.json().catch(() => ({}));
@@ -436,7 +439,7 @@
       const resp = await fetch("/.netlify/functions/deleteDocument", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ center, documentId, source })
+        body: JSON.stringify({ center, documentId, source, year:currentYear })
       });
 
       const data = await resp.json().catch(() => ({}));
@@ -651,7 +654,7 @@
     const auth = getAuth(app);
 
     document.getElementById("backBtn").onclick = () => {
-      window.location.href = `center.html?center=${centerKey}`;
+      window.location.href = `center.html?center=${centerKey}&year=${currentYear}`;
     };
 
     document.getElementById("logoutBtn").onclick = async () => {
